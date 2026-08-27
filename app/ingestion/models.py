@@ -1,0 +1,213 @@
+import re
+import hashlib
+from datetime import datetime
+from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
+from typing import Optional, List, Dict, Any, Literal
+from pydantic import BaseModel, Field, field_validator, model_validator
+
+
+# Supported Sources
+SourceType = Literal["SEBI", "Moneycontrol"]
+
+TRACKING_PARAMS = {
+    "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
+    "ref", "fbclid", "gclid", "_ga", "ncid"
+}
+
+
+def canonicalize_url(url: str) -> str:
+    """
+    Produces a normalized, canonical URL representation.
+    - Normalizes scheme (lowercase)
+    - Normalizes host (lowercase, removes 'www.')
+    - Strips default ports
+    - Strips fragment/hash
+    - Strips tracking parameters
+    - Sorts query parameters deterministically
+    - Strips redundant trailing slashes
+    """
+    if not url or not isinstance(url, str):
+        return ""
+
+    parsed = urlparse(url.strip())
+    scheme = parsed.scheme.lower() if parsed.scheme else "https"
+    
+    netloc = parsed.netloc.lower()
+    # Remove 'www.' prefix
+    if netloc.startswith("www."):
+        netloc = netloc[4:]
+    # Remove default port
+    if (scheme == "http" and netloc.endswith(":80")) or (scheme == "https" and netloc.endswith(":443")):
+        netloc = netloc.rsplit(":", 1)[0]
+
+    # Clean path
+    path = parsed.path
+    if path != "/" and path.endswith("/"):
+        path = path.rstrip("/")
+
+    # Clean and sort query parameters
+    query_params = parse_qsl(parsed.query, keep_blank_values=False)
+    filtered_params = sorted([(k, v) for k, v in query_params if k.lower() not in TRACKING_PARAMS])
+    query = urlencode(filtered_params)
+
+    # Omit fragments entirely
+    return urlunparse((scheme, netloc, path, parsed.params, query, ""))
+
+
+def generate_document_id(source: str, url: str) -> str:
+    """
+    Generates a deterministic SHA-256 hash document ID based on canonical URL and source.
+    """
+    canonical_url = canonicalize_url(url)
+    identity_string = f"{source.strip().upper()}:{canonical_url}"
+    return hashlib.sha256(identity_string.encode("utf-8")).hexdigest()
+
+
+class RawDocument(BaseModel):
+    """Represents a raw scraped web page or document before transformation."""
+    document_id: str
+    url: str
+    title: Optional[str] = None
+    content: str
+    source: SourceType
+    scraped_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+
+    @field_validator("url")
+    @classmethod
+    def validate_url(cls, v: str) -> str:
+        if not v or not (v.startswith("http://") or v.startswith("https://")):
+            raise ValueError("URL must start with http:// or https://")
+        return v.strip()
+
+    @field_validator("content")
+    @classmethod
+    def validate_content(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Content cannot be empty")
+        return v
+
+
+class DocumentMetadata(BaseModel):
+    """Metadata extracted deterministically from the regulatory document."""
+    document_type: Optional[str] = None  # e.g., Circular, Master Circular, Order, Notification, Advisory
+    category: Optional[str] = None       # e.g., Investment Adviser, Mutual Funds, Market Intermediaries, Securities Markets
+    circular_number: Optional[str] = None
+    published_date: Optional[str] = None  # ISO YYYY-MM-DD
+    effective_date: Optional[str] = None  # ISO YYYY-MM-DD
+    section: Optional[str] = None
+
+    @field_validator("published_date", "effective_date")
+    @classmethod
+    def validate_iso_date(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        v = v.strip()
+        if not v:
+            return None
+        # Verify valid YYYY-MM-DD format
+        if not re.match(r"^\d{4}-\d{2}-\d{2}$", v):
+            raise ValueError(f"Date must be in ISO YYYY-MM-DD format, got: {v}")
+        return v
+
+
+class RegulatoryDocument(BaseModel):
+    """Represents a cleaned, structured regulatory document ready for downstream chunking/indexing."""
+    document_id: str
+    url: str
+    title: Optional[str] = None
+    source: SourceType
+    document_type: Optional[str] = None
+    category: Optional[str] = None
+    circular_number: Optional[str] = None
+    published_date: Optional[str] = None
+    effective_date: Optional[str] = None
+    section: Optional[str] = None
+    content: str
+    scraped_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    metadata: DocumentMetadata
+
+    @field_validator("url")
+    @classmethod
+    def validate_url(cls, v: str) -> str:
+        if not v or not (v.startswith("http://") or v.startswith("https://")):
+            raise ValueError("URL must start with http:// or https://")
+        return v.strip()
+
+    @field_validator("content")
+    @classmethod
+    def validate_content(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Content cannot be empty")
+        return v
+
+    @model_validator(mode="after")
+    def sync_top_level_metadata(self):
+        """Ensure top-level metadata fields mirror the nested metadata object."""
+        if self.metadata:
+            if self.document_type is None:
+                self.document_type = self.metadata.document_type
+            if self.category is None:
+                self.category = self.metadata.category
+            if self.circular_number is None:
+                self.circular_number = self.metadata.circular_number
+            if self.published_date is None:
+                self.published_date = self.metadata.published_date
+            if self.effective_date is None:
+                self.effective_date = self.metadata.effective_date
+            if self.section is None:
+                self.section = self.metadata.section
+        return self
+
+
+class DocumentChunk(BaseModel):
+    """
+    Represents a structure-aware, context-enriched regulatory document chunk.
+    Prepared for Gemini embeddings and MongoDB Vector Search.
+    """
+    chunk_id: str
+    document_id: str
+    chunk_index: int
+    content: str
+    title: Optional[str] = None
+    section: Optional[str] = None
+    source: SourceType
+    document_type: Optional[str] = None
+    category: Optional[str] = None
+    circular_number: Optional[str] = None
+    published_date: Optional[str] = None
+    effective_date: Optional[str] = None
+    url: str
+    token_count: int
+    embedding_text: Optional[str] = None
+    embedding: Optional[List[float]] = None
+    embedding_model: Optional[str] = None
+    embedding_dimensions: Optional[int] = None
+
+    @field_validator("content")
+    @classmethod
+    def validate_content(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Chunk content cannot be empty")
+        return v
+
+    @field_validator("token_count")
+    @classmethod
+    def validate_token_count(cls, v: int) -> int:
+        if v <= 0:
+            raise ValueError("Token count must be greater than zero")
+        return v
+
+
+# Serialization Helpers
+def to_mongo(model: BaseModel) -> Dict[str, Any]:
+    """Converts a Pydantic model to a MongoDB-compatible dictionary."""
+    return model.model_dump()
+
+
+def from_mongo(model_cls: type[BaseModel], data: Dict[str, Any]) -> BaseModel:
+    """Constructs a Pydantic model from a MongoDB document dictionary."""
+    clean_data = dict(data)
+    # Remove MongoDB internal _id if present
+    if "_id" in clean_data:
+        clean_data.pop("_id")
+    return model_cls.model_validate(clean_data)

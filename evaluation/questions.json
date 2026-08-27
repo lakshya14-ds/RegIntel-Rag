@@ -1,0 +1,20 @@
+[
+  {
+    "id": "q1",
+    "question": "What are the latest SEBI disclosure requirements for Foreign Portfolio Investors (FPIs)?",
+    "expected_keywords": ["FPI", "disclosure", "beneficial owner", "SEBI", "threshold"],
+    "ground_truth": "SEBI mandates additional granular disclosures for FPIs holding more than 50 percent of their Indian equity AUM in a single corporate group or holding more than INR 25,000 crore."
+  },
+  {
+    "id": "q2",
+    "question": "What is the settlement cycle timeline mandated by SEBI for equity cash markets?",
+    "expected_keywords": ["T+1", "settlement", "cycle", "SEBI", "clearing"],
+    "ground_truth": "SEBI introduced the T+1 settlement cycle phase-wise and subsequently piloted optional T+0 same-day settlement for specified securities."
+  },
+  {
+    "id": "q3",
+    "question": "What are the key provisions regarding ESG rating providers under SEBI regulations?",
+    "expected_keywords": ["ESG", "rating", "provider", "ERP", "SEBI"],
+    "ground_truth": "SEBI introduced the framework for ESG Rating Providers (ERPs) under the Credit Rating Agencies regulations requiring registration and transparency in methodology."
+  }
+]

@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "category": "Investment Adviser",
+    "question": "What are the eligibility and qualification requirements for registered investment advisers?"
+  },
+  {
+    "id": 2,
+    "category": "Investment Adviser",
+    "question": "What are the fee limits and agreement requirements between investment advisers and clients?"
+  },
+  {
+    "id": 3,
+    "category": "Investment Adviser",
+    "question": "How long must investment advisers maintain books of accounts and records?"
+  },
+  {
+    "id": 4,
+    "category": "Mutual Funds",
+    "question": "What is the framework for overseas investment by Mutual Funds?"
+  },
+  {
+    "id": 5,
+    "category": "Mutual Funds",
+    "question": "What are the surveillance and compliance requirements for Asset Management Companies (AMCs)?"
+  },
+  {
+    "id": 6,
+    "category": "Mutual Funds",
+    "question": "What are the valuation and disclosure norms for mutual fund portfolio schemes?"
+  },
+  {
+    "id": 7,
+    "category": "Market Intermediaries",
+    "question": "What are the reporting deadlines and compliance audit guidelines for market intermediaries?"
+  },
+  {
+    "id": 8,
+    "category": "Market Intermediaries",
+    "question": "What actions does SEBI take in case of non-compliance by registered intermediaries?"
+  },
+  {
+    "id": 9,
+    "category": "Securities Markets",
+    "question": "What are the public issue and DRHP filing requirements in Indian securities markets?"
+  },
+  {
+    "id": 10,
+    "category": "Securities Markets",
+    "question": "What is the procedure for recovery proceedings and attachment of bank accounts under SEBI Act?"
+  },
+  {
+    "id": 11,
+    "category": "Regulation numbers",
+    "question": "Which circular specifies guidelines under SEBI/HO/MIRSD/MIRSD-PoD-2/P/CIR/2024/56?"
+  },
+  {
+    "id": 12,
+    "category": "Effective-date queries",
+    "question": "What are the effective dates for the revised investment adviser master circular?"
+  },
+  {
+    "id": 13,
+    "category": "Mutual Funds",
+    "question": "What guidelines apply to ETF schemes and index funds tracking debt securities?"
+  },
+  {
+    "id": 14,
+    "category": "Investment Adviser",
+    "question": "What is the role of BASL in the administration and supervision of Investment Advisers?"
+  },
+  {
+    "id": 15,
+    "category": "Securities Markets",
+    "question": "What are the advertisement code regulations for Online Bond Platform Providers (OBPPs)?"
+  },
+  {
+    "id": 16,
+    "category": "Market Intermediaries",
+    "question": "What is the net worth requirement for Research Analysts and Portfolio Managers?"
+  }
+]
