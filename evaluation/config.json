@@ -1,0 +1,14 @@
+{
+  "corpus_version": "2026.08.28-sebi-v1",
+  "dataset_version": "v1.0",
+  "timestamp": "2026-08-28T00:15:00Z",
+  "retrieval_top_k": [3, 5, 10],
+  "candidate_pool": 20,
+  "hybrid_weights": {
+    "vector_weight": 0.6,
+    "bm25_weight": 0.4
+  },
+  "reranker_model": "BAAI/bge-reranker-v2-m3",
+  "llm_model": "gemini-flash-lite-latest",
+  "embedding_model": "gemini-embedding-001"
+}

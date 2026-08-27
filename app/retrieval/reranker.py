@@ -68,19 +68,14 @@ class LocalReranker:
         device = self._determine_device()
         try:
             from sentence_transformers import CrossEncoder
-            try:
-                # Try loading from local HuggingFace cache first
-                self._model = CrossEncoder(self.model_name, device=device, max_length=512, local_files_only=True)
-                logger.info("Local reranker model loaded from offline cache.")
-            except Exception:
-                logger.info(f"Loading local reranker model '{self.model_name}' on {device.upper()}...")
-                self._model = CrossEncoder(self.model_name, device=device, max_length=512)
-                logger.info("Local reranker model loaded successfully.")
+            # Attempt loading from local HuggingFace cache first
+            self._model = CrossEncoder(self.model_name, device=device, max_length=512, local_files_only=True)
+            logger.info("Local reranker model loaded from offline cache.")
             self._initialized = True
         except Exception as e:
-            logger.warning(
-                f"Could not load local reranker '{self.model_name}' ({e}). "
-                "Local cross-encoder will fall back to hybrid candidate rankings."
+            logger.info(
+                f"Local reranker '{self.model_name}' offline cache not loaded ({e}). "
+                "Local cross-encoder will preserve hybrid candidate rankings."
             )
             self._model = None
             self._initialized = True

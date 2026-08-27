@@ -95,6 +95,11 @@ class DocumentMetadata(BaseModel):
     published_date: Optional[str] = None  # ISO YYYY-MM-DD
     effective_date: Optional[str] = None  # ISO YYYY-MM-DD
     section: Optional[str] = None
+    status: Optional[str] = "unknown"     # current, historical, unknown
+    supersedes: Optional[str] = None
+    superseded_by: Optional[str] = None
+    predecessor_candidates: Optional[List[str]] = Field(default_factory=list)
+    relationship_confidence: Optional[str] = None  # high, medium, low
 
     @field_validator("published_date", "effective_date")
     @classmethod
@@ -122,6 +127,11 @@ class RegulatoryDocument(BaseModel):
     published_date: Optional[str] = None
     effective_date: Optional[str] = None
     section: Optional[str] = None
+    status: Optional[str] = "unknown"
+    supersedes: Optional[str] = None
+    superseded_by: Optional[str] = None
+    predecessor_candidates: Optional[List[str]] = Field(default_factory=list)
+    relationship_confidence: Optional[str] = None
     content: str
     scraped_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
     metadata: DocumentMetadata
@@ -156,6 +166,16 @@ class RegulatoryDocument(BaseModel):
                 self.effective_date = self.metadata.effective_date
             if self.section is None:
                 self.section = self.metadata.section
+            if self.status == "unknown" and self.metadata.status != "unknown":
+                self.status = self.metadata.status
+            if self.supersedes is None:
+                self.supersedes = self.metadata.supersedes
+            if self.superseded_by is None:
+                self.superseded_by = self.metadata.superseded_by
+            if not self.predecessor_candidates and self.metadata.predecessor_candidates:
+                self.predecessor_candidates = self.metadata.predecessor_candidates
+            if self.relationship_confidence is None:
+                self.relationship_confidence = self.metadata.relationship_confidence
         return self
 
 
@@ -176,6 +196,9 @@ class DocumentChunk(BaseModel):
     circular_number: Optional[str] = None
     published_date: Optional[str] = None
     effective_date: Optional[str] = None
+    status: Optional[str] = "unknown"
+    supersedes: Optional[str] = None
+    superseded_by: Optional[str] = None
     url: str
     token_count: int
     embedding_text: Optional[str] = None

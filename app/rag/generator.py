@@ -6,6 +6,7 @@ Enforces non-hallucination, citation placement, and structured response outputs.
 """
 
 import os
+import re
 import json
 import time
 import logging
@@ -62,8 +63,8 @@ class GeminiGenerator:
     def client(self, value: Any):
         self._client = value
 
-    def _call_gemini(self, prompt: str, max_retries: int = 3, backoff_base: float = 2.0) -> str:
-        """Executes Gemini API generation with exponential backoff for transient 503/429 errors."""
+    def _call_gemini(self, prompt: str, max_retries: int = 5, backoff_base: float = 2.0) -> str:
+        """Executes Gemini API generation with adaptive backoff for transient 503/429 errors."""
         last_error = None
         for attempt in range(1, max_retries + 1):
             try:
@@ -77,11 +78,18 @@ class GeminiGenerator:
                 return raw_text.strip()
             except Exception as e:
                 last_error = e
+                err_str = str(e).lower()
+                # If rate limited (429 or RESOURCE_EXHAUSTED), extract retry delay or use progressive sleep
+                if "429" in err_str or "resource_exhausted" in err_str or "quota" in err_str:
+                    match_sec = re.search(r"retry\s+in\s+(\d+)", err_str)
+                    sleep_sec = float(match_sec.group(1)) + 1.0 if match_sec else (20.0 * attempt)
+                else:
+                    sleep_sec = backoff_base ** attempt
                 logger.warning(
                     f"Gemini generation attempt {attempt}/{max_retries} failed: {type(e).__name__} - {e}. "
-                    f"Retrying in {backoff_base ** attempt:.1f}s..."
+                    f"Retrying in {sleep_sec:.1f}s..."
                 )
-                time.sleep(backoff_base ** attempt)
+                time.sleep(sleep_sec)
         raise GenerationError(f"Generation failed after {max_retries} retries: {last_error}") from last_error
 
     def generate_answer(

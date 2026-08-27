@@ -56,6 +56,12 @@ class Settings(BaseSettings):
     min_chunk_tokens: int = Field(default=150)
     overlap_tokens: int = Field(default=100)
 
+    # Temporal & Change Detection Settings
+    temporal_boost_weight: float = Field(default=0.10)
+    change_max_sections: int = Field(default=30)
+    change_max_candidate_predecessors: int = Field(default=10)
+    change_retry_count: int = Field(default=2)
+
     # Paths
     raw_data_dir: Path = Field(
         default=PROJECT_ROOT / "data" / "raw"

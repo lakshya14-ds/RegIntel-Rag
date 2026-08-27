@@ -55,6 +55,10 @@ class CitationManager:
     """Manages citation mapping and verifies that LLM answers adhere strictly to retrieved sources."""
 
     @staticmethod
+    def extract_citation_indices(text: str) -> Set[int]:
+        return extract_citation_indices(text)
+
+    @staticmethod
     def build_source_citations(retrieved_chunks: List[RetrievedChunk]) -> List[SourceCitation]:
         """Maps retrieved chunks to sequential source citations [1], [2], etc."""
         citations: List[SourceCitation] = []

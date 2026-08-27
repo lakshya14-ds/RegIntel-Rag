@@ -195,7 +195,7 @@ class MongoDBVectorRetriever:
         ]
 
         # 3. Try executing against live MongoDB Atlas
-        if self.collection is not None:
+        if self.collection is not None and not getattr(self, "_mongo_offline", False):
             try:
                 cursor = self.collection.aggregate(pipeline)
                 results = []
@@ -217,6 +217,7 @@ class MongoDBVectorRetriever:
                 if results:
                     return results
             except Exception as e:
+                self._mongo_offline = True
                 logger.warning(f"MongoDB Atlas $vectorSearch unavailable or failed ({e}). Falling back to local vector search.")
 
         # Fallback to local stored chunks

@@ -1,0 +1,123 @@
+[
+  {
+    "id": "C001",
+    "case_name": "Investment Advisers IFSC vs Tweaks Circular",
+    "document_a": "af3f1df2c9ef7ec51afee6cbde3331b18925c8c801b1c3c6a17924d7ee5df8ab",
+    "document_b": "384edf54c1afbbf95237706cd2f5ca9f6742a0788056126b70baa6efb193c2c1",
+    "synthetic_test_case": false,
+    "expected_modifications": [
+      "Operating guidelines for IFSC jurisdiction",
+      "Client scope"
+    ],
+    "description": "Compares general IA framework tweaks against specialized IFSC operating guidelines."
+  },
+  {
+    "id": "C002",
+    "case_name": "Investment Advisers 2020 Guidelines vs 2024 Master Circular",
+    "document_a": "3edbbaf8019cab2985b9e7f77846cee64bd988a82dc0a8998ad54f549632e2ac",
+    "document_b": "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8",
+    "synthetic_test_case": false,
+    "expected_modifications": [
+      "Record keeping",
+      "Fee limits",
+      "Registration norms"
+    ],
+    "description": "Compares initial 2020 IA guidelines against consolidated 2024 Master Circular."
+  },
+  {
+    "id": "C003",
+    "case_name": "Mutual Funds Overseas Investment vs Master Circular",
+    "document_a": "03dd333e09b21448a64bf9aac73fd1fde91b137f36937edf51dee1f99d54e7da",
+    "document_b": "555ddaa81bc0ec0847a73444a40b7ce65ac7f7c9b44ddd3b9cf0d59e7f86b06b",
+    "synthetic_test_case": false,
+    "expected_modifications": [
+      "Overseas fund limits",
+      "Valuation methodology"
+    ],
+    "description": "Compares specific overseas fund circular with consolidated mutual fund master circular."
+  },
+  {
+    "id": "C004",
+    "case_name": "Mutual Funds Overseas ETF vs Overseas Mutual Fund Framework",
+    "document_a": "a3bb0f0f46f233a251e591423f937c39cd3d9dade0ce20644ff39d0551e75007",
+    "document_b": "03dd333e09b21448a64bf9aac73fd1fde91b137f36937edf51dee1f99d54e7da",
+    "synthetic_test_case": false,
+    "expected_modifications": [
+      "Overseas ETF eligibility",
+      "Fund manager caps"
+    ],
+    "description": "Compares two consecutive overseas investment framework circulars."
+  },
+  {
+    "id": "C005",
+    "case_name": "Stock Brokers Master Circular vs Surveillance Lapses",
+    "document_a": "6ca36ed21933573c6cfcf46873a202d604d156dc8fc6af55d0c04394961124ff",
+    "document_b": "d79215cbdbca03367cdfdcfe77df2d8f788619371bc2dc4f72dd98eac72ac6bf",
+    "synthetic_test_case": false,
+    "expected_modifications": [
+      "Surveillance penalty clauses",
+      "Reporting deadlines"
+    ],
+    "description": "Compares dedicated surveillance penalty circular with broad Stock Brokers Master Circular."
+  },
+  {
+    "id": "C006",
+    "case_name": "Depositories Master Circular vs Depository Reporting",
+    "document_a": "b4161c3dc5d587f30868606394a2277fc54e0d8bc2bc1722f361df49e4558089",
+    "document_b": "d34cf5aff0780724741a4d2e5d4f2a62b9d3b2a6b4af62f6400b492ead5dbeee",
+    "synthetic_test_case": false,
+    "expected_modifications": [
+      "DDP reporting formats",
+      "Depository compliance"
+    ],
+    "description": "Compares dedicated DDP reporting circular with Master Circular for Depositories."
+  },
+  {
+    "id": "C007",
+    "case_name": "Mutual Funds Disclosures vs MF Master Circular",
+    "document_a": "db53a3a3dc6858093ed3b00c215376239a9bd0f5cf920af98656d48e8675a1f2",
+    "document_b": "555ddaa81bc0ec0847a73444a40b7ce65ac7f7c9b44ddd3b9cf0d59e7f86b06b",
+    "synthetic_test_case": false,
+    "expected_modifications": [
+      "Additional portfolio disclosures",
+      "TER reporting"
+    ],
+    "description": "Compares standalone additional disclosure circular with Mutual Funds Master Circular."
+  },
+  {
+    "id": "C008",
+    "case_name": "FPI Disclosures vs Stock Broker Compliance",
+    "document_a": "b50dcc4966fb18892911ab18c9699431ad365ed2b12ba5d86e03d060a771fda5",
+    "document_b": "d79215cbdbca03367cdfdcfe77df2d8f788619371bc2dc4f72dd98eac72ac6bf",
+    "synthetic_test_case": false,
+    "expected_modifications": [
+      "High risk FPI granular disclosures",
+      "Broker onboarding"
+    ],
+    "description": "Compares FPI disclosure circular with broker client onboarding norms."
+  },
+  {
+    "id": "C009",
+    "case_name": "Synthetic Baseline vs Synthetic Revised IA Net Worth",
+    "document_a": "synthetic_doc_ia_2020",
+    "document_b": "synthetic_doc_ia_2024",
+    "synthetic_test_case": true,
+    "expected_modifications": [
+      "Net worth increased from 25L to 50L",
+      "Digital audit added"
+    ],
+    "description": "Controlled synthetic test case comparing numerical net worth threshold change."
+  },
+  {
+    "id": "C010",
+    "case_name": "Synthetic Baseline vs Synthetic Revised T+0 Settlement",
+    "document_a": "synthetic_settle_t1",
+    "document_b": "synthetic_settle_t0",
+    "synthetic_test_case": true,
+    "expected_modifications": [
+      "Settlement cycle reduced from T+1 to T+0",
+      "25 scrips eligible"
+    ],
+    "description": "Controlled synthetic test case comparing settlement cycle transition."
+  }
+]

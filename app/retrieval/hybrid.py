@@ -226,44 +226,70 @@ class HybridRetriever:
         query: str,
         top_k: int = DEFAULT_HYBRID_TOP_K,
         candidate_k: Optional[int] = None,
-        filter_dict: Optional[Dict[str, Any]] = None
+        filter_dict: Optional[Dict[str, Any]] = None,
+        query_intent: Optional[Any] = None
     ) -> List[HybridRetrievedChunk]:
         """
         Executes hybrid retrieval combining Vector and BM25 retrieval.
-        Returns top_k fused candidate chunks.
+        Applies QueryIntent metadata filters and temporal ranking where applicable.
         """
         if not query or not query.strip():
             return []
 
         c_pool = candidate_k or self.candidate_pool
 
-        # 1. Retrieve Vector Search candidates
+        # 1. Resolve metadata filters from QueryIntent if provided
+        active_filters = dict(filter_dict or {})
+        if query_intent is not None and hasattr(query_intent, "source"):
+            from app.retrieval.query_analyzer import build_metadata_filters
+            intent_filters = build_metadata_filters(query_intent)
+            for k, v in intent_filters.items():
+                if k not in active_filters:
+                    active_filters[k] = v
+
+        # 2. Retrieve Vector Search candidates
         try:
             vector_candidates = self.vector_retriever.retrieve(
                 query_text=query.strip(),
                 limit=c_pool,
-                filter_dict=filter_dict
+                filter_dict=active_filters if active_filters else None
             )
         except Exception as e:
             logger.warning(f"Vector search failed in hybrid retriever: {e}")
             vector_candidates = []
 
-        # 2. Retrieve BM25 Keyword Search candidates
+        # 3. Retrieve BM25 Keyword Search candidates
         try:
             bm25_candidates = self.bm25_retriever.search(
                 query=query.strip(),
                 top_k=c_pool,
-                filter_dict=filter_dict
+                filter_dict=active_filters if active_filters else None
             )
         except Exception as e:
             logger.warning(f"BM25 search failed in hybrid retriever: {e}")
             bm25_candidates = []
 
-        # 3. Fuse candidates
+        # If strict filtering yielded zero candidates, retry unfiltered
+        if not vector_candidates and not bm25_candidates and active_filters:
+            try:
+                vector_candidates = self.vector_retriever.retrieve(query_text=query.strip(), limit=c_pool)
+            except Exception:
+                vector_candidates = []
+            try:
+                bm25_candidates = self.bm25_retriever.search(query=query.strip(), top_k=c_pool)
+            except Exception:
+                bm25_candidates = []
+
+        # 4. Fuse candidates
         if self.fusion_method == "min_max":
             fused = self._fuse_min_max(vector_candidates, bm25_candidates)
         else:
             fused = self._fuse_rrf(vector_candidates, bm25_candidates)
+
+        # 5. Apply temporal ranking if time intent is active
+        if query_intent is not None and getattr(query_intent, "time_intent", "none") != "none":
+            from app.retrieval.temporal import apply_temporal_ranking
+            fused = apply_temporal_ranking(query_intent, fused)
 
         return fused[:top_k]
 
@@ -272,18 +298,29 @@ class HybridRetriever:
         query: str,
         top_k: int = DEFAULT_HYBRID_TOP_K,
         candidate_k: Optional[int] = None,
-        filter_dict: Optional[Dict[str, Any]] = None
+        filter_dict: Optional[Dict[str, Any]] = None,
+        query_intent: Optional[Any] = None
     ) -> Dict[str, Any]:
         """
-        Retrieval diagnostic tool providing visibility into vector, BM25, and hybrid ranks.
+        Retrieval diagnostic tool providing visibility into query intent, filters, vector, BM25, and hybrid ranks.
         """
         c_pool = candidate_k or self.candidate_pool
-        vector_candidates = self.vector_retriever.retrieve(query.strip(), limit=c_pool, filter_dict=filter_dict)
-        bm25_candidates = self.bm25_retriever.search(query.strip(), top_k=c_pool, filter_dict=filter_dict)
-        hybrid_results = self.search(query, top_k=top_k, candidate_k=c_pool, filter_dict=filter_dict)
+        from app.retrieval.query_analyzer import analyze_query, build_metadata_filters
+        intent = query_intent or analyze_query(query)
+        active_filters = dict(filter_dict or {})
+        intent_filters = build_metadata_filters(intent)
+        for k, v in intent_filters.items():
+            if k not in active_filters:
+                active_filters[k] = v
+
+        vector_candidates = self.vector_retriever.retrieve(query.strip(), limit=c_pool, filter_dict=active_filters if active_filters else None)
+        bm25_candidates = self.bm25_retriever.search(query.strip(), top_k=c_pool, filter_dict=active_filters if active_filters else None)
+        hybrid_results = self.search(query, top_k=top_k, candidate_k=c_pool, filter_dict=active_filters if active_filters else None, query_intent=intent)
 
         return {
             "query": query,
+            "query_intent": intent.model_dump(),
+            "retrieval_filters": active_filters,
             "vector_results": [c.model_dump() for c in vector_candidates[:top_k]],
             "bm25_results": [c.model_dump() for c in bm25_candidates[:top_k]],
             "hybrid_results": [c.model_dump() for c in hybrid_results]
@@ -298,6 +335,7 @@ def search_hybrid(
     query: str,
     top_k: int = DEFAULT_HYBRID_TOP_K,
     candidate_k: Optional[int] = None,
-    filter_dict: Optional[Dict[str, Any]] = None
+    filter_dict: Optional[Dict[str, Any]] = None,
+    query_intent: Optional[Any] = None
 ) -> List[HybridRetrievedChunk]:
-    return _default_hybrid_retriever.search(query, top_k=top_k, candidate_k=candidate_k, filter_dict=filter_dict)
+    return _default_hybrid_retriever.search(query, top_k=top_k, candidate_k=candidate_k, filter_dict=filter_dict, query_intent=query_intent)
