@@ -66,19 +66,33 @@ class DocumentRepository:
 
     def document_exists(self, document_id: str) -> bool:
         """Checks if a document with the given document_id already exists in MongoDB."""
+        if getattr(self, "_is_offline", False):
+            return False
         try:
             return self.collection.count_documents({"document_id": document_id}, limit=1) > 0
         except Exception as e:
-            logger.error(f"Error checking document existence for {document_id}: {e}")
+            self._is_offline = True
+            logger.warning(f"MongoDB connection offline during document_exists: {e}")
             return False
 
     def get_document_by_id(self, document_id: str) -> Optional[Dict[str, Any]]:
         """Fetches a document by its deterministic document_id."""
+        if getattr(self, "_is_offline", False):
+            return None
         try:
             return self.collection.find_one({"document_id": document_id})
         except Exception as e:
-            logger.error(f"Error fetching document {document_id}: {e}")
+            self._is_offline = True
+            logger.warning(f"MongoDB connection offline during get_document_by_id: {e}")
             return None
+
+    def get_document(self, document_id: str) -> Optional[RegulatoryDocument]:
+        """Fetches a RegulatoryDocument model instance by its deterministic document_id."""
+        data = self.get_document_by_id(document_id)
+        if data:
+            from app.ingestion.models import from_mongo
+            return from_mongo(RegulatoryDocument, data)
+        return None
 
     def save_document(self, document: RegulatoryDocument) -> str:
         """

@@ -103,6 +103,13 @@ class DocumentComparator:
 
         return report
 
+    def compare(self, doc_a_id: str, doc_b_id: str, generate_summaries: bool = True) -> Dict[str, Any]:
+        """Convenience method returning dictionary or raising error on missing docs."""
+        report = self.compare_documents(doc_a_id, doc_b_id)
+        if report.status == "ERROR":
+            raise FileNotFoundError(report.message)
+        return report.model_dump()
+
 
 def main():
     import argparse

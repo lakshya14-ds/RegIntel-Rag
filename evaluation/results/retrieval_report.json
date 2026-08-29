@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-27T19:11:16.741942",
+  "timestamp": "2026-08-28T20:59:25.708754",
   "corpus_version": "2026.08.28-sebi-v1",
   "total_queries": 50,
   "summary": {
@@ -20,20 +20,20 @@
       "failures_count": 11
     },
     "hybrid": {
-      "recall_at_3": 38.0,
-      "recall_at_5": 40.0,
-      "recall_at_10": 40.0,
-      "mrr": 0.2098,
-      "precision_at_5": 21.8,
-      "failures_count": 30
+      "recall_at_3": 40.0,
+      "recall_at_5": 42.0,
+      "recall_at_10": 42.0,
+      "mrr": 0.2298,
+      "precision_at_5": 23.8,
+      "failures_count": 29
     },
     "hybrid_reranked": {
-      "recall_at_3": 38.0,
-      "recall_at_5": 40.0,
-      "recall_at_10": 40.0,
-      "mrr": 0.2098,
-      "precision_at_5": 21.8,
-      "failures_count": 30
+      "recall_at_3": 40.0,
+      "recall_at_5": 42.0,
+      "recall_at_10": 42.0,
+      "mrr": 0.2298,
+      "precision_at_5": 23.8,
+      "failures_count": 29
     }
   }
 }

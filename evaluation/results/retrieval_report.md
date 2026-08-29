@@ -1,6 +1,6 @@
 # RegIntel Retrieval Evaluation Report
 
-* **Generated**: 2026-08-27T19:11:16.741942
+* **Generated**: 2026-08-28T20:59:25.708754
 * **Corpus Version**: 2026.08.28-sebi-v1
 * **Total Benchmark Queries**: 50
 
@@ -10,13 +10,13 @@
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Vector** | 18.0% | 18.0% | 18.0% | 0.1800 | 16.0% | 41 |
 | **Bm25** | 74.0% | 78.0% | 78.0% | 0.5329 | 51.0% | 11 |
-| **Hybrid** | 38.0% | 40.0% | 40.0% | 0.2098 | 21.8% | 30 |
-| **Hybrid Reranked** | 38.0% | 40.0% | 40.0% | 0.2098 | 21.8% | 30 |
+| **Hybrid** | 40.0% | 42.0% | 42.0% | 0.2298 | 23.8% | 29 |
+| **Hybrid Reranked** | 40.0% | 42.0% | 42.0% | 0.2298 | 23.8% | 29 |
 
 ## 2. Ablation Analysis
 
-- **Vector vs. Hybrid**: Hybrid achieves Recall@5 of 40.0% (vs. Vector 18.0%), delivering lexical + semantic fusion benefits.
-- **Hybrid vs. Hybrid + Reranker**: Cross-encoder reranking yields MRR of 0.2098 (vs. Hybrid 0.2098), effectively elevating primary clauses.
+- **Vector vs. Hybrid**: Hybrid achieves Recall@5 of 42.0% (vs. Vector 18.0%), delivering lexical + semantic fusion benefits.
+- **Hybrid vs. Hybrid + Reranker**: Cross-encoder reranking yields MRR of 0.2298 (vs. Hybrid 0.2298), effectively elevating primary clauses.
 
 ## 3. Failure Analysis Summary
 

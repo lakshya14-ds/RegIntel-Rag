@@ -62,6 +62,27 @@ class Settings(BaseSettings):
     change_max_candidate_predecessors: int = Field(default=10)
     change_retry_count: int = Field(default=2)
 
+    # Version & Status
+    regintel_version: str = Field(default_factory=lambda: os.getenv("REGINTEL_VERSION", "0.1.0"))
+
+    # API & Frontend Configuration
+    fastapi_host: str = Field(default_factory=lambda: os.getenv("FASTAPI_HOST", "0.0.0.0"))
+    fastapi_port: int = Field(default_factory=lambda: int(os.getenv("FASTAPI_PORT", "8000")))
+    cors_origins: str = Field(default_factory=lambda: os.getenv("CORS_ORIGINS", "http://localhost:8501,http://127.0.0.1:8501,http://localhost:8000,http://127.0.0.1:8000"))
+    debug_mode: bool = Field(default_factory=lambda: os.getenv("DEBUG", "false").lower() in ("true", "1"))
+    fastapi_base_url: str = Field(default_factory=lambda: os.getenv("FASTAPI_BASE_URL", "http://localhost:8000"))
+
+    # Observability — MLflow Configuration (Phase 32)
+    mlflow_tracking_uri: str = Field(default_factory=lambda: os.getenv("MLFLOW_TRACKING_URI", str(PROJECT_ROOT / "mlruns")))
+    mlflow_experiment_name: str = Field(default_factory=lambda: os.getenv("MLFLOW_EXPERIMENT_NAME", "RegIntel-RAG"))
+    mlflow_enabled: bool = Field(default_factory=lambda: os.getenv("MLFLOW_ENABLED", "true").lower() in ("true", "1"))
+
+    # Observability — Langfuse Configuration (Phase 33)
+    langfuse_public_key: Optional[str] = Field(default_factory=lambda: os.getenv("LANGFUSE_PUBLIC_KEY"))
+    langfuse_secret_key: Optional[str] = Field(default_factory=lambda: os.getenv("LANGFUSE_SECRET_KEY"))
+    langfuse_host: str = Field(default_factory=lambda: os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com"))
+    langfuse_enabled: bool = Field(default_factory=lambda: os.getenv("LANGFUSE_ENABLED", "false").lower() in ("true", "1"))
+
     # Paths
     raw_data_dir: Path = Field(
         default=PROJECT_ROOT / "data" / "raw"

@@ -1,6 +1,6 @@
 # RegIntel Manual Evaluation Review (20 Sample Answers)
 
-* **Review Timestamp**: 2026-08-27T19:19:27.614179
+* **Review Timestamp**: 2026-08-28T21:02:03.274854
 * **Reviewer Criteria**: Relevance, Evidence Grounding, Citation Accuracy, Legal Disclaimer Check
 
 | # | Question ID | Question | Relevance (1-5) | Groundedness (1-5) | Reviewer Verdict |
@@ -8,7 +8,7 @@
 | 1 | `G001` | What are the record keeping requirements for Investment Advisers under SEBI regulations? | 4.0 | 4.0 | **APPROVED (Grounded)** |
 | 2 | `G002` | What is the fee limit mandated under Regulation 15A for investment advisers? | 4.0 | 5.0 | **APPROVED (Grounded)** |
 | 3 | `G003` | What is the Beta Version of T+0 Settlement introduced by SEBI? | 3.5 | 5.0 | **APPROVED (Grounded)** |
-| 4 | `G004` | What are the qualification requirements for principal officers of Investment Advisers? | 5.0 | 5.0 | **APPROVED (Grounded)** |
+| 4 | `G004` | What are the qualification requirements for principal officers of Investment Advisers? | 3.0 | 3.0 | **FLAGGED** |
 | 5 | `G005` | What is the role of BSE Administration and Supervision Limited BASL? | 3.5 | 5.0 | **APPROVED (Grounded)** |
 | 6 | `G006` | What are the KYC obligations enforced by KYC Registration Agencies KRAs? | 3.5 | 5.0 | **APPROVED (Grounded)** |
 | 7 | `G007` | What is the Inter-Operable Regulatory Sandbox IoRS? | 3.5 | 5.0 | **APPROVED (Grounded)** |
@@ -21,7 +21,7 @@
 | 14 | `G014` | What are the operating guidelines for Investment Advisers in IFSC GIFT City? | 3.5 | 5.0 | **APPROVED (Grounded)** |
 | 15 | `G015` | What are the research report disclosure rules for Research Analysts? | 3.5 | 5.0 | **APPROVED (Grounded)** |
 | 16 | `G016` | What are the compliance audit requirements for Stock Brokers? | 3.5 | 5.0 | **APPROVED (Grounded)** |
-| 17 | `G017` | What are the risk profiling obligations before offering investment advice? | 2.0 | 2.0 | **FLAGGED** |
+| 17 | `G017` | What are the risk profiling obligations before offering investment advice? | 2.0 | 3.0 | **FLAGGED** |
 | 18 | `G018` | What are the requirements for Online Bond Platform Providers OBPP? | 3.5 | 5.0 | **APPROVED (Grounded)** |
 | 19 | `G019` | What is the timeline for depositories to resolve investor grievances? | 3.5 | 5.0 | **APPROVED (Grounded)** |
 | 20 | `G020` | What constitutes a family of client under SEBI IA regulations? | 3.5 | 5.0 | **APPROVED (Grounded)** |
@@ -32,14 +32,14 @@
 - **Answerability**: `ANSWERABLE`
 - **Generated Answer**:
 > Under SEBI regulations, every Investment Adviser must maintain books of accounts, agreements, and advice records for a minimum period of eight years [1].
-- **Evaluator Note**: The generated answer correctly addresses the retention period mentioned in the reference material and cites the source properly. However, it misses the additional record-keeping and audit details found in the reference answer.
-- **Scores**: Relevance: `4.0` | Groundedness: `4.0` | Citations: `5.0`
+- **Evaluator Note**: The generated answer correctly captures the record-keeping duration mentioned in the evidence, though the reference evidence title is the only context provided regarding the source [1]. The answer addresses the core question well, but misses minor details like the annual compliance audit mentioned in the reference answer.
+- **Scores**: Relevance: `4.0` | Groundedness: `4.0` | Citations: `4.0`
 
 ### 2. [G002] What is the fee limit mandated under Regulation 15A for investment advisers?
 - **Answerability**: `ANSWERABLE`
 - **Generated Answer**:
-> Based on the provided evidence, the fee charged by an Investment Adviser shall not exceed the regulatory caps specified in Regulation 15A [1]. However, the specific numerical limit or amount of the cap is not detailed in the text.
-- **Evaluator Note**: The generated answer correctly notes that the retrieved evidence references Regulation 15A regarding fee caps [1] while accurately pointing out that the specific numerical limit is not mentioned in the provided text.
+> Based on the provided evidence, the fee charged by an Investment Adviser shall not exceed the regulatory caps specified in Regulation 15A [1]. However, the specific numerical limit or amount of these caps is not detailed in the text beyond stating that they are specified in Regulation 15A [1].
+- **Evaluator Note**: The generated answer correctly notes that the retrieved text mentions Regulation 15A regarding fee limits [1] but lacks the specific numerical limit. The answer is faithful to the provided evidence, properly cited, and directly addresses the question based on the limited information available in the retrieved source.
 - **Scores**: Relevance: `4.0` | Groundedness: `5.0` | Citations: `5.0`
 
 ### 3. [G003] What is the Beta Version of T+0 Settlement introduced by SEBI?
@@ -52,12 +52,9 @@
 ### 4. [G004] What are the qualification requirements for principal officers of Investment Advisers?
 - **Answerability**: `ANSWERABLE`
 - **Generated Answer**:
-> Based on the provided regulatory evidence, the qualification requirements for a principal officer of a non-individual investment adviser are as follows:
-
-* The principal officer must have at all times a professional qualification or a postgraduate degree in finance, accountancy, or capital markets [1].
-* The principal officer must also hold valid NISM certifications [1].
-- **Evaluator Note**: The generated answer directly and accurately addresses the question based entirely on the provided evidence, correctly incorporating the appropriate citation tags without any unsupported claims.
-- **Scores**: Relevance: `5.0` | Groundedness: `5.0` | Citations: `5.0`
+> An individual investment adviser or a principal officer of a non-individual investment adviser must at all times have a professional qualification or a postgraduate degree in finance, accountancy, or capital markets, along with valid NISM certifications [1].
+- **Evaluator Note**: The retrieved evidence only mentions the section title "2. Registration and Qualification Norms" and does not contain the actual substantive text detailing the qualification requirements for principal officers. Therefore, the generated answer cannot be properly verified against the provided text, and the citation points to an empty source excerpt.
+- **Scores**: Relevance: `3.0` | Groundedness: `3.0` | Citations: `2.0`
 
 ### 5. [G005] What is the role of BSE Administration and Supervision Limited BASL?
 - **Answerability**: `ANSWERABLE`
@@ -93,10 +90,9 @@
 > Based on the provided regulatory sources, Investment Advisers must adhere to the following rules regarding client agreements:
 
 * Investment Advisers are required to enter into an investment advisory agreement with their clients [1].
-* The agreement must detail terms, risk profiling mechanisms, and fee schedules [1].
-* The fees charged by the Investment Adviser under the agreement must not exceed the regulatory caps specified in Regulation 15A [1].
-* Every Investment Adviser is required to maintain these agreements for a minimum period of eight years [2].
-- **Evaluator Note**: The generated answer addresses the question well, but it relies on ungrounded claims (such as fee caps under Regulation 15A and the eight-year retention period) which are not supported by the brief text provided in the retrieved evidence snippets.
+* The agreement must detail the terms, risk profiling mechanisms, and fee schedules [1].
+* The fee charged by the Investment Adviser under the agreement must not exceed the regulatory caps specified in Regulation 15A [1].
+- **Evaluator Note**: The generated answer addresses the question well, but includes a specific claim about "Regulation 15A" and fee caps that is not present in the provided retrieved evidence snippet [1], making that portion ungrounded and incorrectly cited.
 - **Scores**: Relevance: `4.0` | Groundedness: `2.0` | Citations: `2.0`
 
 ### 10. [G010] What are the financial disincentives imposed for surveillance related lapses?
@@ -153,9 +149,9 @@
 - **Generated Answer**:
 > Based on the provided evidence, Investment Advisers are required to enter into an investment advisory agreement with clients that details terms, risk profiling mechanisms, and fee schedules [1]. 
 
-*Disclaimer: I do not claim legal authority or provide formal legal advice.*
-- **Evaluator Note**: The retrieved evidence only contains a title/link regarding registration and qualification norms and does not detail risk profiling obligations. Consequently, the generated answer fails to properly answer the question using the provided text.
-- **Scores**: Relevance: `2.0` | Groundedness: `2.0` | Citations: `3.0`
+*(Note: As RegIntel, please be advised that this response is for informational purposes based strictly on indexed regulatory sources and does not constitute formal legal advice.)*
+- **Evaluator Note**: The retrieved evidence only contains a link header about registration and qualification norms and does not detail the specific risk profiling obligations for investment advice. Consequently, the generated answer cannot fully answer the question using the provided text, resulting in low relevance and partial grounding based on the metadata available.
+- **Scores**: Relevance: `2.0` | Groundedness: `3.0` | Citations: `3.0`
 
 ### 18. [G018] What are the requirements for Online Bond Platform Providers OBPP?
 - **Answerability**: `ANSWERABLE`

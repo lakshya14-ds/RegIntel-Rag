@@ -100,6 +100,9 @@ class DocumentMetadata(BaseModel):
     superseded_by: Optional[str] = None
     predecessor_candidates: Optional[List[str]] = Field(default_factory=list)
     relationship_confidence: Optional[str] = None  # high, medium, low
+    content_hash: Optional[str] = None
+    document_version: Optional[str] = "1.0"
+    relationship_type: Optional[str] = None  # NEW, UPDATE, SUPERSEDES, SUPERSEDED, RELATED, UNKNOWN
 
     @field_validator("published_date", "effective_date")
     @classmethod
@@ -132,6 +135,9 @@ class RegulatoryDocument(BaseModel):
     superseded_by: Optional[str] = None
     predecessor_candidates: Optional[List[str]] = Field(default_factory=list)
     relationship_confidence: Optional[str] = None
+    content_hash: Optional[str] = None
+    document_version: Optional[str] = "1.0"
+    relationship_type: Optional[str] = None
     content: str
     scraped_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
     metadata: DocumentMetadata
@@ -176,6 +182,12 @@ class RegulatoryDocument(BaseModel):
                 self.predecessor_candidates = self.metadata.predecessor_candidates
             if self.relationship_confidence is None:
                 self.relationship_confidence = self.metadata.relationship_confidence
+            if self.content_hash is None:
+                self.content_hash = self.metadata.content_hash
+            if self.document_version == "1.0" and self.metadata.document_version != "1.0":
+                self.document_version = self.metadata.document_version
+            if self.relationship_type is None:
+                self.relationship_type = self.metadata.relationship_type
         return self
 
 
@@ -205,6 +217,7 @@ class DocumentChunk(BaseModel):
     embedding: Optional[List[float]] = None
     embedding_model: Optional[str] = None
     embedding_dimensions: Optional[int] = None
+    content_hash: Optional[str] = None
 
     @field_validator("content")
     @classmethod

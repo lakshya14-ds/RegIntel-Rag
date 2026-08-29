@@ -236,6 +236,28 @@ class RetrievalEvaluator:
         with open(RESULTS_DIR / "retrieval_report.md", "w", encoding="utf-8") as f:
             f.write(md_content)
 
+        # Log Evaluation Run to MLflow (Phase 32)
+        try:
+            from app.observability.mlflow_tracker import mlflow_tracker
+            for m, s in eval_summary.items():
+                mlflow_tracker.log_retrieval_evaluation(
+                    method=m,
+                    top_k=s.get("top_k", 5),
+                    metrics={
+                        "recall_at_3": float(s["recall_at_3"]),
+                        "recall_at_5": float(s["recall_at_5"]),
+                        "recall_at_10": float(s["recall_at_10"]),
+                        "mrr": float(s["mrr"]),
+                        "precision_at_5": float(s["precision_at_5"]),
+                        "failures_count": float(s["failures_count"])
+                    },
+                    dataset_size=len(queries),
+                    parameters={"corpus_version": full_report["corpus_version"]},
+                    results_file=run_dir / "retrieval_report.json"
+                )
+        except Exception as e:
+            logger.warning(f"MLflow retrieval logging encountered an issue: {e}")
+
         return full_report
 
     def _generate_markdown_report(self, full_report: Dict[str, Any], all_failures: Dict[str, Any]) -> str:

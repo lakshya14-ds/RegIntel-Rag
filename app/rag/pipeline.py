@@ -178,85 +178,101 @@ class RAGPipeline:
         final_k = top_k or self.top_k
         threshold = min_score_threshold if min_score_threshold is not None else self.min_score_threshold
 
-        # 1. Query Understanding
-        intent: QueryIntent = self.query_analyzer.analyze(question.strip())
-        logger.info(f"Processing query '{question}' | Intent: type={intent.query_type}, time={intent.time_intent}, cat={intent.category}")
+        from app.observability.langfuse_tracker import langfuse_tracker
 
-        # 2. Check for Change Analysis Request
-        if intent.query_type == "change_analysis":
-            return self._handle_change_analysis_query(question, intent)
+        with langfuse_tracker.start_trace(
+            name="RAG Query Execution",
+            metadata={"question": question, "mode": active_mode, "reranker": use_rerank}
+        ) as trace:
 
-        # 3. Retrieve candidates
-        candidates: List[RetrievedChunk] = self.retrieve_candidates(
-            question=question.strip(),
-            mode=active_mode,
-            candidate_k=self.candidate_pool,
-            filter_dict=filter_dict,
-            query_intent=intent
-        )
+            # 1. Query Understanding
+            with langfuse_tracker.start_span(trace, name="Query Intent Classification", input_data=question) as span:
+                intent: QueryIntent = self.query_analyzer.analyze(question.strip())
+                logger.info(f"Processing query '{question}' | Intent: type={intent.query_type}, time={intent.time_intent}, cat={intent.category}")
 
-        if not candidates:
-            logger.info("Zero candidates retrieved. Skipping LLM generation.")
+            # 2. Check for Change Analysis Request
+            if intent.query_type == "change_analysis":
+                return self._handle_change_analysis_query(question, intent)
+
+            # 3. Retrieve candidates
+            with langfuse_tracker.start_span(trace, name=f"Candidate Retrieval ({active_mode})", input_data={"top_k": self.candidate_pool}) as span:
+                candidates: List[RetrievedChunk] = self.retrieve_candidates(
+                    question=question.strip(),
+                    mode=active_mode,
+                    candidate_k=self.candidate_pool,
+                    filter_dict=filter_dict,
+                    query_intent=intent
+                )
+
+            if not candidates:
+                logger.info("Zero candidates retrieved. Skipping LLM generation.")
+                return RAGResponse(
+                    question=question,
+                    answer="I could not find sufficient evidence in the indexed regulatory sources.",
+                    sources=[],
+                    retrieved_chunks_count=0,
+                    top_score=0.0,
+                    retrieval_mode=active_mode,
+                    reranker_used=False,
+                    query_intent=intent.model_dump(),
+                    sufficient_evidence=False
+                )
+
+            # 4. Apply temporal ranking adjustments
+            if intent.time_intent != "none":
+                candidates = apply_temporal_ranking(intent, candidates)
+
+            # 5. Rerank candidates
+            if use_rerank and self.reranker.enabled:
+                with langfuse_tracker.start_span(trace, name="Cross-Encoder Reranking", input_data={"candidates": len(candidates)}) as span:
+                    ranked_chunks = self.reranker.rerank(query=question, candidates=candidates, top_k=final_k)
+                    reranker_active = True
+            else:
+                ranked_chunks = candidates[:final_k]
+                reranker_active = False
+
+            top_score = ranked_chunks[0].score if ranked_chunks else 0.0
+
+            # 6. Grounding check
+            if top_score < threshold:
+                logger.info(f"Insufficient relevance score ({top_score:.4f} < {threshold}). Skipping generation.")
+                return RAGResponse(
+                    question=question,
+                    answer="I could not find sufficient evidence in the indexed regulatory sources.",
+                    sources=[],
+                    retrieved_chunks_count=len(ranked_chunks),
+                    top_score=top_score,
+                    retrieval_mode=active_mode,
+                    reranker_used=reranker_active,
+                    query_intent=intent.model_dump(),
+                    sufficient_evidence=False
+                )
+
+            # 7. Generate grounded answer via Gemini
+            with langfuse_tracker.record_generation(
+                trace,
+                name="Grounded Answer Generation",
+                model="gemini-2.5-flash",
+                input_prompt=question
+            ) as gen_span:
+                gen_result = self.generator.generate_answer(
+                    question=question.strip(),
+                    retrieved_chunks=ranked_chunks
+                )
+
+            sources = [SourceCitation.model_validate(s) for s in gen_result.get("sources", [])]
+
             return RAGResponse(
                 question=question,
-                answer="I could not find sufficient evidence in the indexed regulatory sources.",
-                sources=[],
-                retrieved_chunks_count=0,
-                top_score=0.0,
-                retrieval_mode=active_mode,
-                reranker_used=False,
-                query_intent=intent.model_dump(),
-                sufficient_evidence=False
-            )
-
-        # 4. Apply temporal ranking adjustments
-        if intent.time_intent != "none":
-            candidates = apply_temporal_ranking(intent, candidates)
-
-        # 5. Rerank candidates
-        if use_rerank and self.reranker.enabled:
-            ranked_chunks = self.reranker.rerank(query=question, candidates=candidates, top_k=final_k)
-            reranker_active = True
-        else:
-            ranked_chunks = candidates[:final_k]
-            reranker_active = False
-
-        top_score = ranked_chunks[0].score if ranked_chunks else 0.0
-
-        # 6. Grounding check
-        if top_score < threshold:
-            logger.info(f"Insufficient relevance score ({top_score:.4f} < {threshold}). Skipping generation.")
-            return RAGResponse(
-                question=question,
-                answer="I could not find sufficient evidence in the indexed regulatory sources.",
-                sources=[],
+                answer=gen_result.get("answer", ""),
+                sources=sources,
                 retrieved_chunks_count=len(ranked_chunks),
                 top_score=top_score,
                 retrieval_mode=active_mode,
                 reranker_used=reranker_active,
                 query_intent=intent.model_dump(),
-                sufficient_evidence=False
+                sufficient_evidence=True
             )
-
-        # 7. Generate grounded answer via Gemini
-        gen_result = self.generator.generate_answer(
-            question=question.strip(),
-            retrieved_chunks=ranked_chunks
-        )
-
-        sources = [SourceCitation.model_validate(s) for s in gen_result.get("sources", [])]
-
-        return RAGResponse(
-            question=question,
-            answer=gen_result.get("answer", ""),
-            sources=sources,
-            retrieved_chunks_count=len(ranked_chunks),
-            top_score=top_score,
-            retrieval_mode=active_mode,
-            reranker_used=reranker_active,
-            query_intent=intent.model_dump(),
-            sufficient_evidence=True
-        )
 
     def _handle_change_analysis_query(self, question: str, intent: QueryIntent) -> RAGResponse:
         """Handles change analysis queries by finding matching document and running change detector."""

@@ -1,0 +1,122 @@
+"""
+Main FastAPI Application Entrypoint for RegIntel RAG.
+
+Provides regulatory intelligence REST APIs for question answering, document comparison,
+version tracking, multi-method search, and health monitoring.
+"""
+
+import logging
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Request, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+
+from app.config import settings
+from app.api.routes_health import router as health_router
+from app.api.routes_rag import router as rag_router
+from app.api.routes_documents import router as documents_router
+
+# Setup logging
+logging.basicConfig(
+    level=logging.DEBUG if settings.debug_mode else logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+logger = logging.getLogger("regintel.api")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application startup and shutdown hooks."""
+    logger.info("Starting RegIntel RAG FastAPI service...")
+    logger.info(f"Debug Mode: {settings.debug_mode} | Environment: {'DEV' if settings.debug_mode else 'PROD'}")
+    yield
+    logger.info("Shutting down RegIntel RAG FastAPI service...")
+
+
+app = FastAPI(
+    title="RegIntel RAG — Regulatory Intelligence & Change Analysis API",
+    description=(
+        "Production-ready, grounded regulatory intelligence API with hybrid vector/BM25 retrieval, "
+        "neural cross-encoder reranking, strict citation validation, and automated document version tracking."
+    ),
+    version="1.0.0",
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
+)
+
+# -------------------------------------------------------------
+# CORS Middleware Configuration
+# -------------------------------------------------------------
+cors_origins_list = [origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()]
+if not cors_origins_list:
+    cors_origins_list = ["http://localhost:8501", "http://127.0.0.1:8501"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins_list if not settings.debug_mode else ["*"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
+)
+
+# -------------------------------------------------------------
+# Exception Handlers
+# -------------------------------------------------------------
+from fastapi.encoders import jsonable_encoder
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Formats Pydantic 422 validation errors cleanly."""
+    logger.warning(f"Request validation failed on {request.url.path}: {exc.errors()}")
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "error": "Validation Error",
+            "message": "Invalid request parameters or payload format.",
+            "details": jsonable_encoder(exc.errors())
+        }
+    )
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    """Preserves specific HTTP error codes (400, 404, 422, etc.)."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail}
+    )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Catches unhandled server errors and logs them server-side without leaking traces."""
+    logger.error(f"Unhandled exception processing {request.method} {request.url.path}: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "error": "Internal Server Error",
+            "message": "An unexpected server error occurred while processing your regulatory request."
+        }
+    )
+
+
+# -------------------------------------------------------------
+# Include Routers
+# -------------------------------------------------------------
+app.include_router(health_router)
+app.include_router(rag_router)
+app.include_router(documents_router)
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        "app.main:app",
+        host=settings.fastapi_host,
+        port=settings.fastapi_port,
+        reload=settings.debug_mode
+    )

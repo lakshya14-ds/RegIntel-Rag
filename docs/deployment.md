@@ -1,0 +1,53 @@
+# Containerization & Deployment: Docker & Docker Compose
+
+## 1. Overview
+The RegIntel RAG stack is fully containerized for seamless multi-service orchestration with isolated environments for the FastAPI backend, Streamlit frontend, MongoDB database, and MLflow tracking server.
+
+---
+
+## 2. Docker Architecture
+
+```
+                       HOST MACHINE
+                            │
+       ┌────────────────────┼────────────────────┐
+       │:8000               │:8501               │:5000
+       ▼                    ▼                    ▼
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│  FastAPI     │◄────│  Streamlit   │     │  MLflow      │
+│  Service     │     │  Frontend    │     │  Tracker     │
+└──────┬───────┘     └──────────────┘     └──────┬───────┘
+       │                                         │
+       ▼                                         ▼
+┌──────────────┐                          ┌──────────────┐
+│  MongoDB     │                          │  SQLite DB   │
+│  Data Store  │                          │  Artifacts   │
+└──────────────┘                          └──────────────┘
+```
+
+---
+
+## 3. Starting the Full Stack
+
+### Build and Launch Services
+```bash
+docker-compose up --build -d
+```
+
+### Checking Service Health
+```bash
+docker-compose ps
+```
+
+### Accessing Endpoints
+- **Streamlit Dashboard**: [http://localhost:8501](http://localhost:8501)
+- **FastAPI REST Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **MLflow Tracking UI**: [http://localhost:5000](http://localhost:5000)
+
+---
+
+## 4. Verification Script
+Run the automated deployment readiness check:
+```bash
+python scripts/verify_deployment.py
+```

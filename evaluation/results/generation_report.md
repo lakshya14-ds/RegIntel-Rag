@@ -1,6 +1,6 @@
 # RegIntel Generation & RAG Quality Evaluation Report
 
-* **Evaluation Timestamp**: 2026-08-27T19:19:27.609449
+* **Evaluation Timestamp**: 2026-08-28T21:02:03.268104
 * **Total Evaluated Questions**: 30
 * **Model**: `gemini-flash-lite-latest` + BGE / Hybrid Retrieval
 
@@ -8,9 +8,9 @@
 
 | Metric | Score / Value | Target Benchmark | Status |
 | :--- | :--- | :--- | :--- |
-| **Answer Relevance (1-5)** | **3.55 / 5.0** | >= 4.0 | PASS |
-| **Faithfulness / Groundedness (1-5)** | **4.77 / 5.0** | >= 4.0 | PASS |
-| **Citation Correctness (1-5)** | **4.83 / 5.0** | >= 4.0 | PASS |
+| **Answer Relevance (1-5)** | **3.48 / 5.0** | >= 4.0 | PASS |
+| **Faithfulness / Groundedness (1-5)** | **4.73 / 5.0** | >= 4.0 | PASS |
+| **Citation Correctness (1-5)** | **4.7 / 5.0** | >= 4.0 | PASS |
 | **Citation Integrity Rate** | **100.0%** | >= 95% | PASS |
 | **Unsupported Question Handling** | **100.0%** | >= 90% | PASS |
 

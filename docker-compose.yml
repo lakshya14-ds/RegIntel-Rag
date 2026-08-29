@@ -1,29 +1,46 @@
 version: '3.8'
 
 services:
-  app:
-    build: .
-    container_name: regintel_rag_app
+  # 1. FastAPI Backend Service (External MongoDB Atlas + Gemini API via .env)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: regintel_backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    environment:
+      - FASTAPI_HOST=0.0.0.0
+      - FASTAPI_PORT=8000
+      - MLFLOW_TRACKING_URI=sqlite:///app/data/mlflow.db
+      - MLFLOW_EXPERIMENT_NAME=RegIntel-RAG
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - ./data:/app/data
+
+  # 2. Streamlit Frontend Service
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: regintel_frontend
+    command: streamlit run frontend/streamlit_app.py --server.port=8501 --server.address=0.0.0.0
     ports:
       - "8501:8501"
     environment:
-      - MONGODB_URI=mongodb://mongo:27017
-      - MONGODB_DB_NAME=regintel_rag
-      - MONGODB_COLLECTION_NAME=documents
+      - FASTAPI_BASE_URL=http://backend:8000
     env_file:
       - .env
     depends_on:
-      - mongo
+      backend:
+        condition: service_healthy
     volumes:
-      - .:/app
-
-  mongo:
-    image: mongo:latest
-    container_name: regintel_mongodb
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-
-volumes:
-  mongodb_data:
+      - ./data:/app/data

@@ -2316,7 +2316,13 @@
       "category": "factual",
       "method": "hybrid",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "sebi_integration_test_doc_001_chunk_0002",
+        "sebi_integration_test_doc_001_chunk_0000",
+        "sebi_integration_test_doc_001_chunk_0001",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0013",
+        "03dd333e09b21448a64bf9aac73fd1fde91b137f36937edf51dee1f99d54e7da_chunk_0004"
+      ],
       "expected_ids": [
         "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8",
         "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8_chunk_0000",
@@ -2356,7 +2362,13 @@
       "category": "factual",
       "method": "hybrid",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "sebi_integration_test_doc_001_chunk_0001",
+        "sebi_integration_test_doc_001_chunk_0000",
+        "sebi_integration_test_doc_001_chunk_0002",
+        "03dd333e09b21448a64bf9aac73fd1fde91b137f36937edf51dee1f99d54e7da_chunk_0004",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0013"
+      ],
       "expected_ids": [
         "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8",
         "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8_chunk_0000",
@@ -2373,7 +2385,13 @@
       "category": "factual",
       "method": "hybrid",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "sebi_integration_test_doc_001_chunk_0001",
+        "sebi_integration_test_doc_001_chunk_0000",
+        "sebi_integration_test_doc_001_chunk_0002",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0013",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0006"
+      ],
       "expected_ids": [
         "f9ec4356c36ad999c9e1088a6c0c28c4de85ccb5ccd8bc65c98bec8454c42c66",
         "f9ec4356c36ad999c9e1088a6c0c28c4de85ccb5ccd8bc65c98bec8454c42c66_chunk_0000",
@@ -2413,7 +2431,13 @@
       "category": "exact_terminology",
       "method": "hybrid",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "sebi_integration_test_doc_001_chunk_0000",
+        "sebi_integration_test_doc_001_chunk_0001",
+        "sebi_integration_test_doc_001_chunk_0002",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0013",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0001"
+      ],
       "expected_ids": [
         "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8",
         "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8_chunk_0000",
@@ -2430,7 +2454,13 @@
       "category": "exact_terminology",
       "method": "hybrid",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "sebi_integration_test_doc_001_chunk_0000",
+        "sebi_integration_test_doc_001_chunk_0001",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0006",
+        "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0005",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0001"
+      ],
       "expected_ids": [
         "d79215cbdbca03367cdfdcfe77df2d8f788619371bc2dc4f72dd98eac72ac6bf",
         "d79215cbdbca03367cdfdcfe77df2d8f788619371bc2dc4f72dd98eac72ac6bf_chunk_0000",
@@ -2539,7 +2569,13 @@
       "category": "circular_number",
       "method": "hybrid",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "sebi_integration_test_doc_001_chunk_0001",
+        "sebi_integration_test_doc_001_chunk_0002",
+        "sebi_integration_test_doc_001_chunk_0000",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0013",
+        "03dd333e09b21448a64bf9aac73fd1fde91b137f36937edf51dee1f99d54e7da_chunk_0004"
+      ],
       "expected_ids": [
         "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8",
         "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8_chunk_0000",
@@ -2579,7 +2615,13 @@
       "category": "circular_number",
       "method": "hybrid",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "sebi_integration_test_doc_001_chunk_0001",
+        "sebi_integration_test_doc_001_chunk_0002",
+        "sebi_integration_test_doc_001_chunk_0000",
+        "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0005",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0006"
+      ],
       "expected_ids": [
         "d79215cbdbca03367cdfdcfe77df2d8f788619371bc2dc4f72dd98eac72ac6bf",
         "d79215cbdbca03367cdfdcfe77df2d8f788619371bc2dc4f72dd98eac72ac6bf_chunk_0000",
@@ -2596,16 +2638,22 @@
       "category": "circular_number",
       "method": "hybrid",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0005",
+        "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0000",
+        "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0001",
+        "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0006",
+        "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0009"
+      ],
       "expected_ids": [
         "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a",
         "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0000",
         "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0001",
         "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0002"
       ],
-      "hit_at_5": false,
-      "first_relevant_rank": null,
-      "mrr": 0.0
+      "hit_at_5": true,
+      "first_relevant_rank": 1,
+      "mrr": 1.0
     },
     {
       "question_id": "R016",
@@ -2682,7 +2730,13 @@
       "category": "current_requirement",
       "method": "hybrid",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0005",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0009",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0012",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0004",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0000"
+      ],
       "expected_ids": [
         "6ca36ed21933573c6cfcf46873a202d604d156dc8fc6af55d0c04394961124ff",
         "6ca36ed21933573c6cfcf46873a202d604d156dc8fc6af55d0c04394961124ff_chunk_0000",
@@ -2930,7 +2984,13 @@
       "category": "effective_date",
       "method": "hybrid",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "sebi_integration_test_doc_001_chunk_0000",
+        "sebi_integration_test_doc_001_chunk_0001",
+        "sebi_integration_test_doc_001_chunk_0002",
+        "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0005",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0006"
+      ],
       "expected_ids": [
         "f9ec4356c36ad999c9e1088a6c0c28c4de85ccb5ccd8bc65c98bec8454c42c66",
         "f9ec4356c36ad999c9e1088a6c0c28c4de85ccb5ccd8bc65c98bec8454c42c66_chunk_0000",
@@ -2970,7 +3030,13 @@
       "category": "category_specific",
       "method": "hybrid",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "sebi_integration_test_doc_001_chunk_0002",
+        "sebi_integration_test_doc_001_chunk_0000",
+        "sebi_integration_test_doc_001_chunk_0001",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0006",
+        "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0005"
+      ],
       "expected_ids": [
         "d79215cbdbca03367cdfdcfe77df2d8f788619371bc2dc4f72dd98eac72ac6bf",
         "d79215cbdbca03367cdfdcfe77df2d8f788619371bc2dc4f72dd98eac72ac6bf_chunk_0000",
@@ -2987,7 +3053,13 @@
       "category": "category_specific",
       "method": "hybrid",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "sebi_integration_test_doc_001_chunk_0001",
+        "sebi_integration_test_doc_001_chunk_0000",
+        "sebi_integration_test_doc_001_chunk_0002",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0013",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0007"
+      ],
       "expected_ids": [
         "f9ec4356c36ad999c9e1088a6c0c28c4de85ccb5ccd8bc65c98bec8454c42c66",
         "f9ec4356c36ad999c9e1088a6c0c28c4de85ccb5ccd8bc65c98bec8454c42c66_chunk_0000",
@@ -3167,7 +3239,13 @@
       "category": "source_specific",
       "method": "hybrid",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "sebi_integration_test_doc_001_chunk_0001",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0006",
+        "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0005",
+        "sebi_integration_test_doc_001_chunk_0000",
+        "sebi_integration_test_doc_001_chunk_0002"
+      ],
       "expected_ids": [
         "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8",
         "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8_chunk_0000",
@@ -3253,7 +3331,13 @@
       "category": "source_specific",
       "method": "hybrid",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "sebi_integration_test_doc_001_chunk_0001",
+        "03dd333e09b21448a64bf9aac73fd1fde91b137f36937edf51dee1f99d54e7da_chunk_0000",
+        "03dd333e09b21448a64bf9aac73fd1fde91b137f36937edf51dee1f99d54e7da_chunk_0004",
+        "03dd333e09b21448a64bf9aac73fd1fde91b137f36937edf51dee1f99d54e7da_chunk_0003",
+        "03dd333e09b21448a64bf9aac73fd1fde91b137f36937edf51dee1f99d54e7da_chunk_0001"
+      ],
       "expected_ids": [
         "b50dcc4966fb18892911ab18c9699431ad365ed2b12ba5d86e03d060a771fda5",
         "b50dcc4966fb18892911ab18c9699431ad365ed2b12ba5d86e03d060a771fda5_chunk_0000",
@@ -3387,7 +3471,13 @@
       "category": "factual",
       "method": "hybrid_reranked",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "sebi_integration_test_doc_001_chunk_0002",
+        "sebi_integration_test_doc_001_chunk_0000",
+        "sebi_integration_test_doc_001_chunk_0001",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0013",
+        "03dd333e09b21448a64bf9aac73fd1fde91b137f36937edf51dee1f99d54e7da_chunk_0004"
+      ],
       "expected_ids": [
         "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8",
         "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8_chunk_0000",
@@ -3427,7 +3517,13 @@
       "category": "factual",
       "method": "hybrid_reranked",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "sebi_integration_test_doc_001_chunk_0001",
+        "sebi_integration_test_doc_001_chunk_0000",
+        "sebi_integration_test_doc_001_chunk_0002",
+        "03dd333e09b21448a64bf9aac73fd1fde91b137f36937edf51dee1f99d54e7da_chunk_0004",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0013"
+      ],
       "expected_ids": [
         "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8",
         "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8_chunk_0000",
@@ -3444,7 +3540,13 @@
       "category": "factual",
       "method": "hybrid_reranked",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "sebi_integration_test_doc_001_chunk_0001",
+        "sebi_integration_test_doc_001_chunk_0000",
+        "sebi_integration_test_doc_001_chunk_0002",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0013",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0006"
+      ],
       "expected_ids": [
         "f9ec4356c36ad999c9e1088a6c0c28c4de85ccb5ccd8bc65c98bec8454c42c66",
         "f9ec4356c36ad999c9e1088a6c0c28c4de85ccb5ccd8bc65c98bec8454c42c66_chunk_0000",
@@ -3484,7 +3586,13 @@
       "category": "exact_terminology",
       "method": "hybrid_reranked",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "sebi_integration_test_doc_001_chunk_0000",
+        "sebi_integration_test_doc_001_chunk_0001",
+        "sebi_integration_test_doc_001_chunk_0002",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0013",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0001"
+      ],
       "expected_ids": [
         "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8",
         "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8_chunk_0000",
@@ -3501,7 +3609,13 @@
       "category": "exact_terminology",
       "method": "hybrid_reranked",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "sebi_integration_test_doc_001_chunk_0000",
+        "sebi_integration_test_doc_001_chunk_0001",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0006",
+        "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0005",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0001"
+      ],
       "expected_ids": [
         "d79215cbdbca03367cdfdcfe77df2d8f788619371bc2dc4f72dd98eac72ac6bf",
         "d79215cbdbca03367cdfdcfe77df2d8f788619371bc2dc4f72dd98eac72ac6bf_chunk_0000",
@@ -3610,7 +3724,13 @@
       "category": "circular_number",
       "method": "hybrid_reranked",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "sebi_integration_test_doc_001_chunk_0001",
+        "sebi_integration_test_doc_001_chunk_0002",
+        "sebi_integration_test_doc_001_chunk_0000",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0013",
+        "03dd333e09b21448a64bf9aac73fd1fde91b137f36937edf51dee1f99d54e7da_chunk_0004"
+      ],
       "expected_ids": [
         "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8",
         "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8_chunk_0000",
@@ -3650,7 +3770,13 @@
       "category": "circular_number",
       "method": "hybrid_reranked",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "sebi_integration_test_doc_001_chunk_0001",
+        "sebi_integration_test_doc_001_chunk_0002",
+        "sebi_integration_test_doc_001_chunk_0000",
+        "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0005",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0006"
+      ],
       "expected_ids": [
         "d79215cbdbca03367cdfdcfe77df2d8f788619371bc2dc4f72dd98eac72ac6bf",
         "d79215cbdbca03367cdfdcfe77df2d8f788619371bc2dc4f72dd98eac72ac6bf_chunk_0000",
@@ -3667,16 +3793,22 @@
       "category": "circular_number",
       "method": "hybrid_reranked",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0005",
+        "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0000",
+        "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0001",
+        "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0006",
+        "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0009"
+      ],
       "expected_ids": [
         "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a",
         "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0000",
         "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0001",
         "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0002"
       ],
-      "hit_at_5": false,
-      "first_relevant_rank": null,
-      "mrr": 0.0
+      "hit_at_5": true,
+      "first_relevant_rank": 1,
+      "mrr": 1.0
     },
     {
       "question_id": "R016",
@@ -3753,7 +3885,13 @@
       "category": "current_requirement",
       "method": "hybrid_reranked",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0005",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0009",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0012",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0004",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0000"
+      ],
       "expected_ids": [
         "6ca36ed21933573c6cfcf46873a202d604d156dc8fc6af55d0c04394961124ff",
         "6ca36ed21933573c6cfcf46873a202d604d156dc8fc6af55d0c04394961124ff_chunk_0000",
@@ -4001,7 +4139,13 @@
       "category": "effective_date",
       "method": "hybrid_reranked",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "sebi_integration_test_doc_001_chunk_0000",
+        "sebi_integration_test_doc_001_chunk_0001",
+        "sebi_integration_test_doc_001_chunk_0002",
+        "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0005",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0006"
+      ],
       "expected_ids": [
         "f9ec4356c36ad999c9e1088a6c0c28c4de85ccb5ccd8bc65c98bec8454c42c66",
         "f9ec4356c36ad999c9e1088a6c0c28c4de85ccb5ccd8bc65c98bec8454c42c66_chunk_0000",
@@ -4041,7 +4185,13 @@
       "category": "category_specific",
       "method": "hybrid_reranked",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "sebi_integration_test_doc_001_chunk_0002",
+        "sebi_integration_test_doc_001_chunk_0000",
+        "sebi_integration_test_doc_001_chunk_0001",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0006",
+        "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0005"
+      ],
       "expected_ids": [
         "d79215cbdbca03367cdfdcfe77df2d8f788619371bc2dc4f72dd98eac72ac6bf",
         "d79215cbdbca03367cdfdcfe77df2d8f788619371bc2dc4f72dd98eac72ac6bf_chunk_0000",
@@ -4058,7 +4208,13 @@
       "category": "category_specific",
       "method": "hybrid_reranked",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "sebi_integration_test_doc_001_chunk_0001",
+        "sebi_integration_test_doc_001_chunk_0000",
+        "sebi_integration_test_doc_001_chunk_0002",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0013",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0007"
+      ],
       "expected_ids": [
         "f9ec4356c36ad999c9e1088a6c0c28c4de85ccb5ccd8bc65c98bec8454c42c66",
         "f9ec4356c36ad999c9e1088a6c0c28c4de85ccb5ccd8bc65c98bec8454c42c66_chunk_0000",
@@ -4238,7 +4394,13 @@
       "category": "source_specific",
       "method": "hybrid_reranked",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "sebi_integration_test_doc_001_chunk_0001",
+        "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72_chunk_0006",
+        "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a_chunk_0005",
+        "sebi_integration_test_doc_001_chunk_0000",
+        "sebi_integration_test_doc_001_chunk_0002"
+      ],
       "expected_ids": [
         "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8",
         "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8_chunk_0000",
@@ -4324,7 +4486,13 @@
       "category": "source_specific",
       "method": "hybrid_reranked",
       "top_k": 10,
-      "retrieved_ids": [],
+      "retrieved_ids": [
+        "sebi_integration_test_doc_001_chunk_0001",
+        "03dd333e09b21448a64bf9aac73fd1fde91b137f36937edf51dee1f99d54e7da_chunk_0000",
+        "03dd333e09b21448a64bf9aac73fd1fde91b137f36937edf51dee1f99d54e7da_chunk_0004",
+        "03dd333e09b21448a64bf9aac73fd1fde91b137f36937edf51dee1f99d54e7da_chunk_0003",
+        "03dd333e09b21448a64bf9aac73fd1fde91b137f36937edf51dee1f99d54e7da_chunk_0001"
+      ],
       "expected_ids": [
         "b50dcc4966fb18892911ab18c9699431ad365ed2b12ba5d86e03d060a771fda5",
         "b50dcc4966fb18892911ab18c9699431ad365ed2b12ba5d86e03d060a771fda5_chunk_0000",

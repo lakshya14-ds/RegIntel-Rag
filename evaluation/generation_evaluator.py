@@ -228,6 +228,26 @@ class GenerationEvaluator:
         with open(RESULTS_DIR / "manual_review.md", "w", encoding="utf-8") as f:
             f.write(manual_review_md)
 
+        # Log Generation Evaluation to MLflow (Phase 32)
+        try:
+            from app.observability.mlflow_tracker import mlflow_tracker
+            m_dict = full_report["metrics"]
+            mlflow_tracker.log_generation_evaluation(
+                model_name="gemini-2.5-flash",
+                metrics={
+                    "average_relevance_score": float(m_dict["average_relevance_score_1_to_5"]),
+                    "average_groundedness_score": float(m_dict["average_groundedness_score_1_to_5"]),
+                    "average_citation_score": float(m_dict["average_citation_score_1_to_5"]),
+                    "citation_integrity_rate_percent": float(m_dict["citation_integrity_rate_percent"]),
+                    "unsupported_question_handling_rate_percent": float(m_dict["unsupported_question_handling_rate_percent"])
+                },
+                dataset_size=len(evaluated_cases),
+                parameters={"retrieval_mode": "hybrid"},
+                results_file=run_dir / "generation_report.json"
+            )
+        except Exception as e:
+            logger.warning(f"MLflow generation logging encountered an issue: {e}")
+
         return full_report
 
     def _generate_markdown_report(self, full_report: Dict[str, Any]) -> str:
