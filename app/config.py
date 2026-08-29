@@ -60,7 +60,12 @@ class Settings(BaseSettings):
     temporal_boost_weight: float = Field(default=0.10)
     change_max_sections: int = Field(default=30)
     change_max_candidate_predecessors: int = Field(default=10)
-    change_retry_count: int = Field(default=2)
+    # Reranker Configuration (Phase 36-37)
+    enable_reranker: bool = Field(default_factory=lambda: os.getenv("ENABLE_RERANKER", "true").lower() in ("true", "1"))
+    reranker_model: str = Field(default_factory=lambda: os.getenv("RERANKER_MODEL", "BAAI/bge-reranker-v2-m3"))
+    reranker_candidates: int = Field(default_factory=lambda: int(os.getenv("RERANKER_CANDIDATES", "20")))
+    reranker_top_k: int = Field(default_factory=lambda: int(os.getenv("RERANKER_TOP_K", "5")))
+    reranker_device: str = Field(default_factory=lambda: os.getenv("RERANKER_DEVICE", "auto"))
 
     # Version & Status
     regintel_version: str = Field(default_factory=lambda: os.getenv("REGINTEL_VERSION", "0.1.0"))

@@ -15,7 +15,8 @@ from app.schemas.responses import (
     SearchItemResponse,
     CompareResponse,
     DocumentMetadataResponse,
-    SectionChangeResponse
+    SectionChangeResponse,
+    EvidenceSourceResponse
 )
 from app.rag.pipeline import RAGPipeline
 from app.retrieval.hybrid import HybridRetriever
@@ -229,77 +230,117 @@ def search_documents(req: SearchRequest) -> SearchResponse:
 @router.post("/compare", response_model=CompareResponse, summary="Compare Two Regulatory Documents")
 def compare_documents(req: CompareRequest) -> CompareResponse:
     """
-    Direct structural comparison between two regulatory documents:
-    - Aligns sections via heading normalization
+    Direct structural and semantic comparison between two regulatory documents:
+    - Resolves chronology (Older vs. Newer) with confidence scoring
+    - Aligns sections via 4-tier structural matching
     - Classifies changes (ADDED, REMOVED, MODIFIED, UNCHANGED)
     - Synthesizes section compliance impact summaries using LLM
+    - Maps exact evidence sources (old_source, new_source)
     """
     try:
         comparator = get_document_comparator()
-        report = comparator.compare(
-            doc_a_id=req.document_a_id,
-            doc_b_id=req.document_b_id,
+        report = comparator.compare_documents(
+            document_a_id=req.document_a_id,
+            document_b_id=req.document_b_id,
             generate_summaries=True
         )
 
-        doc_a_dict = report.get("document_a", {})
-        doc_b_dict = report.get("document_b", {})
+        if report.status == "ERROR":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND if "not found" in (report.message or "").lower() else status.HTTP_400_BAD_REQUEST,
+                detail=report.message or "Comparison failed."
+            )
 
-        doc_a_meta = DocumentMetadataResponse(
-            document_id=doc_a_dict.get("document_id", req.document_a_id),
-            title=doc_a_dict.get("title"),
-            source=doc_a_dict.get("source", "SEBI"),
-            category=doc_a_dict.get("category"),
-            document_type=doc_a_dict.get("document_type"),
-            circular_number=doc_a_dict.get("circular_number"),
-            published_date=doc_a_dict.get("published_date"),
-            effective_date=doc_a_dict.get("effective_date"),
-            status=doc_a_dict.get("status", "unknown"),
-            url=doc_a_dict.get("url", "")
-        )
+        def _to_meta_resp(d: dict, fallback_id: str) -> DocumentMetadataResponse:
+            return DocumentMetadataResponse(
+                document_id=d.get("document_id", fallback_id),
+                title=d.get("title"),
+                source=d.get("source", "SEBI"),
+                category=d.get("category"),
+                document_type=d.get("document_type"),
+                circular_number=d.get("circular_number"),
+                published_date=d.get("published_date"),
+                effective_date=d.get("effective_date"),
+                status=d.get("status", "unknown"),
+                url=d.get("url", ""),
+                content_hash=d.get("content_hash")
+            )
 
-        doc_b_meta = DocumentMetadataResponse(
-            document_id=doc_b_dict.get("document_id", req.document_b_id),
-            title=doc_b_dict.get("title"),
-            source=doc_b_dict.get("source", "SEBI"),
-            category=doc_b_dict.get("category"),
-            document_type=doc_b_dict.get("document_type"),
-            circular_number=doc_b_dict.get("circular_number"),
-            published_date=doc_b_dict.get("published_date"),
-            effective_date=doc_b_dict.get("effective_date"),
-            status=doc_b_dict.get("status", "unknown"),
-            url=doc_b_dict.get("url", "")
-        )
+        older_meta = _to_meta_resp(report.older_document, req.document_a_id)
+        newer_meta = _to_meta_resp(report.newer_document, req.document_b_id)
 
-        counts = report.get("change_counts", {})
         changes_out: List[SectionChangeResponse] = []
-        for ch in report.get("section_changes", []):
+        for idx, ch in enumerate(report.changes, start=1):
+            old_src_resp = None
+            if ch.old_source:
+                old_src_resp = EvidenceSourceResponse(
+                    document_id=ch.old_source.document_id,
+                    section_id=ch.old_source.section_id,
+                    heading=ch.old_source.heading,
+                    section_number=ch.old_source.section_number,
+                    url=ch.old_source.url,
+                    published_date=ch.old_source.published_date
+                )
+
+            new_src_resp = None
+            if ch.new_source:
+                new_src_resp = EvidenceSourceResponse(
+                    document_id=ch.new_source.document_id,
+                    section_id=ch.new_source.section_id,
+                    heading=ch.new_source.heading,
+                    section_number=ch.new_source.section_number,
+                    url=ch.new_source.url,
+                    published_date=ch.new_source.published_date
+                )
+
             changes_out.append(SectionChangeResponse(
-                section_index=ch.get("section_index", 0),
-                heading=ch.get("heading", ""),
-                change_type=ch.get("change_type", "MODIFIED"),
-                category=ch.get("category", "GENERAL"),
-                summary=ch.get("summary", ""),
-                compliance_impact=ch.get("compliance_impact"),
-                similarity_score=ch.get("similarity_score"),
-                evidence=ch.get("evidence")
+                section_index=idx,
+                section=ch.section,
+                heading=ch.heading,
+                change_type=ch.change_type,
+                substantive_change=ch.substantive_change,
+                category=ch.modification_category or "GENERAL",
+                modification_category=ch.modification_category,
+                previous_text=ch.previous_text,
+                current_text=ch.current_text,
+                summary=ch.summary or "",
+                old_requirement=ch.old_requirement,
+                new_requirement=ch.new_requirement,
+                compliance_impact=ch.impact,
+                impact=ch.impact,
+                similarity_score=1.0 if ch.change_type == "UNCHANGED" else 0.0,
+                evidence=ch.evidence,
+                old_source=old_src_resp,
+                new_source=new_src_resp
             ))
 
+        counts = report.summary_counts
         return CompareResponse(
-            document_a=doc_a_meta,
-            document_b=doc_b_meta,
-            summary=report.get("summary", ""),
-            total_changes=report.get("total_sections_analyzed", len(changes_out)),
-            added_count=counts.get("ADDED", 0),
-            removed_count=counts.get("REMOVED", 0),
-            modified_count=counts.get("MODIFIED", 0),
-            unchanged_count=counts.get("UNCHANGED", 0),
-            changes=changes_out
+            status=report.status,
+            message=report.message,
+            document_a=older_meta,
+            document_b=newer_meta,
+            older_document=older_meta,
+            newer_document=newer_meta,
+            document_order_confidence=report.document_order_confidence,
+            version_relationship=report.version_relationship,
+            relationship_confidence=report.relationship_confidence,
+            summary=report.executive_summary,
+            executive_summary=report.executive_summary,
+            key_changes=report.key_changes,
+            total_changes=len(changes_out),
+            added_count=counts.get("added", 0),
+            removed_count=counts.get("removed", 0),
+            modified_count=counts.get("modified", 0),
+            unchanged_count=counts.get("unchanged", 0),
+            summary_counts=counts,
+            statistics=report.statistics,
+            changes=changes_out,
+            cached=report.cached
         )
 
-    except FileNotFoundError as fe:
-        logger.warning(f"Document not found in /compare: {fe}")
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(fe))
+    except HTTPException:
+        raise
     except ValueError as ve:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
     except Exception as e:

@@ -1,0 +1,75 @@
+{
+  "timestamp": "2026-08-29T08:59:11.821941",
+  "model": "BAAI/bge-reranker-v2-m3",
+  "device": "cpu",
+  "total_questions": 50,
+  "baseline_hybrid": {
+    "recall_at_3": 0.18,
+    "recall_at_5": 0.18,
+    "recall_at_10": 0.18,
+    "candidate_recall_at_k": 0.18,
+    "mrr": 0.15,
+    "precision_at_5": 0.096
+  },
+  "hybrid_reranked": {
+    "recall_at_3": 0.2,
+    "recall_at_5": 0.2,
+    "recall_at_10": 0.2,
+    "candidate_recall_at_k": 0.2,
+    "mrr": 0.18,
+    "precision_at_5": 0.096
+  },
+  "latencies": {
+    "avg_retrieval_latency_ms": 920.52,
+    "avg_reranker_latency_ms": 23055.27,
+    "avg_total_latency_ms": 23975.8,
+    "p95_total_latency_ms": 29564.14
+  },
+  "candidate_ablation": {
+    "candidates_10": {
+      "recall_at_5": 0.18,
+      "candidate_recall": 0.18,
+      "mrr": 0.144,
+      "avg_reranker_latency_ms": 11577.22,
+      "avg_total_latency_ms": 12497.74
+    },
+    "candidates_20": {
+      "recall_at_5": 0.2,
+      "candidate_recall": 0.2,
+      "mrr": 0.18,
+      "avg_reranker_latency_ms": 23055.27,
+      "avg_total_latency_ms": 23975.8
+    },
+    "candidates_30": {
+      "recall_at_5": 0.28,
+      "candidate_recall": 0.28,
+      "mrr": 0.2217,
+      "avg_reranker_latency_ms": 35372.92,
+      "avg_total_latency_ms": 36293.44
+    }
+  },
+  "topk_ablation": {
+    "top_k_3": {
+      "recall": 0.2,
+      "mrr": 0.18,
+      "avg_total_latency_ms": 23975.8
+    },
+    "top_k_5": {
+      "recall": 0.2,
+      "mrr": 0.18,
+      "avg_total_latency_ms": 23975.8
+    },
+    "top_k_10": {
+      "recall": 0.2,
+      "mrr": 0.18,
+      "avg_total_latency_ms": 23975.8
+    }
+  },
+  "ranking_shift": {
+    "improved_queries": 1,
+    "worsened_queries": 0,
+    "neutral_queries": 49,
+    "net_gain": 1
+  },
+  "failures_count": 40
+}

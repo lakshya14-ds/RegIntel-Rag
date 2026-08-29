@@ -1,16 +1,16 @@
 """
-Regulatory Document Version Tracking and Predecessor Resolution Module.
+Regulatory Document Version Tracking, Lineage Graph, and Predecessor Resolution Module.
 
-Detects explicit supersession references ("supersedes", "replaces", "earlier circular"),
-identifies candidate predecessors using title similarity and taxonomy alignment,
-and maintains version graph relationships (current vs. historical) without unjustified legal claims.
+Detects explicit legal supersession references ("supersedes", "replaces", "in supersession of"),
+identifies candidate predecessors using taxonomy alignment and title similarity,
+maintains version timeline relationships (Current vs. Historical), and determines comparison eligibility.
 """
 
 import re
 import json
 import logging
 import argparse
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional, Tuple, Literal
 from pathlib import Path
 
 from app.config import settings
@@ -35,7 +35,7 @@ EXPLICIT_SUPERSESSION_PATTERNS = [
 
 class VersionTracker:
     """
-    Manages document version relationships and lineage graph.
+    Manages document version relationships, lineage graph, and comparison eligibility.
     """
 
     def __init__(self, repository: Optional[DocumentRepository] = None):
@@ -48,6 +48,8 @@ class VersionTracker:
         # From local JSON
         if settings.processed_data_dir.exists():
             for f in settings.processed_data_dir.glob("*.json"):
+                if f.name.endswith("_chunks.json"):
+                    continue
                 try:
                     with open(f, "r", encoding="utf-8") as jf:
                         d = json.load(jf)
@@ -93,7 +95,7 @@ class VersionTracker:
 
     def detect_explicit_supersession(self, content: str) -> Optional[str]:
         """
-        Scans document text for explicit supersession clauses and extracts the referenced circular number.
+        Scans document text for explicit supersession clauses and extracts referenced circular numbers.
         """
         if not content:
             return None
@@ -109,10 +111,10 @@ class VersionTracker:
     def find_predecessor_candidates(self, document_id: str) -> List[Dict[str, Any]]:
         """
         Discovers candidate predecessors for a target document using:
-        1. Explicit circular references in text
-        2. Same source + same category match
-        3. Title token overlap / similarity
-        4. Publication date (candidate must be older than target)
+        1. Explicit circular references in text (Highest Priority)
+        2. Circular / reference number matching
+        3. Same source + same category + temporal plausibility (candidate date <= target date)
+        4. Title token overlap / similarity
         """
         target_doc = self._get_document(document_id)
         if not target_doc:
@@ -145,25 +147,25 @@ class VersionTracker:
             cand_circ = cand.get("circular_number") or cand_meta.get("circular_number")
             cand_title = (cand.get("title") or "").lower()
 
-            # Must be older or same date
+            # Must be older or same date for predecessor
             if cand_date > target_date:
                 continue
 
             score = 0.0
 
-            # 1. Explicit circular match
+            # Priority 1: Explicit circular match
             if explicit_ref and cand_circ and explicit_ref.lower() in cand_circ.lower():
                 score += 10.0
 
-            # 2. Source match
+            # Priority 2: Source match
             if cand_src.upper() == target_src.upper():
                 score += 1.0
 
-            # 3. Category match
+            # Priority 3: Category match
             if target_cat and cand_cat and (target_cat in cand_cat or cand_cat in target_cat):
                 score += 2.0
 
-            # 4. Title similarity overlap
+            # Priority 4: Title similarity overlap
             cand_title_words = set(re.findall(r"\b\w{3,}\b", cand_title))
             if target_title_words and cand_title_words:
                 overlap = len(target_title_words.intersection(cand_title_words))
@@ -242,7 +244,7 @@ class VersionTracker:
                 continue
             other_meta = other.get("metadata", {})
             other_sup = other.get("supersedes") or other_meta.get("supersedes")
-            if other_sup == document_id or other_sup == target_doc.get("circular_number"):
+            if other_sup == document_id or (target_doc.get("circular_number") and other_sup == target_doc.get("circular_number")):
                 successor_id = other.get("document_id")
                 status_val = "historical"
                 break
@@ -259,6 +261,120 @@ class VersionTracker:
             "predecessor_candidates": candidate_ids
         }
 
+    def get_document_versions(self, document_id: str) -> Dict[str, Any]:
+        """
+        Builds a full version graph and chronological timeline for a regulatory document.
+        """
+        rel_info = self.resolve_document_relationships(document_id)
+        all_docs = self._load_all_documents()
+        all_by_id = {d.get("document_id"): d for d in all_docs if d.get("document_id")}
+
+        # 1. Predecessor doc info
+        pred_doc = all_by_id.get(rel_info.get("predecessor_id")) if rel_info.get("predecessor_id") else None
+
+        # 2. Successor docs info
+        succ_doc = all_by_id.get(rel_info.get("successor_id")) if rel_info.get("successor_id") else None
+
+        # 3. Related documents (same category)
+        target_doc = all_by_id.get(document_id, {})
+        target_cat = (target_doc.get("category") or target_doc.get("metadata", {}).get("category") or "").lower()
+
+        related: List[Dict[str, Any]] = []
+        if target_cat:
+            for d in all_docs:
+                if d.get("document_id") == document_id:
+                    continue
+                d_cat = (d.get("category") or d.get("metadata", {}).get("category") or "").lower()
+                if d_cat == target_cat:
+                    related.append(d)
+
+        # 4. Construct Chronological Timeline
+        timeline_nodes: List[Dict[str, Any]] = []
+        visited = set()
+
+        # Follow predecessor chain backwards
+        curr_pred_id = rel_info.get("predecessor_id")
+        while curr_pred_id and curr_pred_id in all_by_id and curr_pred_id not in visited:
+            visited.add(curr_pred_id)
+            d = all_by_id[curr_pred_id]
+            timeline_nodes.insert(0, {
+                "document_id": d.get("document_id"),
+                "title": d.get("title"),
+                "published_date": d.get("published_date") or d.get("metadata", {}).get("published_date"),
+                "status": "historical",
+                "relationship": "predecessor"
+            })
+            p_info = self.resolve_document_relationships(curr_pred_id)
+            curr_pred_id = p_info.get("predecessor_id")
+
+        # Add target doc
+        timeline_nodes.append({
+            "document_id": document_id,
+            "title": target_doc.get("title"),
+            "published_date": target_doc.get("published_date") or target_doc.get("metadata", {}).get("published_date"),
+            "status": rel_info.get("status", "current"),
+            "relationship": "target"
+        })
+
+        # Follow successor chain forwards
+        curr_succ_id = rel_info.get("successor_id")
+        while curr_succ_id and curr_succ_id in all_by_id and curr_succ_id not in visited:
+            visited.add(curr_succ_id)
+            d = all_by_id[curr_succ_id]
+            timeline_nodes.append({
+                "document_id": d.get("document_id"),
+                "title": d.get("title"),
+                "published_date": d.get("published_date") or d.get("metadata", {}).get("published_date"),
+                "status": "current",
+                "relationship": "successor"
+            })
+            s_info = self.resolve_document_relationships(curr_succ_id)
+            curr_succ_id = s_info.get("successor_id")
+
+        return {
+            "document_id": document_id,
+            "status": rel_info.get("status", "unknown"),
+            "document_version": rel_info.get("document_version", "1.0"),
+            "relationship_type": rel_info.get("relationship_type", "UNKNOWN"),
+            "relationship_confidence": rel_info.get("relationship_confidence", "low"),
+            "predecessor": pred_doc,
+            "successor": succ_doc,
+            "related_documents": related[:5],
+            "timeline": timeline_nodes
+        }
+
+    def determine_comparison_eligibility(self, doc_a_id: str, doc_b_id: str) -> Tuple[str, Optional[str]]:
+        """
+        Determines if two documents are eligible for automatic comparison:
+        - 'high': direct version lineage (supersedes)
+        - 'medium': related category with high similarity
+        - 'low': explicit comparison allowed but warning displayed
+        - 'unknown': no clear taxonomy relation
+        """
+        doc_a = self._get_document(doc_a_id)
+        doc_b = self._get_document(doc_b_id)
+
+        if not doc_a or not doc_b:
+            return "unknown", "One or both documents not found."
+
+        # Check explicit supersession
+        exp_a = self.detect_explicit_supersession(doc_a.get("content", ""))
+        exp_b = self.detect_explicit_supersession(doc_b.get("content", ""))
+        circ_a = doc_a.get("circular_number") or doc_a.get("metadata", {}).get("circular_number", "")
+        circ_b = doc_b.get("circular_number") or doc_b.get("metadata", {}).get("circular_number", "")
+
+        if (exp_b and circ_a and exp_b.lower() in circ_a.lower()) or (exp_a and circ_b and exp_a.lower() in circ_b.lower()):
+            return "high", None
+
+        # Check category alignment
+        cat_a = (doc_a.get("category") or doc_a.get("metadata", {}).get("category") or "").lower()
+        cat_b = (doc_b.get("category") or doc_b.get("metadata", {}).get("category") or "").lower()
+
+        if cat_a and cat_b and cat_a == cat_b:
+            return "medium", f"Both circulars belong to '{doc_a.get('category')}'. Verify specific clause applicability."
+
+        return "low", "Documents do not share the same regulatory category. Comparison is manual."
+
 
 def main():
     parser = argparse.ArgumentParser(description="RegIntel Document Version Tracker CLI")
@@ -266,20 +382,21 @@ def main():
     args = parser.parse_args()
 
     tracker = VersionTracker()
-    info = tracker.resolve_document_relationships(args.document)
+    info = tracker.get_document_versions(args.document)
 
     print("\n" + "=" * 65)
-    print("REGULATORY DOCUMENT VERSION RELATIONSHIP")
+    print("REGULATORY DOCUMENT VERSION RELATIONSHIP & TIMELINE")
     print("=" * 65)
     print(f"Document ID             : {info.get('document_id')}")
-    print(f"Title                   : {info.get('title')}")
     print(f"Current Status          : {info.get('status', '').upper()}")
     print(f"Document Version        : {info.get('document_version')}")
     print(f"Relationship Type       : {info.get('relationship_type')}")
     print(f"Confidence Level        : {info.get('relationship_confidence', '').upper()}")
-    print(f"Supersedes (Predecessor): {info.get('predecessor_id') or 'None identified'}")
-    print(f"Superseded By (Successor): {info.get('successor_id') or 'None (Current)'}")
-    print(f"Candidate Predecessors  : {len(info.get('predecessor_candidates', []))} found")
+    print(f"Supersedes (Predecessor): {info.get('predecessor', {}).get('title') if info.get('predecessor') else 'None'}")
+    print(f"Superseded By (Successor): {info.get('successor', {}).get('title') if info.get('successor') else 'None (Current)'}")
+    print("\nTIMELINE:")
+    for node in info.get("timeline", []):
+        print(f"  - [{node.get('status').upper()}] {node.get('title')} ({node.get('published_date') or 'N/A'})")
     print("=" * 65 + "\n")
 
 

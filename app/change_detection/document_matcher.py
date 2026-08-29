@@ -42,6 +42,10 @@ def compute_title_overlap(title_a: Optional[str], title_b: Optional[str]) -> flo
     return len(intersection) / len(union)
 
 
+# Alias for backward compatibility
+compute_title_similarity = compute_title_overlap
+
+
 class DocumentMatcher:
     """
     Identifies the most defensible predecessor regulatory document for comparative change analysis.

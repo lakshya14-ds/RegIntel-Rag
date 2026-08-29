@@ -1,22 +1,22 @@
 """
-Local Neural Reranking Module for Regulatory Documents.
+Local Neural Cross-Encoder Reranking Module for RegIntel RAG (Phase 36).
 
 Applies cross-encoder neural reranking using BAAI/bge-reranker-v2-m3 (running locally via PyTorch / Sentence Transformers).
-Selects top-k most relevant candidates from a hybrid candidate pool with automatic CPU/CUDA detection and graceful fallback.
+Selects top-k most relevant candidates from a hybrid candidate pool with automatic CPU/CUDA detection,
+lazy model initialization, batched inference, and graceful fallback if the model is unavailable.
 """
 
+import time
 import logging
 from typing import List, Optional, Tuple, Any
 
+from app.config import settings
 from app.retrieval.mongodb_vector import RetrievedChunk
 from app.retrieval.hybrid import HybridRetrievedChunk
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("regintel.retrieval.reranker")
 if not logger.hasHandlers():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
-
-DEFAULT_RERANKER_MODEL = "BAAI/bge-reranker-v2-m3"
-DEFAULT_RERANK_TOP_K = 5
 
 
 class RerankedChunk(HybridRetrievedChunk):
@@ -27,54 +27,61 @@ class RerankedChunk(HybridRetrievedChunk):
 class LocalReranker:
     """
     Cross-encoder reranker utilizing local BAAI/bge-reranker-v2-m3.
-    Lazy-loads weights once and scores (query, document) pairs.
+    Lazy-loads weights once and scores (query, document) pairs in batches.
     """
 
     def __init__(
         self,
-        model_name: str = DEFAULT_RERANKER_MODEL,
+        model_name: Optional[str] = None,
         device: Optional[str] = None,
-        enabled: bool = True
+        enabled: Optional[bool] = None,
+        default_top_k: Optional[int] = None
     ):
-        self.model_name = model_name
-        self.enabled = enabled
-        self._device = device
+        self.model_name = model_name or settings.reranker_model
+        self.enabled = settings.enable_reranker if enabled is None else enabled
+        self._device_setting = device or settings.reranker_device
+        self.default_top_k = default_top_k or settings.reranker_top_k
+        self._device = None
         self._model = None
         self._initialized = False
 
     def _determine_device(self) -> str:
-        if self._device:
-            return self._device
+        """Determines the compute device (CUDA or CPU)."""
+        if self._device_setting and self._device_setting.lower() != "auto":
+            dev = self._device_setting.lower()
+            logger.info(f"Reranker device: {dev.upper()}")
+            return dev
+
         try:
             import torch
-            if torch.cuda.is_available():
-                device = "cuda"
-            else:
-                device = "cpu"
+            dev = "cuda" if torch.cuda.is_available() else "cpu"
         except Exception:
-            device = "cpu"
-        
-        logger.info(f"Reranker device: {device.upper()}")
-        return device
+            dev = "cpu"
 
-    def load_model(self):
+        logger.info(f"Reranker device: {dev.upper()}")
+        return dev
+
+    def load_model(self) -> None:
         """Lazy-loads the cross-encoder model into memory once."""
-        if not self.enabled:
+        if not self.enabled or self._initialized:
             return
 
-        if self._initialized:
-            return
-
-        device = self._determine_device()
+        self._device = self._determine_device()
         try:
+            import torch
+            import os
+            if self._device == "cpu":
+                threads = min(8, os.cpu_count() or 4)
+                torch.set_num_threads(threads)
+                logger.info(f"PyTorch CPU multithreading configured with {threads} threads.")
+
             from sentence_transformers import CrossEncoder
-            # Attempt loading from local HuggingFace cache first
-            self._model = CrossEncoder(self.model_name, device=device, max_length=512, local_files_only=True)
-            logger.info("Local reranker model loaded from offline cache.")
+            self._model = CrossEncoder(self.model_name, device=self._device, max_length=384)
+            logger.info(f"Local cross-encoder '{self.model_name}' loaded successfully on {self._device.upper()}.")
             self._initialized = True
         except Exception as e:
-            logger.info(
-                f"Local reranker '{self.model_name}' offline cache not loaded ({e}). "
+            logger.warning(
+                f"Local reranker '{self.model_name}' could not be initialized ({e}). "
                 "Local cross-encoder will preserve hybrid candidate rankings."
             )
             self._model = None
@@ -84,16 +91,18 @@ class LocalReranker:
         self,
         query: str,
         candidates: List[RetrievedChunk],
-        top_k: int = DEFAULT_RERANK_TOP_K
+        top_k: Optional[int] = None
     ) -> List[RerankedChunk]:
         """
-        Reranks a list of candidate chunks against the user query.
+        Reranks candidate chunks against the query using cross-encoder sentence pairs.
         Returns top_k chunks sorted descending by cross-encoder relevance score.
         """
+        k = top_k if top_k is not None else self.default_top_k
+
         if not query or not query.strip() or not candidates:
             return []
 
-        # Convert candidates to RerankedChunk objects
+        # Convert candidates to RerankedChunk objects preserving original metadata
         reranked_pool: List[RerankedChunk] = []
         for c in candidates:
             if isinstance(c, HybridRetrievedChunk):
@@ -140,43 +149,47 @@ class LocalReranker:
 
         # If reranking disabled, return candidate pool directly
         if not self.enabled:
-            return reranked_pool[:top_k]
+            return reranked_pool[:k]
 
         if not self._initialized:
             self.load_model()
 
         if self._model is None:
-            # Fallback: preserve hybrid candidate ranking
-            return reranked_pool[:top_k]
+            # Fallback: preserve original candidate ranking
+            return reranked_pool[:k]
 
-        # Prepare (query, passage) sentence pairs
+        # Prepare (query, passage) sentence pairs for batch inference
         pairs = []
         for c in reranked_pool:
-            passage = f"Title: {c.title or ''}\nSection: {c.section or ''}\n{c.content}"
+            passage = f"Title: {c.title or 'N/A'}\nSection: {c.section or 'General'}\n{c.content}"
             pairs.append([query.strip(), passage])
 
         try:
-            scores = self._model.predict(pairs)
+            scores = self._model.predict(pairs, batch_size=16)
             for idx, raw_score in enumerate(scores):
                 score_val = float(raw_score)
                 reranked_pool[idx].reranker_score = round(score_val, 4)
                 reranked_pool[idx].score = round(score_val, 4)
 
-            # Sort descending by reranker score
-            reranked_pool.sort(key=lambda x: x.reranker_score if x.reranker_score is not None else -999.0, reverse=True)
+            # Sort descending by cross-encoder score
+            reranked_pool.sort(
+                key=lambda x: x.reranker_score if x.reranker_score is not None else -999.0,
+                reverse=True
+            )
         except Exception as e:
-            logger.error(f"Error during cross-encoder reranking: {e}. Preserving hybrid ranking.")
+            logger.error(f"Error during cross-encoder reranking ({e}). Preserving candidate ranking.")
 
-        return reranked_pool[:top_k]
+        return reranked_pool[:k]
 
 
-# Default singleton instance
+# Singleton default instance
 _default_reranker = LocalReranker()
 
 
 def rerank_candidates(
     query: str,
     candidates: List[RetrievedChunk],
-    top_k: int = DEFAULT_RERANK_TOP_K
+    top_k: Optional[int] = None
 ) -> List[RerankedChunk]:
+    """Convenience function to rerank candidates with the default singleton reranker."""
     return _default_reranker.rerank(query, candidates, top_k=top_k)

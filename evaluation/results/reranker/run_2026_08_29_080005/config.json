@@ -1,0 +1,6 @@
+{
+  "model": "BAAI/bge-reranker-v2-m3",
+  "device": "cpu",
+  "dataset_size": 50,
+  "timestamp": "2026-08-29T08:59:11.878690"
+}

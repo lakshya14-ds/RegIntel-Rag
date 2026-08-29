@@ -97,9 +97,10 @@ def get_document_metadata(document_id: str) -> DocumentMetadataResponse:
 @router.get("/document/{document_id}/versions", response_model=DocumentVersionResponse, summary="Get Version Relationships")
 def get_document_versions(document_id: str) -> DocumentVersionResponse:
     """
-    Returns explicit version relationships, predecessor, successor, and candidates.
+    Returns explicit version relationships, predecessor, successor, related documents, and chronological timeline.
     """
     from app.ingestion.version_tracker import VersionTracker
+    from app.schemas.responses import TimelineNodeResponse
 
     doc_dict = _load_doc_from_local_or_mongo(document_id)
     if not doc_dict:
@@ -109,56 +110,66 @@ def get_document_versions(document_id: str) -> DocumentVersionResponse:
         )
 
     tracker = VersionTracker()
-    version_info = tracker.resolve_document_relationships(document_id)
+    version_info = tracker.get_document_versions(document_id)
 
     pred_doc = None
-    if version_info.get("predecessor_id"):
-        pred_dict = _load_doc_from_local_or_mongo(version_info["predecessor_id"])
-        if pred_dict:
-            pred_meta = pred_dict.get("metadata", {})
-            pred_doc = DocumentMetadataResponse(
-                document_id=pred_dict.get("document_id", version_info["predecessor_id"]),
-                title=pred_dict.get("title"),
-                source=pred_dict.get("source", "SEBI"),
-                category=pred_dict.get("category") or pred_meta.get("category"),
-                document_type=pred_dict.get("document_type") or pred_meta.get("document_type"),
-                circular_number=pred_dict.get("circular_number") or pred_meta.get("circular_number"),
-                published_date=pred_dict.get("published_date") or pred_meta.get("published_date"),
-                effective_date=pred_dict.get("effective_date") or pred_meta.get("effective_date"),
-                status=pred_dict.get("status") or pred_meta.get("status", "historical"),
-                url=pred_dict.get("url", "")
-            )
+    if version_info.get("predecessor"):
+        pred_dict = version_info["predecessor"]
+        pred_meta = pred_dict.get("metadata", {})
+        pred_doc = DocumentMetadataResponse(
+            document_id=pred_dict.get("document_id", ""),
+            title=pred_dict.get("title"),
+            source=pred_dict.get("source", "SEBI"),
+            category=pred_dict.get("category") or pred_meta.get("category"),
+            document_type=pred_dict.get("document_type") or pred_meta.get("document_type"),
+            circular_number=pred_dict.get("circular_number") or pred_meta.get("circular_number"),
+            published_date=pred_dict.get("published_date") or pred_meta.get("published_date"),
+            effective_date=pred_dict.get("effective_date") or pred_meta.get("effective_date"),
+            status=pred_dict.get("status") or pred_meta.get("status", "historical"),
+            url=pred_dict.get("url", "")
+        )
 
     succ_doc = None
-    if version_info.get("successor_id"):
-        succ_dict = _load_doc_from_local_or_mongo(version_info["successor_id"])
-        if succ_dict:
-            succ_meta = succ_dict.get("metadata", {})
-            succ_doc = DocumentMetadataResponse(
-                document_id=succ_dict.get("document_id", version_info["successor_id"]),
-                title=succ_dict.get("title"),
-                source=succ_dict.get("source", "SEBI"),
-                category=succ_dict.get("category") or succ_meta.get("category"),
-                document_type=succ_dict.get("document_type") or succ_meta.get("document_type"),
-                circular_number=succ_dict.get("circular_number") or succ_meta.get("circular_number"),
-                published_date=succ_dict.get("published_date") or succ_meta.get("published_date"),
-                effective_date=succ_dict.get("effective_date") or succ_meta.get("effective_date"),
-                status=succ_dict.get("status") or succ_meta.get("status", "current"),
-                url=succ_dict.get("url", "")
-            )
+    if version_info.get("successor"):
+        succ_dict = version_info["successor"]
+        succ_meta = succ_dict.get("metadata", {})
+        succ_doc = DocumentMetadataResponse(
+            document_id=succ_dict.get("document_id", ""),
+            title=succ_dict.get("title"),
+            source=succ_dict.get("source", "SEBI"),
+            category=succ_dict.get("category") or succ_meta.get("category"),
+            document_type=succ_dict.get("document_type") or succ_meta.get("document_type"),
+            circular_number=succ_dict.get("circular_number") or succ_meta.get("circular_number"),
+            published_date=succ_dict.get("published_date") or succ_meta.get("published_date"),
+            effective_date=succ_dict.get("effective_date") or succ_meta.get("effective_date"),
+            status=succ_dict.get("status") or succ_meta.get("status", "current"),
+            url=succ_dict.get("url", "")
+        )
+
+    timeline_nodes: List[TimelineNodeResponse] = [
+        TimelineNodeResponse(
+            document_id=n.get("document_id", ""),
+            title=n.get("title"),
+            published_date=n.get("published_date"),
+            status=n.get("status", "unknown"),
+            relationship=n.get("relationship", "related")
+        )
+        for n in version_info.get("timeline", [])
+    ]
 
     return DocumentVersionResponse(
         document_id=document_id,
         title=doc_dict.get("title"),
         status=version_info.get("status", "unknown"),
         document_version=version_info.get("document_version", "1.0"),
-        supersedes=version_info.get("predecessor_id"),
-        superseded_by=version_info.get("successor_id"),
+        supersedes=pred_doc.document_id if pred_doc else None,
+        superseded_by=succ_doc.document_id if succ_doc else None,
         predecessor=pred_doc,
         successor=succ_doc,
-        predecessor_candidates=version_info.get("predecessor_candidates", []),
+        predecessor_candidates=[d.get("document_id") for d in version_info.get("related_documents", []) if d.get("document_id")],
         relationship_type=version_info.get("relationship_type"),
-        relationship_confidence=version_info.get("relationship_confidence")
+        relationship_confidence=version_info.get("relationship_confidence"),
+        timeline=timeline_nodes
     )
 
 
