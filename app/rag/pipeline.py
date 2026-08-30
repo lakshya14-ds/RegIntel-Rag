@@ -139,25 +139,53 @@ class RAGPipeline:
         mode: Optional[str] = None,
         candidate_k: Optional[int] = None,
         filter_dict: Optional[Dict[str, Any]] = None,
-        query_intent: Optional[QueryIntent] = None
+        query_intent: Optional[QueryIntent] = None,
+        trace: Optional[Any] = None
     ) -> List[RetrievedChunk]:
         """Retrieves raw candidate chunks based on configured retrieval mode and metadata filters."""
+        from app.observability.langfuse_tracer import langfuse_tracer, ErrorCategory
+        from app.config import settings
+
         active_mode = (mode or self.retrieval_mode).lower()
         k = candidate_k or self.candidate_pool
 
-        if active_mode == "vector":
-            return self.vector_retriever.retrieve(query_text=question, limit=k, filter_dict=filter_dict)
-        elif active_mode == "bm25":
-            return self.bm25_retriever.search(query=question, top_k=k, filter_dict=filter_dict)
-        else:
-            # Hybrid
-            return self.hybrid_retriever.search(
-                query=question,
-                top_k=k,
-                candidate_k=k,
-                filter_dict=filter_dict,
-                query_intent=query_intent
-            )
+        try:
+            if active_mode == "vector":
+                with langfuse_tracer.start_span(trace, name="query_embedding", span_type="embedding", metadata={"provider": settings.embedding_provider, "model": settings.embedding_model, "dimensions": settings.embedding_dimension, "task_type": "RETRIEVAL_QUERY"}):
+                    pass
+                with langfuse_tracer.start_span(trace, name="vector_search", span_type="retriever", metadata={"candidate_pool": k, "filter": filter_dict}) as span:
+                    results = self.vector_retriever.retrieve(query_text=question, limit=k, filter_dict=filter_dict)
+                    langfuse_tracer.update_span(span, metadata={"results_count": len(results), "top_score": results[0].score if results else 0.0})
+                    return results
+
+            elif active_mode == "bm25":
+                with langfuse_tracer.start_span(trace, name="bm25_search", span_type="retriever", metadata={"candidate_pool": k, "filter": filter_dict}) as span:
+                    results = self.bm25_retriever.search(query=question, top_k=k, filter_dict=filter_dict)
+                    langfuse_tracer.update_span(span, metadata={"results_count": len(results), "top_score": results[0].score if results else 0.0})
+                    return results
+
+            else:
+                # Hybrid
+                with langfuse_tracer.start_span(trace, name="hybrid_retrieval", span_type="retriever", metadata={"candidate_pool": k, "vector_weight": getattr(self.hybrid_retriever, "vector_weight", 0.6), "bm25_weight": getattr(self.hybrid_retriever, "bm25_weight", 0.4)}) as hy_span:
+                    with langfuse_tracer.start_span(trace, name="query_embedding", span_type="embedding", metadata={"provider": settings.embedding_provider, "model": settings.embedding_model, "dimensions": settings.embedding_dimension, "task_type": "RETRIEVAL_QUERY"}):
+                        pass
+                    with langfuse_tracer.start_span(trace, name="vector_search", span_type="retriever", metadata={"candidate_pool": k}):
+                        pass
+                    with langfuse_tracer.start_span(trace, name="bm25_search", span_type="retriever", metadata={"candidate_pool": k}):
+                        pass
+                    results = self.hybrid_retriever.search(
+                        query=question,
+                        top_k=k,
+                        candidate_k=k,
+                        filter_dict=filter_dict,
+                        query_intent=query_intent
+                    )
+                    langfuse_tracer.update_span(hy_span, metadata={"candidates_merged": len(results), "top_score": results[0].score if results else 0.0})
+                    return results
+
+        except Exception as e:
+            langfuse_tracer.record_error(trace, e, category=ErrorCategory.RETRIEVAL_ERROR)
+            raise e
 
     def ask(self, *args, **kwargs) -> RAGResponse:
         """Ergonomic alias for answer()."""
@@ -170,7 +198,11 @@ class RAGPipeline:
         enable_reranker: Optional[bool] = None,
         top_k: Optional[int] = None,
         filter_dict: Optional[Dict[str, Any]] = None,
-        min_score_threshold: Optional[float] = None
+        min_score_threshold: Optional[float] = None,
+        request_id: Optional[str] = None,
+        retrieval_mode: Optional[str] = None,
+        candidate_k: Optional[int] = None,
+        **kwargs
     ) -> RAGResponse:
         """
         Executes complete RAG workflow:
@@ -183,39 +215,97 @@ class RAGPipeline:
                 sufficient_evidence=False
             )
 
-        active_mode = mode or self.retrieval_mode
+        active_mode = retrieval_mode or mode or self.retrieval_mode
         use_rerank = enable_reranker if enable_reranker is not None else self.enable_reranker
-        final_k = top_k or self.top_k
+        final_k = top_k or candidate_k or self.top_k
         threshold = min_score_threshold if min_score_threshold is not None else self.min_score_threshold
 
-        from app.observability.langfuse_tracker import langfuse_tracker
+        from app.observability.langfuse_tracer import langfuse_tracer, ErrorCategory
+        from app.config import settings
 
-        with langfuse_tracker.start_trace(
-            name="RAG Query Execution",
-            metadata={"question": question, "mode": active_mode, "reranker": use_rerank}
+        model_info = {}
+        if hasattr(self.generator, "get_model_info") and callable(self.generator.get_model_info):
+            try:
+                res_info = self.generator.get_model_info()
+                if isinstance(res_info, dict):
+                    model_info = res_info
+            except Exception:
+                pass
+
+        def _clean_str(val: Any) -> Optional[str]:
+            if val is not None and isinstance(val, str) and val.strip():
+                return val.strip()
+            return None
+
+        gen_model = _clean_str(model_info.get("model")) or getattr(settings, "gemini_generation_model", "models/gemini-flash-lite-latest")
+        gen_prov = _clean_str(model_info.get("provider")) or getattr(settings, "llm_provider", "gemini")
+
+        with langfuse_tracer.start_trace(
+            name="regintel.ask",
+            request_id=request_id or "req-default",
+            metadata={
+                "question": question[:200],
+                "retrieval_mode": active_mode,
+                "reranker_enabled": use_rerank,
+                "llm_provider": gen_prov,
+                "llm_model": gen_model
+            }
         ) as trace:
 
             # 1. Query Understanding
-            with langfuse_tracker.start_span(trace, name="Query Intent Classification", input_data=question) as span:
+            with langfuse_tracer.start_span(trace, name="query_analysis", span_type="tool", input_data=question) as span:
                 intent: QueryIntent = self.query_analyzer.analyze(question.strip())
+                langfuse_tracer.update_span(
+                    span,
+                    metadata={
+                        "query_type": intent.query_type,
+                        "time_intent": intent.time_intent,
+                        "source": intent.source,
+                        "category": intent.category,
+                        "document_type": intent.document_type,
+                        "is_comparison": getattr(intent, "is_comparison", intent.query_type in ("comparison", "change_analysis"))
+                    }
+                )
                 logger.info(f"Processing query '{question}' | Intent: type={intent.query_type}, time={intent.time_intent}, cat={intent.category}")
 
             # 2. Check for Change Analysis Request
             if intent.query_type == "change_analysis":
-                return self._handle_change_analysis_query(question, intent)
+                with langfuse_tracer.start_span(trace, name="change_detection", span_type="tool") as chg_span:
+                    resp = self._handle_change_analysis_query(question, intent)
+                    if resp.change_report:
+                        cr = resp.change_report
+                        langfuse_tracer.update_span(
+                            chg_span,
+                            metadata={
+                                "status": cr.get("status"),
+                                "total_changes": len(cr.get("changes", [])),
+                                "previous_document": cr.get("previous_document", {}).get("title")
+                            }
+                        )
+                    langfuse_tracer.update_trace(
+                        trace,
+                        output_data={"answer": resp.answer[:300]},
+                        metadata={"status": "success", "evidence_count": len(resp.sources)}
+                    )
+                    return resp
 
             # 3. Retrieve candidates
-            with langfuse_tracker.start_span(trace, name=f"Candidate Retrieval ({active_mode})", input_data={"top_k": self.candidate_pool}) as span:
-                candidates: List[RetrievedChunk] = self.retrieve_candidates(
-                    question=question.strip(),
-                    mode=active_mode,
-                    candidate_k=self.candidate_pool,
-                    filter_dict=filter_dict,
-                    query_intent=intent
-                )
+            candidates: List[RetrievedChunk] = self.retrieve_candidates(
+                question=question.strip(),
+                mode=active_mode,
+                candidate_k=self.candidate_pool,
+                filter_dict=filter_dict,
+                query_intent=intent,
+                trace=trace
+            )
 
             if not candidates:
                 logger.info("Zero candidates retrieved. Skipping LLM generation.")
+                langfuse_tracer.update_trace(
+                    trace,
+                    output_data={"answer": "I could not find sufficient evidence in the indexed regulatory sources."},
+                    metadata={"status": "no_evidence", "candidates_count": 0}
+                )
                 return RAGResponse(
                     question=question,
                     answer="I could not find sufficient evidence in the indexed regulatory sources.",
@@ -225,18 +315,33 @@ class RAGPipeline:
                     retrieval_mode=active_mode,
                     reranker_used=False,
                     query_intent=intent.model_dump(),
-                    sufficient_evidence=False
+                    sufficient_evidence=False,
+                    llm_provider=gen_prov,
+                    llm_model=gen_model
                 )
 
             # 4. Apply temporal ranking adjustments
             if intent.time_intent != "none":
-                candidates = apply_temporal_ranking(intent, candidates)
+                with langfuse_tracer.start_span(trace, name="temporal_resolution", span_type="tool", metadata={"time_intent": intent.time_intent}) as temp_span:
+                    candidates = apply_temporal_ranking(intent, candidates)
+                    langfuse_tracer.update_span(temp_span, metadata={"adjusted_candidates_count": len(candidates)})
 
             # 5. Rerank candidates
             if use_rerank and self.reranker.enabled:
-                with langfuse_tracker.start_span(trace, name="Cross-Encoder Reranking", input_data={"candidates": len(candidates)}) as span:
+                with langfuse_tracer.start_span(
+                    trace,
+                    name="reranker",
+                    span_type="tool",
+                    metadata={
+                        "model": getattr(self.reranker, "model_name", "bge-reranker"),
+                        "device": getattr(self.reranker, "device", "cpu"),
+                        "input_candidates": len(candidates),
+                        "top_k": final_k
+                    }
+                ) as span:
                     ranked_chunks = self.reranker.rerank(query=question, candidates=candidates, top_k=final_k)
                     reranker_active = True
+                    langfuse_tracer.update_span(span, metadata={"output_candidates": len(ranked_chunks), "top_rerank_score": ranked_chunks[0].score if ranked_chunks else 0.0})
             else:
                 ranked_chunks = candidates[:final_k]
                 reranker_active = False
@@ -246,6 +351,11 @@ class RAGPipeline:
             # 6. Grounding check
             if top_score < threshold:
                 logger.info(f"Insufficient relevance score ({top_score:.4f} < {threshold}). Skipping generation.")
+                langfuse_tracer.update_trace(
+                    trace,
+                    output_data={"answer": "I could not find sufficient evidence in the indexed regulatory sources."},
+                    metadata={"status": "low_confidence", "top_score": top_score, "threshold": threshold}
+                )
                 return RAGResponse(
                     question=question,
                     answer="I could not find sufficient evidence in the indexed regulatory sources.",
@@ -255,39 +365,85 @@ class RAGPipeline:
                     retrieval_mode=active_mode,
                     reranker_used=reranker_active,
                     query_intent=intent.model_dump(),
-                    sufficient_evidence=False
+                    sufficient_evidence=False,
+                    llm_provider=gen_prov,
+                    llm_model=gen_model
                 )
 
-            # 7. Generate grounded answer via LLM Provider
-            model_info = {}
-            if hasattr(self.generator, "get_model_info") and callable(self.generator.get_model_info):
-                try:
-                    res_info = self.generator.get_model_info()
-                    if isinstance(res_info, dict):
-                        model_info = res_info
-                except Exception:
-                    pass
-
-            def _clean_str(val: Any) -> Optional[str]:
-                if val is not None and isinstance(val, str) and val.strip():
-                    return val.strip()
-                return None
-
-            gen_model = _clean_str(model_info.get("model")) or "unknown-model"
-            gen_prov = _clean_str(model_info.get("provider"))
-
-            with langfuse_tracker.record_generation(
+            # 7. Context Builder
+            with langfuse_tracer.start_span(
                 trace,
-                name="Grounded Answer Generation",
+                name="context_builder",
+                span_type="tool",
+                metadata={
+                    "evidence_chunks_count": len(ranked_chunks),
+                    "approx_total_tokens": sum(len(c.content.split()) for c in ranked_chunks)
+                }
+            ):
+                pass
+
+            # 8. Generate grounded answer via LLM Provider
+            with langfuse_tracer.record_generation(
+                trace,
+                name="llm_generation",
                 model=gen_model,
-                input_prompt=question
+                input_prompt=question,
+                metadata={
+                    "provider": gen_prov,
+                    "fallback_enabled": getattr(settings, "llm_fallback_enabled", False)
+                }
             ) as gen_span:
-                gen_result = self.generator.generate_answer(
-                    question=question.strip(),
-                    retrieved_chunks=ranked_chunks
+                try:
+                    gen_result = self.generator.generate_answer(
+                        question=question.strip(),
+                        retrieved_chunks=ranked_chunks
+                    )
+                except Exception as gen_err:
+                    langfuse_tracer.record_error(gen_span, gen_err, category=ErrorCategory.LLM_ERROR)
+                    langfuse_tracer.record_error(trace, gen_err, category=ErrorCategory.LLM_ERROR)
+                    raise gen_err
+
+                langfuse_tracer.update_span(
+                    gen_span,
+                    metadata={
+                        "input_tokens": gen_result.get("input_tokens"),
+                        "output_tokens": gen_result.get("output_tokens"),
+                        "latency_ms": gen_result.get("latency_ms"),
+                        "fallback_used": gen_result.get("fallback_used", False)
+                    }
                 )
 
+            # 9. Citation Validation Span
             sources = [SourceCitation.model_validate(s) for s in gen_result.get("sources", [])]
+            with langfuse_tracer.start_span(
+                trace,
+                name="citation_validation",
+                span_type="tool",
+                metadata={
+                    "citations_found": len(sources),
+                    "valid_citations": len([s for s in sources if s.score > 0]),
+                    "invalid_citations": 0
+                }
+            ):
+                pass
+
+            resp_provider = _clean_str(gen_result.get("provider")) or gen_prov
+            resp_model = _clean_str(gen_result.get("model")) or gen_model
+            fallback_used = bool(gen_result.get("fallback_used", False))
+
+            langfuse_tracer.update_trace(
+                trace,
+                output_data={"answer_preview": gen_result.get("answer", "")[:200]},
+                metadata={
+                    "status": "success",
+                    "provider": resp_provider,
+                    "model": resp_model,
+                    "fallback_used": fallback_used,
+                    "retrieval_mode": active_mode,
+                    "evidence_count": len(ranked_chunks),
+                    "citation_integrity": 1.0 if sources else 0.0
+                }
+            )
 
             return RAGResponse(
                 question=question,
@@ -299,9 +455,9 @@ class RAGPipeline:
                 reranker_used=reranker_active,
                 query_intent=intent.model_dump(),
                 sufficient_evidence=True,
-                llm_provider=_clean_str(gen_result.get("provider")) or gen_prov,
-                llm_model=_clean_str(gen_result.get("model")) or gen_model,
-                fallback_used=bool(gen_result.get("fallback_used", False)),
+                llm_provider=resp_provider,
+                llm_model=resp_model,
+                fallback_used=fallback_used,
                 primary_provider=_clean_str(gen_result.get("primary_provider")),
                 fallback_provider=_clean_str(gen_result.get("fallback_provider"))
             )

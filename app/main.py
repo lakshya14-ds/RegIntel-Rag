@@ -25,6 +25,8 @@ logging.basicConfig(
 logger = logging.getLogger("regintel.api")
 
 
+import uuid
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application startup and shutdown hooks."""
@@ -32,6 +34,12 @@ async def lifespan(app: FastAPI):
     logger.info(f"Debug Mode: {settings.debug_mode} | Environment: {'DEV' if settings.debug_mode else 'PROD'}")
     yield
     logger.info("Shutting down RegIntel RAG FastAPI service...")
+    try:
+        from app.observability.langfuse_tracer import langfuse_tracer
+        langfuse_tracer.flush()
+        langfuse_tracer.shutdown()
+    except Exception as e:
+        logger.warning(f"Error during Langfuse shutdown flush: {e}")
 
 
 app = FastAPI(
@@ -46,6 +54,18 @@ app = FastAPI(
     redoc_url="/redoc",
     openapi_url="/openapi.json"
 )
+
+# -------------------------------------------------------------
+# Request Correlation ID Middleware
+# -------------------------------------------------------------
+@app.middleware("http")
+async def correlation_id_middleware(request: Request, call_next):
+    request_id = request.headers.get("X-Request-ID") or f"req-{uuid.uuid4().hex[:12]}"
+    # Attach to request state for downstream handlers
+    request.state.request_id = request_id
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request_id
+    return response
 
 # -------------------------------------------------------------
 # CORS Middleware Configuration

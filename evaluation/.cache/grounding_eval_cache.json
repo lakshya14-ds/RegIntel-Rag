@@ -158,5 +158,15 @@
         "reason": "The provided evidence only names the section title 'Master Circular for Investment Advisers (IAs) Section: 4. Record Keeping and Audit' but does not contain the specific requirements or the eight-year retention period mentioned in the claim."
       }
     ]
+  },
+  "2d7999ebf0e6b4fccb364763c53cc326bb902bb57c6eb66fa8d1df65faad86c8": {
+    "claims_eval": [
+      {
+        "claim": "Every Investment Adviser is required to maintain books of accounts, agreements, and advice records for a minimum period of eight years under SEBI regulations [1].",
+        "classification": "UNSUPPORTED",
+        "evidence_ids": [],
+        "reason": "The evidence provides the title and section for 'Record Keeping and Audit' from the Master Circular for Investment Advisers, but it does not contain the specific retention period (eight years) or the exact details of what must be maintained."
+      }
+    ]
   }
 }

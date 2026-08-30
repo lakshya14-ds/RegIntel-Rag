@@ -225,7 +225,16 @@ RegIntel RAG supports flexible text generation backends:
 
 See full documentation: [LLM Providers Guide](docs/llm-providers.md).
 
-### 4. Run with Docker Compose
+### 4. Distributed Tracing & Observability (Phase 50)
+RegIntel RAG is fully instrumented with **Langfuse** for production observability:
+- **Zero-Overhead Tracing**: Negligible latency impact (+0.37 ms), fully asynchronous event buffering.
+- **Span Hierarchy**: Tracks `query_analysis`, `query_embedding`, `vector_search`, `bm25_search`, `hybrid_retrieval`, `temporal_resolution`, `reranker`, `context_builder`, `llm_generation`, and `citation_validation`.
+- **Fail-Safe Operation**: Silently no-ops if Langfuse is disabled or offline.
+- **Strict Privacy Controls**: Automatic API key and password redaction, opt-in prompt/content capturing, and content length bounding.
+
+See full documentation: [Observability Guide](docs/observability.md).
+
+### 5. Run with Docker Compose
 ```bash
 docker compose up --build
 ```

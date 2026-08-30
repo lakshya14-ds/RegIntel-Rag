@@ -96,5 +96,33 @@
     "stage": "discovery",
     "error_type": "MissingData",
     "message": "Missing URL or raw markdown content"
+  },
+  {
+    "run_id": "ingest_20260830_055459",
+    "url": "",
+    "stage": "discovery",
+    "error_type": "MissingData",
+    "message": "Missing URL or raw markdown content"
+  },
+  {
+    "run_id": "ingest_20260830_055459",
+    "url": "https://sebi.gov.in/doc.html",
+    "stage": "discovery",
+    "error_type": "MissingData",
+    "message": "Missing URL or raw markdown content"
+  },
+  {
+    "run_id": "ingest_20260830_063058",
+    "url": "",
+    "stage": "discovery",
+    "error_type": "MissingData",
+    "message": "Missing URL or raw markdown content"
+  },
+  {
+    "run_id": "ingest_20260830_063058",
+    "url": "https://sebi.gov.in/doc.html",
+    "stage": "discovery",
+    "error_type": "MissingData",
+    "message": "Missing URL or raw markdown content"
   }
 ]

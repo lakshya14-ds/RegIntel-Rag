@@ -57,6 +57,8 @@ Resolve grievances within 21 days via SCORES portal.
         json.dump(doc_2.model_dump(), f)
 
     monkeypatch.setattr(settings, "processed_data_dir", tmp_path)
+    import app.api.routes_rag as routes_rag
+    monkeypatch.setattr(routes_rag, "_document_comparator", None)
     return tmp_path
 
 

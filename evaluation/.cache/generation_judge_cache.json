@@ -94,5 +94,11 @@
     "completeness": 5.0,
     "groundedness": 5.0,
     "reason": "The generated answer directly and completely addresses the record-keeping requirements for Investment Advisers using only the provided retrieved evidence, accurately citing the required retention period and documents."
+  },
+  "e96244e2e8ebf232f782bc71f71c99ba735a68d2a2acb0e8d886752dc787768b": {
+    "relevance": 5.0,
+    "completeness": 4.0,
+    "groundedness": 5.0,
+    "reason": "The generated answer directly and accurately addresses the question using only the retrieved evidence, though it omits the separate compliance audit requirement mentioned in the source (which is minor regarding core record keeping). Every claim made is fully supported by Source [1]."
   }
 }

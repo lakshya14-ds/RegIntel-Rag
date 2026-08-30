@@ -45,6 +45,13 @@ class LocalReranker:
         self._model = None
         self._initialized = False
 
+    @property
+    def device(self) -> str:
+        """Returns the configured or detected compute device."""
+        if self._device is not None:
+            return self._device
+        return self._device_setting or "auto"
+
     def _determine_device(self) -> str:
         """Determines the compute device (CUDA or CPU)."""
         if self._device_setting and self._device_setting.lower() != "auto":

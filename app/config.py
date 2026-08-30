@@ -105,11 +105,16 @@ class Settings(BaseSettings):
     mlflow_experiment_name: str = Field(default_factory=lambda: os.getenv("MLFLOW_EXPERIMENT_NAME", "RegIntel-RAG"))
     mlflow_enabled: bool = Field(default_factory=lambda: os.getenv("MLFLOW_ENABLED", "true").lower() in ("true", "1"))
 
-    # Observability — Langfuse Configuration (Phase 33)
+    # Observability — Langfuse Configuration (Phases 33 & 50)
     langfuse_public_key: Optional[str] = Field(default_factory=lambda: os.getenv("LANGFUSE_PUBLIC_KEY"))
     langfuse_secret_key: Optional[str] = Field(default_factory=lambda: os.getenv("LANGFUSE_SECRET_KEY"))
     langfuse_host: str = Field(default_factory=lambda: os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com"))
     langfuse_enabled: bool = Field(default_factory=lambda: os.getenv("LANGFUSE_ENABLED", "false").lower() in ("true", "1"))
+    langfuse_sample_rate: float = Field(default_factory=lambda: float(os.getenv("LANGFUSE_SAMPLE_RATE", "1.0")))
+    langfuse_capture_prompts: bool = Field(default_factory=lambda: os.getenv("LANGFUSE_CAPTURE_PROMPTS", "false").lower() in ("true", "1"))
+    langfuse_capture_retrieved_content: bool = Field(default_factory=lambda: os.getenv("LANGFUSE_CAPTURE_RETRIEVED_CONTENT", "false").lower() in ("true", "1"))
+    langfuse_max_content_length: int = Field(default_factory=lambda: int(os.getenv("LANGFUSE_MAX_CONTENT_LENGTH", "5000")))
+    environment: str = Field(default_factory=lambda: os.getenv("ENVIRONMENT", "production"))
 
     # Paths
     raw_data_dir: Path = Field(
