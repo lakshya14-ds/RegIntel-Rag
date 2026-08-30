@@ -24,7 +24,8 @@ def test_integration_rag_pipeline_change_analysis_routing():
     pipeline = RAGPipeline(retrieval_mode="hybrid", enable_reranker=False)
     query = "What changed in the SEBI investment adviser circulars?"
 
-    with patch.object(pipeline.generator, "generate_answer", return_value={"answer": "Changes detected [1].", "sources": []}):
+    with patch.object(pipeline, "retrieve_candidates", return_value=[]), \
+         patch.object(pipeline.generator, "generate_answer", return_value={"answer": "Changes detected [1].", "sources": []}):
         response = pipeline.answer(query)
         assert response is not None
         assert response.query_intent is not None
