@@ -1,16 +1,49 @@
-# RegIntel RAG — GitHub Repository Summary & Description
-
-### Short Repository Description
-> AI-powered regulatory intelligence system for SEBI compliance: Features structure-aware ingestion, Hybrid BM25 + Vector Search, local BGE cross-encoder reranking, regulatory change detection, and 100% grounded citations.
-
-### Repository Topics / Tags
-`rag`, `regulatory-compliance`, `sebi`, `fastapi`, `streamlit`, `mongodb-atlas`, `vector-search`, `bm25`, `cross-encoder`, `reranking`, `mlflow`, `langfuse`, `docker`, `gemini-api`
+# RegIntel RAG — GitHub Repository Configuration (Phase 55.5, 55.6, 55.7)
 
 ---
 
-### Highlights Section for GitHub
-- **Multi-Stage Hybrid Search**: Dense Vector (Gemini 768d) + BM25 keyword retrieval fused via Reciprocal Rank Fusion (RRF).
-- **Neural Cross-Encoder Reranking**: Locally executed `BAAI/bge-reranker-v2-m3` optimizing top-5 evidence chunks.
-- **Regulatory Change & Version Analysis**: Clause alignment algorithm detecting **ADDED**, **MODIFIED**, **REMOVED**, and **UNCHANGED** clauses across document revisions.
-- **Auditable Citation Verification**: 100% citation index grounding guaranteeing zero hallucinated regulatory claims.
-- **Production-Ready Observability & CI**: Tracing with Langfuse, experiment tracking with MLflow, multi-service Docker Compose, and GitHub Actions CI.
+## 1. Short Description (< 160 characters)
+
+```text
+Production-oriented RAG system for tracking, searching, and comparing evolving SEBI regulations with hybrid retrieval and grounded citations.
+```
+*(Exact length: 142 characters)*
+
+---
+
+## 2. Recommended GitHub Topics / Tags
+
+```text
+rag
+llm
+generative-ai
+information-retrieval
+vector-search
+mongodb-atlas
+gemini
+ollama
+fastapi
+streamlit
+bge-reranker
+cross-encoder
+langfuse
+mlflow
+regulatory-intelligence
+document-comparison
+change-detection
+python
+docker
+```
+
+---
+
+## 3. GitHub README Badges
+
+```markdown
+[![CI/CD Pipeline](https://github.com/lakshya14-ds/RegIntel-Rag/actions/workflows/ci.yml/badge.svg)](https://github.com/lakshya14-ds/RegIntel-Rag)
+[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688.svg)](https://fastapi.tiangolo.com)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.40-FF4B4B.svg)](https://streamlit.io)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+```

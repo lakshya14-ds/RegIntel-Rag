@@ -48,7 +48,7 @@ app = FastAPI(
         "Production-ready, grounded regulatory intelligence API with hybrid vector/BM25 retrieval, "
         "neural cross-encoder reranking, strict citation validation, and automated document version tracking."
     ),
-    version="1.0.0",
+    version=settings.regintel_version,
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",

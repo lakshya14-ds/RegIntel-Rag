@@ -95,8 +95,8 @@ class Settings(BaseSettings):
 
     # API & Frontend Configuration
     fastapi_host: str = Field(default_factory=lambda: os.getenv("FASTAPI_HOST", "0.0.0.0"))
-    fastapi_port: int = Field(default_factory=lambda: int(os.getenv("FASTAPI_PORT", "8000")))
-    cors_origins: str = Field(default_factory=lambda: os.getenv("CORS_ORIGINS", "http://localhost:8501,http://127.0.0.1:8501,http://localhost:8000,http://127.0.0.1:8000"))
+    fastapi_port: int = Field(default_factory=lambda: int(os.getenv("PORT") or os.getenv("FASTAPI_PORT", "8000")))
+    cors_origins: str = Field(default_factory=lambda: os.getenv("CORS_ALLOWED_ORIGINS") or os.getenv("CORS_ORIGINS", "http://localhost:8501,http://127.0.0.1:8501,http://localhost:8000,http://127.0.0.1:8000"))
     debug_mode: bool = Field(default_factory=lambda: os.getenv("DEBUG", "false").lower() in ("true", "1"))
     fastapi_base_url: str = Field(default_factory=lambda: os.getenv("FASTAPI_BASE_URL", "http://localhost:8000"))
 

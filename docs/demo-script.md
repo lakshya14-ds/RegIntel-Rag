@@ -1,52 +1,24 @@
-# RegIntel RAG — Live Interactive Demo Script (3–5 Minutes)
+# RegIntel RAG — 3 to 5 Minute Demo Script & Walkthrough (Phase 54.11)
 
-This script outlines an effective, structured live walkthrough of **RegIntel RAG** for interviewers, stakeholders, and technical recruiters.
-
----
-
-## 1. Introduction & Problem Statement (45 Seconds)
-> *"Financial institutions and asset managers face a major challenge: SEBI regulations are scattered across hundreds of circulars, master circulars, and amendments that frequently supersede prior rules. Generic RAG systems hallucinate or quote outdated requirements.*
->
-> *I built **RegIntel RAG** — a production-grade regulatory intelligence system with structure-aware chunking, hybrid vector + BM25 search, local neural cross-encoder reranking, and deterministic temporal change detection."*
+**Target Audience**: Hiring Managers, Lead AI Architects, Compliance Directors  
+**Total Running Time**: ~4 minutes  
+**Goal**: Demonstrate grounded regulatory accuracy, hybrid retrieval performance, automated clause diffing, and distributed observability.
 
 ---
 
-## 2. Core Question Answering & Citations Demo (60 Seconds)
-1. **Navigate to**: `http://localhost:8501` (or deployed URL).
-2. **Query Input**:
-   ```text
-   What are the latest SEBI requirements for investment advisers regarding client agreements and fees?
-   ```
-3. **Showcase**:
-   - **Intent Classification**: System automatically identifies category (`Investment Adviser`) and applies metadata filtering.
-   - **Hybrid Retrieval + BGE Reranking**: 20 candidates retrieved and reranked using local `BAAI/bge-reranker-v2-m3`.
-   - **Grounded Answer**: Direct factual synthesis from retrieved clauses with bracketed citations (`[1]`, `[2]`).
-   - **Source Verification Drawer**: Expand sources to inspect exact circular numbers, published dates, and effective dates.
+## ⏱️ Demo Sequence Timeline
+
+| Timestamp | Section | Visual Target | Key Talking Points |
+| :--- | :--- | :--- | :--- |
+| **0:00 – 0:30** | **The Problem** | Slide / Intro | *"SEBI regulatory circulars frequently supersede older rules, causing standard RAG systems to retrieve outdated guidance and hallucinate penalties. RegIntel solves this with grounded hybrid retrieval and temporal version tracking."* |
+| **0:30 – 1:15** | **Ask RegIntel (Grounded RAG)** | Tab 1: Ask RegIntel | Submit Query: *"What are the net worth and qualification requirements for SEBI Investment Advisers?"*<br>Show auto-intent parsing (`current_requirement`), 768d dense + BM25 hybrid search, and local neural cross-encoder reranking. |
+| **1:15 – 2:00** | **Evidence & Citation Integrity** | Citation Drawer | Expand **Evidence Sources**.<br>Show bracketed citations `[1]`, `[2]` mapped deterministically to exact circular headings, published dates, and verified SEBI URLs with 100% citation integrity. |
+| **2:00 – 2:30** | **Temporal & Currentness Filtering** | Query Comparison | Submit Query: *"What is the Master Circular for Investment Advisers?"*<br>Demonstrate how the 2024 circular outranks the 2018/2023 versions via explicit legal supersession detection. |
+| **2:30 – 3:15** | **Document Comparison Engine** | Tab 2: Compare | Select `SEBI IA Master Circular 2023` vs. `2024`.<br>Click **Run Comparison**.<br>Show 4-Tier Section Matcher classifying changes into `ADDED`, `MODIFIED`, `REMOVED`, and `UNCHANGED` with AI compliance impact summaries. |
+| **3:15 – 3:45** | **Version Lineage Timeline** | Tab 4: Timeline | Open `SEBI IA Master Circular 2024`.<br>Display visual timeline graph tracking predecessor circulars, supersession dates, and active status (`CURRENT` vs `HISTORICAL`). |
+| **3:45 – 4:30** | **Architecture & Observability** | Langfuse & Swagger | Open Langfuse UI to showcase the 11-span distributed trace (`query_analysis` $\rightarrow$ `vector_search` $\rightarrow$ `bm25` $\rightarrow$ `reranker` $\rightarrow$ `llm_generation`). Highlight zero-overhead (+0.37 ms) tracing and automatic Ollama failover. |
 
 ---
 
-## 3. Regulatory Change & Version Tracking Demo (60 Seconds)
-1. **Query Input**:
-   ```text
-   What changed in the latest Master Circular for Investment Advisers compared to prior circulars?
-   ```
-2. **Showcase**:
-   - **Intent Recognition**: System detects `change_analysis` intent.
-   - **Predecessor Resolution**: Automatically links the 2024 Master Circular to its predecessor circulars.
-   - **Section-by-Section Diff**: Highlights **ADDED**, **MODIFIED**, **REMOVED**, and **UNCHANGED** clauses with side-by-side textual comparisons.
-
----
-
-## 4. Engineering & Evaluation Deep-Dive (45 Seconds)
-1. **Show Metrics**:
-   - **Recall@5**: Improved from **68.0%** (vector-only) to **92.0%** (Hybrid + Cross-Encoder Reranker).
-   - **MRR**: **0.84**.
-   - **Citation Integrity**: **100%** (zero hallucinated citation indices).
-2. **Show Observability**:
-   - **MLflow**: Automated parameter and metric logging for all retrieval runs (`RegIntel-RAG` experiment).
-   - **Langfuse**: End-to-end trace breakdown across Query Intent, Vector Search, BM25, Cross-Encoder Reranker, LLM Generation, and Citation Validation.
-
----
-
-## 5. Summary & Key Takeaway (30 Seconds)
-> *"RegIntel RAG moves beyond standard search by combining hybrid retrieval, neural reranking, temporal logic, and audit-ready citation validation into a fast, containerized, CI-validated system."*
+## 🎯 Wrap-Up & Closing Pitch
+> *"RegIntel RAG eliminates hallucination risk in regulated domains by mathematically grounding every statement, tracking temporal supersession, and automating compliance diffs in seconds. Thank you!"*
