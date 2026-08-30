@@ -2,9 +2,9 @@
 Automated Regulatory Document Ingestion Pipeline.
 
 Orchestrates end-to-end incremental ingestion:
-Discovery -> Canonicalization -> Content Hashing -> Change/Delta Detection ->
-Cleaning -> Metadata Extraction -> Version Tracking -> Structure-Aware Chunking ->
-Chunk Quality Validation -> Gemini Embedding Generation (with unchanged chunk caching) -> Persistence.
+Discovery -> Canonicalization -> Deduplication -> Check Database -> Crawl ->
+Cleaning -> Metadata Extraction -> Content Hash -> Classify -> Chunk ->
+Chunk Hash -> Embed only new/changed chunks -> Persist -> Version Tracking -> Report.
 """
 
 import sys
@@ -12,6 +12,7 @@ import json
 import logging
 import hashlib
 import argparse
+from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 
@@ -59,13 +60,14 @@ class IngestionPipeline:
 
     def _load_stored_document(self, document_id: str) -> Optional[Dict[str, Any]]:
         """Checks local filesystem and MongoDB for existing document record."""
-        local_path = settings.processed_data_dir / f"{document_id}.json"
-        if local_path.exists():
-            try:
-                with open(local_path, "r", encoding="utf-8") as f:
-                    return json.load(f)
-            except Exception:
-                pass
+        for candidate_name in [f"{document_id}.json", f"sebi_{document_id}.json"]:
+            local_path = settings.processed_data_dir / candidate_name
+            if local_path.exists():
+                try:
+                    with open(local_path, "r", encoding="utf-8") as f:
+                        return json.load(f)
+                except Exception:
+                    pass
         try:
             doc = self.repository.get_document(document_id)
             if doc:
@@ -77,27 +79,27 @@ class IngestionPipeline:
     def _load_stored_chunk_hashes(self, document_id: str) -> Dict[str, Dict[str, Any]]:
         """Loads existing chunks for a document to check for unchanged chunk content hashes."""
         chunk_map: Dict[str, Dict[str, Any]] = {}
-        # From local chunks dir
-        chunk_file = settings.chunks_data_dir / f"{document_id}_chunks.json"
-        if chunk_file.exists():
-            try:
-                with open(chunk_file, "r", encoding="utf-8") as f:
-                    chunks_data = json.load(f)
-                    for c in chunks_data:
-                        cid = c.get("chunk_id")
-                        if cid:
-                            chunk_map[cid] = c
-            except Exception:
-                pass
+        for chunk_name in [f"{document_id}_chunks.json", f"sebi_{document_id}_chunks.json"]:
+            chunk_file = settings.chunks_data_dir / chunk_name
+            if chunk_file.exists():
+                try:
+                    with open(chunk_file, "r", encoding="utf-8") as f:
+                        chunks_data = json.load(f)
+                        for c in chunks_data:
+                            cid = c.get("chunk_id")
+                            if cid:
+                                chunk_map[cid] = c
+                except Exception:
+                    pass
         return chunk_map
 
-    def discover_candidates(self, source: str = "sebi", limit: Optional[int] = None) -> List[Dict[str, Any]]:
+    def discover_candidates(self, source: str = "sebi", limit: Optional[int] = None) -> Tuple[List[Dict[str, Any]], int]:
         """
         Discovers candidate documents using raw corpus / scraper artifacts.
+        Returns (unique_candidates, duplicate_count).
         """
-        candidates: List[Dict[str, Any]] = []
+        raw_candidates: List[Dict[str, Any]] = []
 
-        # Read raw data directory
         if settings.raw_data_dir.exists():
             for f in sorted(settings.raw_data_dir.glob("*.json")):
                 try:
@@ -106,24 +108,29 @@ class IngestionPipeline:
                         if isinstance(data, list):
                             for item in data:
                                 if isinstance(item, dict) and item.get("url"):
-                                    candidates.append(item)
+                                    raw_candidates.append(item)
                         elif isinstance(data, dict) and data.get("url"):
-                            candidates.append(data)
+                            raw_candidates.append(data)
                 except Exception as e:
                     logger.warning(f"Error reading raw candidate file {f.name}: {e}")
 
         # Deduplicate candidates by canonical URL
         seen_urls = set()
         unique_candidates = []
-        for c in candidates:
+        duplicate_count = 0
+        for c in raw_candidates:
             c_url = canonicalize_url(c.get("url", ""))
-            if c_url and c_url not in seen_urls:
+            if not c_url:
+                continue
+            if c_url in seen_urls:
+                duplicate_count += 1
+            else:
                 seen_urls.add(c_url)
                 unique_candidates.append(c)
 
         if limit and limit > 0:
-            return unique_candidates[:limit]
-        return unique_candidates
+            return unique_candidates[:limit], duplicate_count
+        return unique_candidates, duplicate_count
 
     def run(
         self,
@@ -134,35 +141,67 @@ class IngestionPipeline:
         """
         Executes the ingestion run with deduplication, change detection, and metrics tracking.
         """
-        logger.info(f"Starting Ingestion Run | Source: {source.upper()} | Limit: {limit} | Dry Run: {dry_run}")
+        run_id = f"ingest_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+        start_time = datetime.utcnow().isoformat()
 
-        candidates = self.discover_candidates(source=source, limit=limit)
-        logger.info(f"Discovered {len(candidates)} unique candidate documents.")
+        logger.info(f"Starting Ingestion Run '{run_id}' | Source: {source.upper()} | Limit: {limit} | Dry Run: {dry_run}")
+
+        res = self.discover_candidates(source=source, limit=limit)
+        if isinstance(res, tuple) and len(res) == 2:
+            candidates, duplicate_count = res
+        elif isinstance(res, list):
+            candidates = res
+            duplicate_count = 0
+        else:
+            candidates = []
+            duplicate_count = 0
+
+        logger.info(f"Discovered {len(candidates)} unique candidates ({duplicate_count} duplicates).")
 
         stats = {
+            "run_id": run_id,
+            "source": source.upper(),
+            "started_at": start_time,
+            "finished_at": None,
             "discovered": len(candidates),
             "new": 0,
             "updated": 0,
             "unchanged": 0,
             "failed": 0,
-            "duplicates": 0,
+            "duplicates": duplicate_count,
             "documents_chunked": 0,
             "new_chunks": 0,
             "updated_chunks": 0,
             "embeddings_generated": 0,
             "embeddings_skipped": 0,
+            "embeddings_failed": 0,
             "version_relationships_created": 0,
             "failures": []
         }
 
         for idx, item in enumerate(candidates, start=1):
-            url = item.get("url", "")
-            title = item.get("title", "")
-            raw_content = item.get("content") or item.get("markdown", "")
+            if isinstance(item, dict):
+                url = item.get("url", "")
+                title = item.get("title", "")
+                raw_content = item.get("content") or item.get("markdown", "")
+            elif isinstance(item, str):
+                url = item
+                title = ""
+                raw_content = ""
+            else:
+                url = ""
+                title = ""
+                raw_content = ""
 
             if not url or not raw_content:
                 stats["failed"] += 1
-                stats["failures"].append({"url": url, "stage": "discovery", "error": "Missing URL or content"})
+                stats["failures"].append({
+                    "run_id": run_id,
+                    "url": url,
+                    "stage": "discovery",
+                    "error_type": "MissingData",
+                    "message": "Missing URL or raw markdown content"
+                })
                 continue
 
             doc_id = generate_document_id(source=source.upper(), url=url)
@@ -237,23 +276,36 @@ class IngestionPipeline:
                 if not chunks:
                     logger.warning(f"No chunks generated for {doc_id}.")
                     stats["failed"] += 1
-                    stats["failures"].append({"url": url, "stage": "chunk", "error": "Zero chunks produced"})
+                    stats["failures"].append({
+                        "run_id": run_id,
+                        "url": url,
+                        "stage": "chunking",
+                        "error_type": "ZeroChunks",
+                        "message": "Zero chunks produced by structure-aware chunker"
+                    })
                     continue
 
                 stats["documents_chunked"] += 1
 
                 # 4. Chunk validation
                 val_report = validate_chunks(chunks)
-                if not val_report.get("is_valid", True):
+                if hasattr(val_report, "status") and val_report.status == "FAIL":
+                    logger.warning(f"Chunk quality FAIL for {doc_id}: {getattr(val_report, 'details', [])}")
+                elif isinstance(val_report, dict) and not val_report.get("is_valid", True):
                     logger.warning(f"Chunk quality warning for {doc_id}: {val_report.get('warnings')}")
 
                 # 5. Embeddings generation with chunk hash cache
                 existing_chunks_map = self._load_stored_chunk_hashes(doc_id)
+                existing_hash_map = {
+                    c.get("content_hash"): c
+                    for c in existing_chunks_map.values()
+                    if c.get("content_hash") and c.get("embedding")
+                }
                 chunks_to_embed: List[DocumentChunk] = []
 
                 for chunk in chunks:
                     chunk.content_hash = compute_content_hash(chunk.content)
-                    cached_chunk = existing_chunks_map.get(chunk.chunk_id)
+                    cached_chunk = existing_chunks_map.get(chunk.chunk_id) or existing_hash_map.get(chunk.content_hash)
 
                     if (
                         cached_chunk and
@@ -271,8 +323,20 @@ class IngestionPipeline:
 
                 if chunks_to_embed:
                     logger.info(f"Generating embeddings for {len(chunks_to_embed)} new/modified chunks of {doc_id}...")
-                    embedded_chunks = self.embedding_service.embed_chunks_batch(chunks_to_embed)
-                    stats["embeddings_generated"] += len(embedded_chunks)
+                    try:
+                        embedded_chunks = self.embedding_service.embed_chunks_batch(chunks_to_embed)
+                        stats["embeddings_generated"] += len(embedded_chunks)
+                    except Exception as emb_err:
+                        logger.error(f"Embedding error for {doc_id}: {emb_err}")
+                        stats["embeddings_failed"] += len(chunks_to_embed)
+                        stats["failures"].append({
+                            "run_id": run_id,
+                            "url": url,
+                            "stage": "embedding",
+                            "error_type": "EmbeddingFailure",
+                            "message": str(emb_err)
+                        })
+
                     if doc_status_type == "NEW":
                         stats["new_chunks"] += len(chunks)
                     else:
@@ -293,12 +357,12 @@ class IngestionPipeline:
                     stats["version_relationships_created"] += 1
 
                 # 7. Persist document & chunks
-                # Local JSON fallback files
-                doc_file = settings.processed_data_dir / f"{doc_id}.json"
+                # Local JSON files
+                doc_file = settings.processed_data_dir / f"sebi_{doc_id}.json"
                 with open(doc_file, "w", encoding="utf-8") as df:
                     json.dump(reg_doc.model_dump(), df, indent=2, ensure_ascii=False)
 
-                chunk_file = settings.chunks_data_dir / f"{doc_id}_chunks.json"
+                chunk_file = settings.chunks_data_dir / f"sebi_{doc_id}_chunks.json"
                 with open(chunk_file, "w", encoding="utf-8") as cf:
                     json.dump([c.model_dump() for c in chunks], cf, indent=2, ensure_ascii=False)
 
@@ -312,37 +376,110 @@ class IngestionPipeline:
             except Exception as e:
                 logger.error(f"Error processing document {url}: {e}", exc_info=True)
                 stats["failed"] += 1
-                stats["failures"].append({"url": url, "stage": "processing", "error": str(e)})
+                stats["failures"].append({
+                    "run_id": run_id,
+                    "url": url,
+                    "stage": "processing",
+                    "error_type": type(e).__name__,
+                    "message": str(e)
+                })
 
+        stats["finished_at"] = datetime.utcnow().isoformat()
+
+        # Save failure and run log artifacts
+        self._save_run_logs(stats, dry_run=dry_run)
         self._print_ingestion_report(stats, dry_run=dry_run)
+
         return stats
 
-    def _print_ingestion_report(self, stats: Dict[str, Any], dry_run: bool = False):
-        """Prints the structured Ingestion Report."""
-        prefix = "[DRY RUN] " if dry_run else ""
-        print("\n" + "=" * 65)
-        print(f"{prefix}INGESTION REPORT")
-        print("=" * 65)
-        print(f"Discovered Documents        : {stats['discovered']}")
-        print(f"New Documents               : {stats['new']}")
-        print(f"Updated Documents           : {stats['updated']}")
-        print(f"Unchanged Documents         : {stats['unchanged']}")
-        print(f"Failed Documents            : {stats['failed']}")
-        print(f"Duplicates Skipped          : {stats['duplicates']}")
-        print("-" * 65)
-        print(f"Documents Chunked           : {stats['documents_chunked']}")
-        print(f"New Chunks Created          : {stats['new_chunks']}")
-        print(f"Updated Chunks              : {stats['updated_chunks']}")
-        print(f"Embeddings Generated        : {stats['embeddings_generated']}")
-        print(f"Embeddings Skipped (Cached) : {stats['embeddings_skipped']}")
-        print(f"Version Links Created       : {stats['version_relationships_created']}")
-        print("=" * 65)
+    def _save_run_logs(self, stats: Dict[str, Any], dry_run: bool = False) -> None:
+        """Saves ingestion run logs and failure records."""
+        if dry_run:
+            return
+
+        # 1. Failures log
         if stats["failures"]:
-            print(f"Failures ({len(stats['failures'])}):")
-            for f in stats["failures"][:5]:
-                print(f"  - [{f['stage']}] {f['url']}: {f['error']}")
-            print("=" * 65)
-        print()
+            fail_path = Path(__file__).resolve().parent.parent.parent / "evaluation" / "results" / "ingestion_failures.json"
+            fail_path.parent.mkdir(parents=True, exist_ok=True)
+            existing_fails = []
+            if fail_path.exists():
+                try:
+                    with open(fail_path, "r", encoding="utf-8") as f:
+                        existing_fails = json.load(f)
+                except Exception:
+                    pass
+            existing_fails.extend(stats["failures"])
+            try:
+                with open(fail_path, "w", encoding="utf-8") as f:
+                    json.dump(existing_fails, f, indent=2)
+            except Exception as e:
+                logger.warning(f"Failed to write ingestion failures log: {e}")
+
+        # 2. Ingestion Run record
+        run_record = {
+            "run_id": stats["run_id"],
+            "source": stats["source"],
+            "started_at": stats["started_at"],
+            "finished_at": stats["finished_at"],
+            "discovered": stats["discovered"],
+            "new": stats["new"],
+            "changed": stats["updated"],
+            "unchanged": stats["unchanged"],
+            "duplicate": stats["duplicates"],
+            "failed": stats["failed"],
+            "chunks_created": stats["new_chunks"],
+            "chunks_reused": stats["embeddings_skipped"],
+            "embeddings_created": stats["embeddings_generated"],
+            "embeddings_reused": stats["embeddings_skipped"]
+        }
+        run_log_path = Path(__file__).resolve().parent.parent.parent / "evaluation" / "results" / "ingestion_runs.json"
+        run_log_path.parent.mkdir(parents=True, exist_ok=True)
+        existing_runs = []
+        if run_log_path.exists():
+            try:
+                with open(run_log_path, "r", encoding="utf-8") as f:
+                    existing_runs = json.load(f)
+            except Exception:
+                pass
+        existing_runs.append(run_record)
+        try:
+            with open(run_log_path, "w", encoding="utf-8") as f:
+                json.dump(existing_runs, f, indent=2)
+        except Exception as e:
+            logger.warning(f"Failed to write ingestion run log: {e}")
+
+    def _print_ingestion_report(self, stats: Dict[str, Any], dry_run: bool = False):
+        """Prints the structured Ingestion Report according to project specification."""
+        if dry_run:
+            print("\n# INGESTION DRY RUN\n")
+            print(f"Discovered: {stats['discovered']}\n")
+            print(f"## NEW\n{stats['new']}\n")
+            print(f"## CHANGED\n{stats['updated']}\n")
+            print(f"## UNCHANGED\n{stats['unchanged']}\n")
+            print(f"## DUPLICATE\n{stats['duplicates']}\n")
+            print(f"## FAILED\n{stats['failed']}\n")
+            print("No database modifications performed.\n")
+        else:
+            print("\n# INGESTION SUMMARY\n")
+            print(f"Source: {stats['source']}\n")
+            print(f"Discovered: {stats['discovered']}")
+            print(f"Processed: {stats['new'] + stats['updated']}")
+            print(f"Unchanged: {stats['unchanged']}")
+            print(f"Duplicates: {stats['duplicates']}")
+            print(f"Failed: {stats['failed']}\n")
+            print("Documents:")
+            print(f"New: {stats['new']}")
+            print(f"Changed: {stats['updated']}\n")
+            print("Chunks:")
+            print(f"Created: {stats['new_chunks']}")
+            print(f"Reused: {stats['embeddings_skipped']}")
+            print(f"Changed: {stats['updated_chunks']}\n")
+            print("Embeddings:")
+            print(f"Generated: {stats['embeddings_generated']}")
+            print(f"Reused: {stats['embeddings_skipped']}")
+            print(f"Failed: {stats['embeddings_failed']}\n")
+            print("Version relationships:")
+            print(f"Created/updated: {stats['version_relationships_created']}\n")
 
 
 def main():

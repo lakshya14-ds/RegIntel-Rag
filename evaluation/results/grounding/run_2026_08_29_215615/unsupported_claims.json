@@ -1,0 +1,74 @@
+[
+  {
+    "question_id": "G001",
+    "claim": "Every Investment Adviser must maintain books of accounts, agreements, and advice records for a minimum period of eight years [1].",
+    "citations": [
+      "1"
+    ],
+    "reason": "Source [1] only provides the title and section heading for 'Record Keeping and Audit' under the Master Circular for Investment Advisers, but does not provide any text regarding the specific record keeping requirements or the eight-year retention period."
+  },
+  {
+    "question_id": "G002",
+    "claim": "The fee charged by the Investment Adviser shall not exceed the regulatory caps specified in Regulation 15A [1].",
+    "citations": [
+      "1"
+    ],
+    "reason": "The provided evidence mentions the Master Circular for Investment Advisers under Section 2, but it contains no text, mention, or specification regarding a fee limit or caps mandated under Regulation 15A."
+  },
+  {
+    "question_id": "G004",
+    "claim": "An individual investment adviser or a principal officer of a non-individual investment adviser must at all times possess a professional qualification or postgraduate degree in finance, accountancy, or capital markets [1].",
+    "citations": [
+      "1"
+    ],
+    "reason": "Source [1] mentions the section covering Registration and Qualification Norms, but does not provide the specific educational qualification details stated in the claim."
+  },
+  {
+    "question_id": "G004",
+    "claim": "An individual investment adviser or a principal officer of a non-individual investment adviser must possess valid NISM certifications [1].",
+    "citations": [
+      "1"
+    ],
+    "reason": "Source [1] mentions the section covering Registration and Qualification Norms, but does not state the requirement for valid NISM certifications."
+  },
+  {
+    "question_id": "G009",
+    "claim": "Investment Advisers are required to enter into an investment advisory agreement with their clients [1].",
+    "citations": [
+      "1"
+    ],
+    "reason": "Source [1] only provides the title, section, and URL regarding registration and qualification norms for Investment Advisers, but contains no text detailing the actual rules or requirements for investment advisory agreements."
+  },
+  {
+    "question_id": "G009",
+    "claim": "This agreement must detail terms, risk profiling mechanisms, and fee schedules [1].",
+    "citations": [
+      "1"
+    ],
+    "reason": "Source [1] does not contain any information regarding the required contents of an investment advisory agreement."
+  },
+  {
+    "question_id": "G009",
+    "claim": "The fee charged by the Investment Adviser under the agreement must not exceed the regulatory caps specified in Regulation 15A [1].",
+    "citations": [
+      "1"
+    ],
+    "reason": "Source [1] does not mention fee caps or Regulation 15A."
+  },
+  {
+    "question_id": "G017",
+    "claim": "Investment Advisers are required to enter into an investment advisory agreement with their clients [1].",
+    "citations": [
+      "1"
+    ],
+    "reason": "The provided evidence discusses Section 2: Registration and Qualification Norms, but does not mention investment advisory agreements or client contracts."
+  },
+  {
+    "question_id": "G017",
+    "claim": "The investment advisory agreement must detail the terms, risk profiling mechanisms, and fee schedules [1].",
+    "citations": [
+      "1"
+    ],
+    "reason": "The provided evidence does not contain information regarding investment advisory agreements, terms, risk profiling mechanisms, or fee schedules."
+  }
+]

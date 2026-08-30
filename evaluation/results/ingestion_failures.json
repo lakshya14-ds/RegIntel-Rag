@@ -1,0 +1,100 @@
+[
+  {
+    "run_id": "ingest_20260830_041202",
+    "url": "https://sebi.gov.in/circular_amended.html",
+    "stage": "processing",
+    "error_type": "NameError",
+    "message": "name 'RegulatoryMetadataExtractor' is not defined"
+  },
+  {
+    "run_id": "ingest_20260830_041202",
+    "url": "https://sebi.gov.in/legal/circulars/ia_test.html",
+    "stage": "processing",
+    "error_type": "NameError",
+    "message": "name 'RegulatoryMetadataExtractor' is not defined"
+  },
+  {
+    "run_id": "ingest_20260830_041247",
+    "url": "https://sebi.gov.in/circular_amended.html",
+    "stage": "processing",
+    "error_type": "AttributeError",
+    "message": "'ChunkQualityReport' object has no attribute 'get'"
+  },
+  {
+    "run_id": "ingest_20260830_041247",
+    "url": "https://sebi.gov.in/legal/circulars/ia_test.html",
+    "stage": "processing",
+    "error_type": "AttributeError",
+    "message": "'ChunkQualityReport' object has no attribute 'get'"
+  },
+  {
+    "run_id": "ingest_20260830_041447",
+    "url": "https://sebi.gov.in/circular_amended.html",
+    "stage": "processing",
+    "error_type": "AttributeError",
+    "message": "'ChunkQualityReport' object has no attribute 'get'"
+  },
+  {
+    "run_id": "ingest_20260830_041448",
+    "url": "https://sebi.gov.in/legal/circulars/ia_test.html",
+    "stage": "processing",
+    "error_type": "AttributeError",
+    "message": "'ChunkQualityReport' object has no attribute 'get'"
+  },
+  {
+    "run_id": "ingest_20260830_042736",
+    "url": "",
+    "stage": "discovery",
+    "error_type": "MissingData",
+    "message": "Missing URL or raw markdown content"
+  },
+  {
+    "run_id": "ingest_20260830_042736",
+    "url": "https://sebi.gov.in/doc.html",
+    "stage": "discovery",
+    "error_type": "MissingData",
+    "message": "Missing URL or raw markdown content"
+  },
+  {
+    "run_id": "ingest_20260830_043121",
+    "url": "",
+    "stage": "discovery",
+    "error_type": "MissingData",
+    "message": "Missing URL or raw markdown content"
+  },
+  {
+    "run_id": "ingest_20260830_043121",
+    "url": "https://sebi.gov.in/doc.html",
+    "stage": "discovery",
+    "error_type": "MissingData",
+    "message": "Missing URL or raw markdown content"
+  },
+  {
+    "run_id": "ingest_20260830_045627",
+    "url": "",
+    "stage": "discovery",
+    "error_type": "MissingData",
+    "message": "Missing URL or raw markdown content"
+  },
+  {
+    "run_id": "ingest_20260830_045627",
+    "url": "https://sebi.gov.in/doc.html",
+    "stage": "discovery",
+    "error_type": "MissingData",
+    "message": "Missing URL or raw markdown content"
+  },
+  {
+    "run_id": "ingest_20260830_050102",
+    "url": "",
+    "stage": "discovery",
+    "error_type": "MissingData",
+    "message": "Missing URL or raw markdown content"
+  },
+  {
+    "run_id": "ingest_20260830_050102",
+    "url": "https://sebi.gov.in/doc.html",
+    "stage": "discovery",
+    "error_type": "MissingData",
+    "message": "Missing URL or raw markdown content"
+  }
+]

@@ -209,10 +209,23 @@ pip install -r requirements.txt
 ### 2. Configure Environment
 ```bash
 cp .env.example .env
-# Edit .env and insert your GEMINI_API_KEY
+# Edit .env and configure provider settings:
+# LLM_PROVIDER=gemini        # or "ollama"
+# LLM_FALLBACK_ENABLED=false # or "true"
+# GEMINI_API_KEY=your_key
+# OLLAMA_MODEL=llama3.2
 ```
 
-### 3. Run with Docker Compose
+### 3. LLM Providers & Local Ollama Fallback
+RegIntel RAG supports flexible text generation backends:
+- **Primary (Cloud)**: Google Gemini (`models/gemini-flash-lite-latest`)
+- **Offline / Local**: Ollama REST API (`http://localhost:11434`, e.g. `llama3.2`, `mistral`)
+- **Transparent Fallback**: When `LLM_FALLBACK_ENABLED=true`, generation automatically fails over to local Ollama if Gemini is unavailable.
+- **Provider Comparison**: Run `python -m evaluation.compare_llm_providers --limit 10` to benchmark providers on identical retrieval context.
+
+See full documentation: [LLM Providers Guide](docs/llm-providers.md).
+
+### 4. Run with Docker Compose
 ```bash
 docker compose up --build
 ```
@@ -220,7 +233,7 @@ docker compose up --build
 - Streamlit UI: `http://localhost:8501`
 - MLflow UI: `http://localhost:5000`
 
-### 4. Run Directly (Without Docker)
+### 5. Run Directly (Without Docker)
 ```bash
 # Terminal 1 — Start Backend
 uvicorn app.main:app --host 0.0.0.0 --port 8000
@@ -241,6 +254,7 @@ streamlit run frontend/streamlit_app.py
    - Observe: Predecessor circular resolved, clause diff generated with ADDED/MODIFIED badges.
 3. **Inspect Evaluation & Observability**:
    - Run `python -m evaluation.run_mlflow_experiment` to evaluate and log metrics to MLflow.
+   - Run `python -m evaluation.compare_llm_providers` to evaluate LLM provider quality.
    - Run `python scripts/verify_deployment.py` to verify deployment health.
 
 ---
@@ -264,6 +278,7 @@ streamlit run frontend/streamlit_app.py
 
 ## 14. Documentation Links
 
+- [LLM Providers Guide](docs/llm-providers.md)
 - [Live Demo Script](docs/demo-script.md)
 - [Engineering Decisions](docs/engineering-decisions.md)
 - [Evaluation Summary](docs/evaluation-summary.md)

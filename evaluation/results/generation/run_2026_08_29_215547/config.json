@@ -1,0 +1,9 @@
+{
+  "dataset": "C:\\Users\\Lakshya Arora\\Documents\\RegIntel Rag\\evaluation\\dataset\\generation_questions.json",
+  "pipeline": {
+    "retrieval_mode": "hybrid",
+    "candidate_pool": 20,
+    "top_k": 5,
+    "reranker_enabled": true
+  }
+}

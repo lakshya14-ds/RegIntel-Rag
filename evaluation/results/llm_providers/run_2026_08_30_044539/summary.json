@@ -1,0 +1,25 @@
+{
+  "benchmark_size": 5,
+  "timestamp": "2026_08_30_044539",
+  "providers": {
+    "gemini": {
+      "model": "models/gemini-flash-lite-latest",
+      "summary": {
+        "status": "AVAILABLE",
+        "eval_count": 5,
+        "avg_relevance": 1.22,
+        "avg_groundedness": 3.96,
+        "citation_integrity_pct": 100.0,
+        "avg_latency_ms": 1409.5,
+        "p95_latency_ms": 3013.2
+      }
+    },
+    "ollama": {
+      "model": "llama3.2",
+      "base_url": "http://localhost:11434",
+      "summary": {
+        "status": "UNAVAILABLE"
+      }
+    }
+  }
+}

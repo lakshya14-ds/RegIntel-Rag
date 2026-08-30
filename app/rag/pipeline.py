@@ -22,7 +22,7 @@ from app.retrieval.reranker import LocalReranker, RerankedChunk
 from app.retrieval.query_analyzer import QueryAnalyzer, QueryIntent, analyze_query
 from app.retrieval.temporal import TemporalRanker, apply_temporal_ranking
 from app.change_detection.detector import RegulatoryChangeDetector, ChangeReport
-from app.rag.generator import GeminiGenerator
+from app.llm import get_llm_provider, BaseLLMProvider
 from app.rag.citations import CitationManager, SourceCitation
 
 logger = logging.getLogger(__name__)
@@ -46,6 +46,11 @@ class RAGResponse(BaseModel):
     query_intent: Optional[Dict[str, Any]] = None
     change_report: Optional[Dict[str, Any]] = None
     sufficient_evidence: bool = True
+    llm_provider: Optional[str] = None
+    llm_model: Optional[str] = None
+    fallback_used: bool = False
+    primary_provider: Optional[str] = None
+    fallback_provider: Optional[str] = None
 
     def print_formatted(self):
         """Prints the answer and citation sources clearly formatted."""
@@ -102,7 +107,7 @@ class RAGPipeline:
         hybrid_retriever: Optional[HybridRetriever] = None,
         retriever: Optional[Any] = None,  # Backward compatibility alias
         reranker: Optional[LocalReranker] = None,
-        generator: Optional[GeminiGenerator] = None,
+        generator: Optional[BaseLLMProvider] = None,
         query_analyzer: Optional[QueryAnalyzer] = None,
         change_detector: Optional[RegulatoryChangeDetector] = None,
         candidate_pool: int = DEFAULT_CANDIDATE_POOL,
@@ -123,9 +128,10 @@ class RAGPipeline:
             candidate_pool=candidate_pool
         )
         self.reranker = reranker or LocalReranker(enabled=enable_reranker)
-        self.generator = generator or GeminiGenerator()
+        self.generator = generator or get_llm_provider()
         self.query_analyzer = query_analyzer or QueryAnalyzer()
-        self.change_detector = change_detector or RegulatoryChangeDetector(generator_client=self.generator._client)
+        gen_client = getattr(self.generator, "_client", None) or getattr(getattr(self.generator, "primary", None), "_client", None)
+        self.change_detector = change_detector or RegulatoryChangeDetector(generator_client=gen_client)
 
     def retrieve_candidates(
         self,
@@ -152,6 +158,10 @@ class RAGPipeline:
                 filter_dict=filter_dict,
                 query_intent=query_intent
             )
+
+    def ask(self, *args, **kwargs) -> RAGResponse:
+        """Ergonomic alias for answer()."""
+        return self.answer(*args, **kwargs)
 
     def answer(
         self,
@@ -248,11 +258,28 @@ class RAGPipeline:
                     sufficient_evidence=False
                 )
 
-            # 7. Generate grounded answer via Gemini
+            # 7. Generate grounded answer via LLM Provider
+            model_info = {}
+            if hasattr(self.generator, "get_model_info") and callable(self.generator.get_model_info):
+                try:
+                    res_info = self.generator.get_model_info()
+                    if isinstance(res_info, dict):
+                        model_info = res_info
+                except Exception:
+                    pass
+
+            def _clean_str(val: Any) -> Optional[str]:
+                if val is not None and isinstance(val, str) and val.strip():
+                    return val.strip()
+                return None
+
+            gen_model = _clean_str(model_info.get("model")) or "unknown-model"
+            gen_prov = _clean_str(model_info.get("provider"))
+
             with langfuse_tracker.record_generation(
                 trace,
                 name="Grounded Answer Generation",
-                model="gemini-2.5-flash",
+                model=gen_model,
                 input_prompt=question
             ) as gen_span:
                 gen_result = self.generator.generate_answer(
@@ -271,7 +298,12 @@ class RAGPipeline:
                 retrieval_mode=active_mode,
                 reranker_used=reranker_active,
                 query_intent=intent.model_dump(),
-                sufficient_evidence=True
+                sufficient_evidence=True,
+                llm_provider=_clean_str(gen_result.get("provider")) or gen_prov,
+                llm_model=_clean_str(gen_result.get("model")) or gen_model,
+                fallback_used=bool(gen_result.get("fallback_used", False)),
+                primary_provider=_clean_str(gen_result.get("primary_provider")),
+                fallback_provider=_clean_str(gen_result.get("fallback_provider"))
             )
 
     def _handle_change_analysis_query(self, question: str, intent: QueryIntent) -> RAGResponse:

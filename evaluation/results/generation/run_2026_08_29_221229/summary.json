@@ -1,0 +1,24 @@
+{
+  "evaluation_timestamp": "2026-08-29T16:42:29.926730",
+  "total_questions": 30,
+  "answerability_breakdown": {
+    "answerable": 20,
+    "partially_answerable": 5,
+    "unanswerable": 5
+  },
+  "metrics": {
+    "average_relevance": 3.52,
+    "average_completeness": 2.62,
+    "average_groundedness": 5.0,
+    "average_citation_integrity": 100.0,
+    "answerability_handling_rate": 50.0,
+    "safe_abstention_rate": 100.0
+  },
+  "latency": {
+    "average_retrieval_ms": 1102.07,
+    "average_reranking_ms": 23924.51,
+    "average_generation_ms": 417.09,
+    "average_total_ms": 25443.86,
+    "p95_total_ms": 26822.88
+  }
+}

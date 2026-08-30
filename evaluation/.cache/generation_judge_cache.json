@@ -1,0 +1,98 @@
+{
+  "9eaf736c4c5925065eeca0d3d124b3c8d20c49672a964dfac19b04a8f78d94ca": {
+    "relevance": 5.0,
+    "completeness": 5.0,
+    "groundedness": 5.0,
+    "reason": "The generated answer directly, accurately, and completely states the 8-year record-keeping period for investment advisers based solely on the provided evidence."
+  },
+  "ccd99e36a0424c5fde44d84d3aaa8ced48c02d898a92f54672cf5714ae3a7da7": {
+    "relevance": 5.0,
+    "completeness": 4.0,
+    "groundedness": 5.0,
+    "reason": "The generated answer directly and accurately addresses the record-keeping requirements using the provided evidence, omitting only the related compliance audit requirement (which is technically a separate requirement under Section 4, though related). Every claim is fully supported by the retrieved text."
+  },
+  "24fc8b6de5e2b183730c6fc4bb71da173dda6b8fd7ef519a7dfd6d73636715d2": {
+    "relevance": 5.0,
+    "completeness": 4.0,
+    "groundedness": 5.0,
+    "reason": "The generated answer directly and accurately addresses the record-keeping requirements by stating the exact documents and duration (8 years) found in the retrieved evidence, omitting only the additional audit requirement mentioned in the reference answer. All statements are fully grounded in Source [1]."
+  },
+  "e8d256b9bdb2f96e1512ee267f5da4972bee5f209c3cab1ec0b9dcf39c78ad71": {
+    "relevance": 5.0,
+    "completeness": 5.0,
+    "groundedness": 5.0,
+    "reason": "The generated answer directly addresses the question based solely on the provided evidence, accurately pointing out that fees must not exceed the regulatory caps specified in Regulation 15A without missing any available details or introducing ungrounded information."
+  },
+  "f3f716b6fe4da40e933b4fda42fbaeaa95e7532c689bbb3d8d4618b45a6382f1": {
+    "relevance": 4.0,
+    "completeness": 4.0,
+    "groundedness": 5.0,
+    "reason": "The generated answer directly and accurately addresses the record-keeping requirement (maintaining books of accounts, agreements, and advice records for eight years) using only the provided evidence. It misses the annual compliance audit detail mentioned in the reference answer, but that detail was not present in the provided retrieved evidence anyway, leading to minor incompleteness relative to the reference text while remaining 100% faithful to the source snippet."
+  },
+  "4934f910f25576f4e577c9ecd1bb946381a650965b72005e0413d2e503c7619f": {
+    "relevance": 3.0,
+    "completeness": 2.0,
+    "groundedness": 5.0,
+    "reason": "The generated answer correctly references Regulation 15A based on the text, but the retrieved evidence does not actually state the specific fee limit or numerical cap (it only mentions that they must not exceed the caps specified in the regulation). Therefore, the answer is fully grounded in the limited evidence provided, but incomplete and limited in relevance regarding the exact numerical limit requested by the user."
+  },
+  "36aace7f6fe45eec885edd8bf2bfb309a30d7977417cec888610c02c93457eb6": {
+    "relevance": 5.0,
+    "completeness": 5.0,
+    "groundedness": 5.0,
+    "reason": "The generated answer directly, accurately, and completely addresses the qualification requirements for principal officers using the provided evidence, and every claim is fully supported by the text."
+  },
+  "227a57353262f460e2ff054cb3f2443763e4b22d811aca6fd3bbc6b9441d355d": {
+    "relevance": 3.0,
+    "completeness": 3.0,
+    "groundedness": 2.0,
+    "reason": "The generated answer correctly touches upon the requirement of an advisory agreement, but it mentions a regulatory cap under \"Regulation 15A\" which is completely missing from the provided retrieved evidence, making that claim ungrounded based solely on the supplied text."
+  },
+  "b471937e6cbfa0326c4858459a2a4cc69e0dcc2b50168521b46358a4d9208cf1": {
+    "relevance": 2.0,
+    "completeness": 1.0,
+    "groundedness": 4.0,
+    "reason": "The generated answer mentions that the agreement details risk profiling mechanisms, but it completely fails to answer the core question regarding what the actual risk profiling obligations are before offering investment advice. While mostly grounded in the context of agreements, it misses the required obligations and details entirely."
+  },
+  "aa07bcc0aabb7f8752348dfd5a897917fe69cf6e7b494e85d4e82b839ca1c917": {
+    "relevance": 5.0,
+    "completeness": 4.0,
+    "groundedness": 5.0,
+    "reason": "The generated answer directly and accurately answers the question using only the provided text, omitting only the minor secondary detail about the annual compliance audit found in the same section."
+  },
+  "02bc917db6149725bea3c3c238194c1e923220dd5f72a7fdf50951816f3d6eb4": {
+    "relevance": 5.0,
+    "completeness": 5.0,
+    "groundedness": 5.0,
+    "reason": "The generated answer directly addresses the question using the exact fee limit detail available in the retrieved evidence (stating that fees must not exceed the regulatory caps specified in Regulation 15A), without adding any ungrounded information."
+  },
+  "322a8e4612332c321ffaf87b38c6cedc588e19a47913ea4ae568e549064c2656": {
+    "relevance": 5.0,
+    "completeness": 5.0,
+    "groundedness": 5.0,
+    "reason": "The generated answer directly, accurately, and completely addresses the user's question using only the provided retrieved evidence, correctly identifying both the educational/professional qualification requirements and the NISM certification requirement."
+  },
+  "1a9ed27761ffec9b64d7edcc6aa7be741be0a05a0203e895c0014d3ddf2cd8f4": {
+    "relevance": 5.0,
+    "completeness": 5.0,
+    "groundedness": 5.0,
+    "reason": "The generated answer directly and accurately addresses the question using only the provided evidence, covering all key regulatory points related to investment advisory agreements without any unsupported claims."
+  },
+  "2687bdf391974d2b1ca1ab2c99a43a304892dcb8976a799a52ebf1d3c44c6f7a": {
+    "relevance": 3.0,
+    "completeness": 2.0,
+    "groundedness": 5.0,
+    "reason": "The generated answer correctly notes that risk profiling mechanisms must be detailed in the client agreement based on the text, but the provided evidence lacks specific details on the actual operational obligations of risk profiling itself. Therefore, completeness is limited by the source text, though what is provided is fully grounded."
+  },
+  "5e89942f0a258910affecdc4732074336a7ffcb222d650e65adc98bdbd64b696": {
+    "relevance": 5.0,
+    "completeness": 5.0,
+    "groundedness": 5.0,
+    "reason": "The generated answer directly, accurately, and completely answers the question based on the provided evidence, with every claim fully supported by the text."
+  },
+  "d039ab35029714b35e2ad87c5ea91faf4f7b5e9ac22238f6f4c63844d2e0d5f7": {
+    "relevance": 5.0,
+    "completeness": 5.0,
+    "groundedness": 5.0,
+    "reason": "The generated answer directly and completely addresses the record-keeping requirements for Investment Advisers using only the provided retrieved evidence, accurately citing the required retention period and documents."
+  }
+}

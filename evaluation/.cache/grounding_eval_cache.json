@@ -1,0 +1,162 @@
+{
+  "384f0f8c5fa0363d8f59b7dd34931bb13ae0284b1e008056508875eff6864bee": {
+    "claims_eval": [
+      {
+        "claim": "Every Investment Adviser must maintain books of accounts, agreements, and advice records for a minimum period of eight years [1].",
+        "classification": "UNSUPPORTED",
+        "evidence_ids": [],
+        "reason": "Source [1] only provides the title and section heading for 'Record Keeping and Audit' under the Master Circular for Investment Advisers, but does not provide any text regarding the specific record keeping requirements or the eight-year retention period."
+      }
+    ]
+  },
+  "a7015021826bd80261d905823411fbc9d414851fb4a8b377034cabc811f574a4": {
+    "claims_eval": [
+      {
+        "claim": "The fee charged by the Investment Adviser shall not exceed the regulatory caps specified in Regulation 15A [1].",
+        "classification": "UNSUPPORTED",
+        "evidence_ids": [],
+        "reason": "The provided evidence mentions the Master Circular for Investment Advisers under Section 2, but it contains no text, mention, or specification regarding a fee limit or caps mandated under Regulation 15A."
+      }
+    ]
+  },
+  "967044b8fdf68fcd5657fb66f88a086cb86ee84f38d16d478d7ef7b6d014221c": {
+    "claims_eval": [
+      {
+        "claim": "An individual investment adviser or a principal officer of a non-individual investment adviser must at all times possess a professional qualification or postgraduate degree in finance, accountancy, or capital markets [1].",
+        "classification": "UNSUPPORTED",
+        "evidence_ids": [],
+        "reason": "Source [1] mentions the section covering Registration and Qualification Norms, but does not provide the specific educational qualification details stated in the claim."
+      },
+      {
+        "claim": "An individual investment adviser or a principal officer of a non-individual investment adviser must possess valid NISM certifications [1].",
+        "classification": "UNSUPPORTED",
+        "evidence_ids": [],
+        "reason": "Source [1] mentions the section covering Registration and Qualification Norms, but does not state the requirement for valid NISM certifications."
+      }
+    ]
+  },
+  "d22e652c5818d9833b09ce2d769f2f823b630fc307d6b4fcec91a9543e264fc0": {
+    "claims_eval": [
+      {
+        "claim": "Investment Advisers are required to enter into an investment advisory agreement with their clients [1].",
+        "classification": "UNSUPPORTED",
+        "evidence_ids": [],
+        "reason": "Source [1] only provides the title, section, and URL regarding registration and qualification norms for Investment Advisers, but contains no text detailing the actual rules or requirements for investment advisory agreements."
+      },
+      {
+        "claim": "This agreement must detail terms, risk profiling mechanisms, and fee schedules [1].",
+        "classification": "UNSUPPORTED",
+        "evidence_ids": [],
+        "reason": "Source [1] does not contain any information regarding the required contents of an investment advisory agreement."
+      },
+      {
+        "claim": "The fee charged by the Investment Adviser under the agreement must not exceed the regulatory caps specified in Regulation 15A [1].",
+        "classification": "UNSUPPORTED",
+        "evidence_ids": [],
+        "reason": "Source [1] does not mention fee caps or Regulation 15A."
+      }
+    ]
+  },
+  "c51c729ef0e866e9d7a95f37f61e2ea7df01c8060dac7979a788469a067c828c": {
+    "claims_eval": [
+      {
+        "claim": "Investment Advisers are required to enter into an investment advisory agreement with their clients [1].",
+        "classification": "UNSUPPORTED",
+        "evidence_ids": [],
+        "reason": "The provided evidence discusses Section 2: Registration and Qualification Norms, but does not mention investment advisory agreements or client contracts."
+      },
+      {
+        "claim": "The investment advisory agreement must detail the terms, risk profiling mechanisms, and fee schedules [1].",
+        "classification": "UNSUPPORTED",
+        "evidence_ids": [],
+        "reason": "The provided evidence does not contain information regarding investment advisory agreements, terms, risk profiling mechanisms, or fee schedules."
+      }
+    ]
+  },
+  "a79d0ec56372eff14901e50b9136af2226e21e94f8957ff49714feab6e072d56": {
+    "claims_eval": [
+      {
+        "claim": "Under SEBI regulations, every Investment Adviser is required to maintain books of accounts, agreements, and advice records for a minimum period of eight years",
+        "classification": "SUPPORTED",
+        "evidence_ids": [
+          "1"
+        ],
+        "reason": "Source [1] explicitly states that every Investment Adviser shall maintain books of accounts, agreements, and advice records for a minimum period of eight years."
+      }
+    ]
+  },
+  "72e8ec94507259ef706c2bf523294a1acdc7ac4d361ec0e05be6ac3a728bfa99": {
+    "claims_eval": [
+      {
+        "claim": "The fee charged by the Investment Adviser shall not exceed the regulatory caps specified in Regulation 15A",
+        "classification": "SUPPORTED",
+        "evidence_ids": [
+          "1"
+        ],
+        "reason": "Source [1] explicitly states that the fee charged by the Investment Adviser shall not exceed the regulatory caps specified in Regulation 15A."
+      }
+    ]
+  },
+  "50088031ae335de64eb1896d2b92406ddf02a670d29df972defea5e5255806bd": {
+    "claims_eval": [
+      {
+        "claim": "A principal officer of a non-individual investment adviser must at all times have a professional qualification or postgraduate degree in finance, accountancy, or capital markets [1].",
+        "classification": "SUPPORTED",
+        "evidence_ids": [
+          "1"
+        ],
+        "reason": "Source [1] explicitly states that a principal officer of a non-individual investment adviser shall have at all times a professional qualification or postgraduate degree in finance, accountancy, or capital markets."
+      },
+      {
+        "claim": "A principal officer of a non-individual investment adviser must at all times have valid NISM certifications [1].",
+        "classification": "SUPPORTED",
+        "evidence_ids": [
+          "1"
+        ],
+        "reason": "Source [1] explicitly states that a principal officer of a non-individual investment adviser shall have at all times valid NISM certifications along with their professional qualification or postgraduate degree."
+      }
+    ]
+  },
+  "13292c9bf22c54de3e5e48cd81f467c746a4473efef8fa349b36582c15047735": {
+    "claims_eval": [
+      {
+        "claim": "Investment Advisers are required to enter into an investment advisory agreement with clients that details the terms, risk profiling mechanisms, and fee schedules [1].",
+        "classification": "SUPPORTED",
+        "evidence_ids": [
+          "1"
+        ],
+        "reason": "Source [1] explicitly states that Investment Advisers shall enter into an investment advisory agreement with clients detailing terms, risk profiling mechanisms, and fee schedules."
+      },
+      {
+        "claim": "The fee charged by the Investment Adviser must not exceed the regulatory caps specified in Regulation 15A [1].",
+        "classification": "SUPPORTED",
+        "evidence_ids": [
+          "1"
+        ],
+        "reason": "Source [1] explicitly states that the fee charged by the Investment Adviser shall not exceed the regulatory caps specified in Regulation 15A."
+      }
+    ]
+  },
+  "2aecbf4c78d61006155b389a7ec3104f303aa68db169039b7d246c05223f92cc": {
+    "claims_eval": [
+      {
+        "claim": "Investment Advisers are required to enter into an investment advisory agreement with clients that details terms, fee schedules, and risk profiling mechanisms [1].",
+        "classification": "SUPPORTED",
+        "evidence_ids": [
+          "1"
+        ],
+        "reason": "Source [1] explicitly states that 'Investment Advisers shall enter into an investment advisory agreement with clients detailing terms, risk profiling mechanisms, and fee schedules.'"
+      }
+    ]
+  },
+  "9cb30e7d139c0da3fc7bfa3ed70f4201c09b1f38e270f1530fadce255fbe2e58": {
+    "claims_eval": [
+      {
+        "claim": "Every Investment Adviser must maintain books of accounts, agreements, and advice records for a minimum period of eight years under SEBI regulations [1].",
+        "classification": "UNSUPPORTED",
+        "evidence_ids": [],
+        "reason": "The provided evidence only names the section title 'Master Circular for Investment Advisers (IAs) Section: 4. Record Keeping and Audit' but does not contain the specific requirements or the eight-year retention period mentioned in the claim."
+      }
+    ]
+  }
+}

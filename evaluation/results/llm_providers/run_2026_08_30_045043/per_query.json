@@ -1,0 +1,92 @@
+[
+  {
+    "query_id": "G001",
+    "question": "What are the record keeping requirements for Investment Advisers under SEBI regulations?",
+    "retrieved_chunks_count": 5,
+    "providers": {
+      "gemini": {
+        "status": "SUCCESS",
+        "latency_ms": 2247.79,
+        "relevance": 2.89,
+        "groundedness": 4.08,
+        "citation_integrity": 1.0,
+        "answer_snippet": "Under SEBI regulations, every Investment Adviser is required to maintain books of accounts, agreements, and advice recor..."
+      },
+      "ollama": {
+        "status": "UNAVAILABLE"
+      }
+    }
+  },
+  {
+    "query_id": "G002",
+    "question": "What is the fee limit mandated under Regulation 15A for investment advisers?",
+    "retrieved_chunks_count": 5,
+    "providers": {
+      "gemini": {
+        "status": "SUCCESS",
+        "latency_ms": 1073.68,
+        "relevance": 1.86,
+        "groundedness": 5.0,
+        "citation_integrity": 1.0,
+        "answer_snippet": "Based on the provided evidence, the fee charged by the Investment Adviser shall not exceed the regulatory caps specified..."
+      },
+      "ollama": {
+        "status": "UNAVAILABLE"
+      }
+    }
+  },
+  {
+    "query_id": "G003",
+    "question": "What is the Beta Version of T+0 Settlement introduced by SEBI?",
+    "retrieved_chunks_count": 5,
+    "providers": {
+      "gemini": {
+        "status": "SUCCESS",
+        "latency_ms": 856.38,
+        "relevance": 0.0,
+        "groundedness": 2.05,
+        "citation_integrity": 1.0,
+        "answer_snippet": "I could not find sufficient evidence in the indexed regulatory sources."
+      },
+      "ollama": {
+        "status": "UNAVAILABLE"
+      }
+    }
+  },
+  {
+    "query_id": "G004",
+    "question": "What are the qualification requirements for principal officers of Investment Advisers?",
+    "retrieved_chunks_count": 5,
+    "providers": {
+      "gemini": {
+        "status": "SUCCESS",
+        "latency_ms": 1077.83,
+        "relevance": 2.79,
+        "groundedness": 5.0,
+        "citation_integrity": 1.0,
+        "answer_snippet": "Based on the provided regulatory sources, an individual investment adviser or a principal officer of a non-individual in..."
+      },
+      "ollama": {
+        "status": "UNAVAILABLE"
+      }
+    }
+  },
+  {
+    "query_id": "G005",
+    "question": "What is the role of BSE Administration and Supervision Limited BASL?",
+    "retrieved_chunks_count": 5,
+    "providers": {
+      "gemini": {
+        "status": "SUCCESS",
+        "latency_ms": 1040.84,
+        "relevance": 0.0,
+        "groundedness": 2.73,
+        "citation_integrity": 1.0,
+        "answer_snippet": "I could not find sufficient evidence in the indexed regulatory sources."
+      },
+      "ollama": {
+        "status": "UNAVAILABLE"
+      }
+    }
+  }
+]

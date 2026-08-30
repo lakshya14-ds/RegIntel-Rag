@@ -43,11 +43,34 @@ class Settings(BaseSettings):
     gemini_api_key: Optional[str] = Field(
         default_factory=lambda: os.getenv("GEMINI_API_KEY")
     )
+    embedding_provider: str = Field(
+        default_factory=lambda: os.getenv("EMBEDDING_PROVIDER", "gemini")
+    )
     embedding_model: str = Field(
         default="gemini-embedding-001"
     )
     embedding_dimension: int = Field(
         default=768
+    )
+
+    # LLM Generation Provider Settings (Phase 48-49)
+    llm_provider: str = Field(
+        default_factory=lambda: os.getenv("LLM_PROVIDER", "gemini").lower()
+    )
+    llm_fallback_enabled: bool = Field(
+        default_factory=lambda: os.getenv("LLM_FALLBACK_ENABLED", "false").lower() in ("true", "1")
+    )
+    gemini_generation_model: str = Field(
+        default_factory=lambda: os.getenv("GEMINI_GENERATION_MODEL", "models/gemini-flash-lite-latest")
+    )
+    ollama_base_url: str = Field(
+        default_factory=lambda: os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
+    )
+    ollama_model: str = Field(
+        default_factory=lambda: os.getenv("OLLAMA_MODEL", "llama3.2")
+    )
+    ollama_timeout_seconds: float = Field(
+        default_factory=lambda: float(os.getenv("OLLAMA_TIMEOUT_SECONDS", "30.0"))
     )
 
     # Chunking Configuration

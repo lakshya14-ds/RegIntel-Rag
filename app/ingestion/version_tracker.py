@@ -290,7 +290,7 @@ class VersionTracker:
 
         # 4. Construct Chronological Timeline
         timeline_nodes: List[Dict[str, Any]] = []
-        visited = set()
+        visited = {document_id}
 
         # Follow predecessor chain backwards
         curr_pred_id = rel_info.get("predecessor_id")

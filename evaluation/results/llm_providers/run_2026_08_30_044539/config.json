@@ -1,0 +1,6 @@
+{
+  "limit": 5,
+  "gemini_model": "models/gemini-flash-lite-latest",
+  "ollama_model": "llama3.2",
+  "ollama_base_url": "http://localhost:11434"
+}

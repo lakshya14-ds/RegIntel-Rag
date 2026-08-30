@@ -1,0 +1,21 @@
+{
+  "evaluation_timestamp": "2026-08-29T16:42:56.832159",
+  "total_questions": 30,
+  "claim_statistics": {
+    "total_claims_extracted": 7,
+    "supported_claims": 7,
+    "partially_supported_claims": 0,
+    "unsupported_claims": 0
+  },
+  "grounding_metrics": {
+    "grounded_claim_rate": 100.0,
+    "partially_supported_claim_rate": 0.0,
+    "unsupported_claim_rate": 0.0,
+    "safe_abstention_rate": 100.0
+  },
+  "citation_metrics": {
+    "citation_integrity": 100.0,
+    "citation_support_rate": 100.0,
+    "citation_coverage_rate": 93.33
+  }
+}

@@ -1,0 +1,213 @@
+[
+  {
+    "question_id": "G001",
+    "question": "What are the record keeping requirements for Investment Advisers under SEBI regulations?",
+    "claims": [
+      {
+        "claim": "Under SEBI regulations, every Investment Adviser is required to maintain books of accounts, agreements, and advice records for a minimum period of eight years",
+        "classification": "SUPPORTED",
+        "evidence_ids": [
+          "1"
+        ],
+        "reason": "Source [1] explicitly states that every Investment Adviser shall maintain books of accounts, agreements, and advice records for a minimum period of eight years."
+      }
+    ]
+  },
+  {
+    "question_id": "G002",
+    "question": "What is the fee limit mandated under Regulation 15A for investment advisers?",
+    "claims": [
+      {
+        "claim": "The fee charged by the Investment Adviser shall not exceed the regulatory caps specified in Regulation 15A",
+        "classification": "SUPPORTED",
+        "evidence_ids": [
+          "1"
+        ],
+        "reason": "Source [1] explicitly states that the fee charged by the Investment Adviser shall not exceed the regulatory caps specified in Regulation 15A."
+      }
+    ]
+  },
+  {
+    "question_id": "G003",
+    "question": "What is the Beta Version of T+0 Settlement introduced by SEBI?",
+    "claims": []
+  },
+  {
+    "question_id": "G004",
+    "question": "What are the qualification requirements for principal officers of Investment Advisers?",
+    "claims": [
+      {
+        "claim": "A principal officer of a non-individual investment adviser must at all times have a professional qualification or postgraduate degree in finance, accountancy, or capital markets [1].",
+        "classification": "SUPPORTED",
+        "evidence_ids": [
+          "1"
+        ],
+        "reason": "Source [1] explicitly states that a principal officer of a non-individual investment adviser shall have at all times a professional qualification or postgraduate degree in finance, accountancy, or capital markets."
+      },
+      {
+        "claim": "A principal officer of a non-individual investment adviser must at all times have valid NISM certifications [1].",
+        "classification": "SUPPORTED",
+        "evidence_ids": [
+          "1"
+        ],
+        "reason": "Source [1] explicitly states that a principal officer of a non-individual investment adviser shall have at all times valid NISM certifications along with their professional qualification or postgraduate degree."
+      }
+    ]
+  },
+  {
+    "question_id": "G005",
+    "question": "What is the role of BSE Administration and Supervision Limited BASL?",
+    "claims": []
+  },
+  {
+    "question_id": "G006",
+    "question": "What are the KYC obligations enforced by KYC Registration Agencies KRAs?",
+    "claims": []
+  },
+  {
+    "question_id": "G007",
+    "question": "What is the Inter-Operable Regulatory Sandbox IoRS?",
+    "claims": []
+  },
+  {
+    "question_id": "G008",
+    "question": "What are the additional disclosure mandates for high risk Foreign Portfolio Investors?",
+    "claims": []
+  },
+  {
+    "question_id": "G009",
+    "question": "What are the rules regarding investment advisory agreements with clients?",
+    "claims": [
+      {
+        "claim": "Investment Advisers are required to enter into an investment advisory agreement with clients that details the terms, risk profiling mechanisms, and fee schedules [1].",
+        "classification": "SUPPORTED",
+        "evidence_ids": [
+          "1"
+        ],
+        "reason": "Source [1] explicitly states that Investment Advisers shall enter into an investment advisory agreement with clients detailing terms, risk profiling mechanisms, and fee schedules."
+      },
+      {
+        "claim": "The fee charged by the Investment Adviser must not exceed the regulatory caps specified in Regulation 15A [1].",
+        "classification": "SUPPORTED",
+        "evidence_ids": [
+          "1"
+        ],
+        "reason": "Source [1] explicitly states that the fee charged by the Investment Adviser shall not exceed the regulatory caps specified in Regulation 15A."
+      }
+    ]
+  },
+  {
+    "question_id": "G010",
+    "question": "What are the financial disincentives imposed for surveillance related lapses?",
+    "claims": []
+  },
+  {
+    "question_id": "G011",
+    "question": "Can an Investment Adviser receive distribution commissions from mutual funds for recommended schemes?",
+    "claims": []
+  },
+  {
+    "question_id": "G012",
+    "question": "What is the overseas investment framework for Indian Mutual Funds?",
+    "claims": []
+  },
+  {
+    "question_id": "G013",
+    "question": "What safeguards are required against unauthorized electronic fund transfers?",
+    "claims": []
+  },
+  {
+    "question_id": "G014",
+    "question": "What are the operating guidelines for Investment Advisers in IFSC GIFT City?",
+    "claims": []
+  },
+  {
+    "question_id": "G015",
+    "question": "What are the research report disclosure rules for Research Analysts?",
+    "claims": []
+  },
+  {
+    "question_id": "G016",
+    "question": "What are the compliance audit requirements for Stock Brokers?",
+    "claims": []
+  },
+  {
+    "question_id": "G017",
+    "question": "What are the risk profiling obligations before offering investment advice?",
+    "claims": [
+      {
+        "claim": "Investment Advisers are required to enter into an investment advisory agreement with clients that details terms, fee schedules, and risk profiling mechanisms [1].",
+        "classification": "SUPPORTED",
+        "evidence_ids": [
+          "1"
+        ],
+        "reason": "Source [1] explicitly states that 'Investment Advisers shall enter into an investment advisory agreement with clients detailing terms, risk profiling mechanisms, and fee schedules.'"
+      }
+    ]
+  },
+  {
+    "question_id": "G018",
+    "question": "What are the requirements for Online Bond Platform Providers OBPP?",
+    "claims": []
+  },
+  {
+    "question_id": "G019",
+    "question": "What is the timeline for depositories to resolve investor grievances?",
+    "claims": []
+  },
+  {
+    "question_id": "G020",
+    "question": "What constitutes a family of client under SEBI IA regulations?",
+    "claims": []
+  },
+  {
+    "question_id": "G021",
+    "question": "What are the exact cryptocurrency trading rules and taxation guidelines under SEBI circulars?",
+    "claims": []
+  },
+  {
+    "question_id": "G022",
+    "question": "What are the algorithmic trading co-location latency thresholds and hardware specifications under SEBI Master Circular for Stock Brokers?",
+    "claims": []
+  },
+  {
+    "question_id": "G023",
+    "question": "What are the foreign exchange remittance tax rates for overseas investments by Mutual Funds?",
+    "claims": []
+  },
+  {
+    "question_id": "G024",
+    "question": "What are the capital requirements for insurance brokers under IRDAI regulations?",
+    "claims": []
+  },
+  {
+    "question_id": "G025",
+    "question": "How does SEBI regulate commodity derivatives warehouse receipts for agricultural commodities?",
+    "claims": []
+  },
+  {
+    "question_id": "G026",
+    "question": "What is the prescribed medical negligence penalty under the Medical Council of India guidelines?",
+    "claims": []
+  },
+  {
+    "question_id": "G027",
+    "question": "What are the FDA approval timelines for pharmaceutical clinical trials in the United States?",
+    "claims": []
+  },
+  {
+    "question_id": "G028",
+    "question": "What are the aviation safety guidelines issued by the Federal Aviation Administration FAA for Boeing 737 Max?",
+    "claims": []
+  },
+  {
+    "question_id": "G029",
+    "question": "What are the minimum capital adequacy ratios for European Union banks under Basel III framework?",
+    "claims": []
+  },
+  {
+    "question_id": "G030",
+    "question": "What are the environmental emission caps for coal thermal power plants under the EPA Clean Air Act?",
+    "claims": []
+  }
+]

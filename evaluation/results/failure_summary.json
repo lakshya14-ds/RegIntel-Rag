@@ -1,0 +1,135 @@
+{
+  "total_failures": 15,
+  "failure_stages": {
+    "retrieval": 15,
+    "reranking": 0,
+    "generation": 0,
+    "citation": 0,
+    "comparison": 0
+  },
+  "failure_types": {
+    "missing_relevant_document": 15
+  },
+  "failures": [
+    {
+      "question_id": "G003",
+      "failure_stage": "retrieval",
+      "failure_type": "missing_relevant_document",
+      "question": "What is the Beta Version of T+0 Settlement introduced by SEBI?",
+      "answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+      "analysis": "Expected sources ['20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a'] were not retrieved with sufficient similarity score."
+    },
+    {
+      "question_id": "G005",
+      "failure_stage": "retrieval",
+      "failure_type": "missing_relevant_document",
+      "question": "What is the role of BSE Administration and Supervision Limited BASL?",
+      "answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+      "analysis": "Expected sources ['69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8'] were not retrieved with sufficient similarity score."
+    },
+    {
+      "question_id": "G006",
+      "failure_stage": "retrieval",
+      "failure_type": "missing_relevant_document",
+      "question": "What are the KYC obligations enforced by KYC Registration Agencies KRAs?",
+      "answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+      "analysis": "Expected sources ['be8461b8d553b86c321ad3affeac24c3acc57a045768ee24caf48d9d2924cb47'] were not retrieved with sufficient similarity score."
+    },
+    {
+      "question_id": "G007",
+      "failure_stage": "retrieval",
+      "failure_type": "missing_relevant_document",
+      "question": "What is the Inter-Operable Regulatory Sandbox IoRS?",
+      "answer": "I could not find sufficient evidence in the indexed regulatory sources to explain what the Inter-Operable Regulatory Sandbox (IoRS) is, other than the title referencing a \"Standard Operating Procedure For Inter Operable Regulatory Sandbox\" published by SEBI [1, 2, 3, 4, 5].",
+      "analysis": "Expected sources ['1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72'] were not retrieved with sufficient similarity score."
+    },
+    {
+      "question_id": "G008",
+      "failure_stage": "retrieval",
+      "failure_type": "missing_relevant_document",
+      "question": "What are the additional disclosure mandates for high risk Foreign Portfolio Investors?",
+      "answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+      "analysis": "Expected sources ['b50dcc4966fb18892911ab18c9699431ad365ed2b12ba5d86e03d060a771fda5'] were not retrieved with sufficient similarity score."
+    },
+    {
+      "question_id": "G010",
+      "failure_stage": "retrieval",
+      "failure_type": "missing_relevant_document",
+      "question": "What are the financial disincentives imposed for surveillance related lapses?",
+      "answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+      "analysis": "Expected sources ['6ca36ed21933573c6cfcf46873a202d604d156dc8fc6af55d0c04394961124ff'] were not retrieved with sufficient similarity score."
+    },
+    {
+      "question_id": "G011",
+      "failure_stage": "retrieval",
+      "failure_type": "missing_relevant_document",
+      "question": "Can an Investment Adviser receive distribution commissions from mutual funds for recommended schemes?",
+      "answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+      "analysis": "Expected sources ['69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8'] were not retrieved with sufficient similarity score."
+    },
+    {
+      "question_id": "G012",
+      "failure_stage": "retrieval",
+      "failure_type": "missing_relevant_document",
+      "question": "What is the overseas investment framework for Indian Mutual Funds?",
+      "answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+      "analysis": "Expected sources ['03dd333e09b21448a64bf9aac73fd1fde91b137f36937edf51dee1f99d54e7da', '555ddaa81bc0ec0847a73444a40b7ce65ac7f7c9b44ddd3b9cf0d59e7f86b06b'] were not retrieved with sufficient similarity score."
+    },
+    {
+      "question_id": "G013",
+      "failure_stage": "retrieval",
+      "failure_type": "missing_relevant_document",
+      "question": "What safeguards are required against unauthorized electronic fund transfers?",
+      "answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+      "analysis": "Expected sources ['6dc7cd6f0e1b0643b116f473b616db61cda6d95bfb006f2c29aa1d385db352c4'] were not retrieved with sufficient similarity score."
+    },
+    {
+      "question_id": "G014",
+      "failure_stage": "retrieval",
+      "failure_type": "missing_relevant_document",
+      "question": "What are the operating guidelines for Investment Advisers in IFSC GIFT City?",
+      "answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+      "analysis": "Expected sources ['384edf54c1afbbf95237706cd2f5ca9f6742a0788056126b70baa6efb193c2c1'] were not retrieved with sufficient similarity score."
+    },
+    {
+      "question_id": "G015",
+      "failure_stage": "retrieval",
+      "failure_type": "missing_relevant_document",
+      "question": "What are the research report disclosure rules for Research Analysts?",
+      "answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+      "analysis": "Expected sources ['f9ec4356c36ad999c9e1088a6c0c28c4de85ccb5ccd8bc65c98bec8454c42c66'] were not retrieved with sufficient similarity score."
+    },
+    {
+      "question_id": "G016",
+      "failure_stage": "retrieval",
+      "failure_type": "missing_relevant_document",
+      "question": "What are the compliance audit requirements for Stock Brokers?",
+      "answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+      "analysis": "Expected sources ['d79215cbdbca03367cdfdcfe77df2d8f788619371bc2dc4f72dd98eac72ac6bf'] were not retrieved with sufficient similarity score."
+    },
+    {
+      "question_id": "G018",
+      "failure_stage": "retrieval",
+      "failure_type": "missing_relevant_document",
+      "question": "What are the requirements for Online Bond Platform Providers OBPP?",
+      "answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+      "analysis": "Expected sources ['d79215cbdbca03367cdfdcfe77df2d8f788619371bc2dc4f72dd98eac72ac6bf'] were not retrieved with sufficient similarity score."
+    },
+    {
+      "question_id": "G019",
+      "failure_stage": "retrieval",
+      "failure_type": "missing_relevant_document",
+      "question": "What is the timeline for depositories to resolve investor grievances?",
+      "answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+      "analysis": "Expected sources ['d34cf5aff0780724741a4d2e5d4f2a62b9d3b2a6b4af62f6400b492ead5dbeee'] were not retrieved with sufficient similarity score."
+    },
+    {
+      "question_id": "G020",
+      "failure_stage": "retrieval",
+      "failure_type": "missing_relevant_document",
+      "question": "What constitutes a family of client under SEBI IA regulations?",
+      "answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+      "analysis": "Expected sources ['69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8'] were not retrieved with sufficient similarity score."
+    }
+  ]
+}

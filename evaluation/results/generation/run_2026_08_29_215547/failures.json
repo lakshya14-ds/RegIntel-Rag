@@ -1,0 +1,639 @@
+[
+  {
+    "id": "G002",
+    "question": "What is the fee limit mandated under Regulation 15A for investment advisers?",
+    "answerability": "ANSWERABLE",
+    "expected_sources": [
+      "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8"
+    ],
+    "reference_answer": "Fees charged by an Investment Adviser must not exceed the regulatory caps specified in Regulation 15A of the SEBI Investment Advisers Regulations.",
+    "generated_answer": "Based on the provided evidence, the fee charged by the Investment Adviser shall not exceed the regulatory caps specified in Regulation 15A [1].",
+    "citations_count": 1,
+    "citations": [
+      {
+        "source_id": 1,
+        "title": "Master Circular for Investment Advisers (IAs)",
+        "section": "2. Registration and Qualification Norms",
+        "document_id": "sebi_integration_test_doc_001",
+        "url": "https://sebi.gov.in/legal/circulars/may-2024/master-circular-for-investment-advisers-ias-_83556.html"
+      }
+    ],
+    "scores": {
+      "relevance": 3.0,
+      "completeness": 2.0,
+      "groundedness": 5.0,
+      "citation_integrity": 100.0
+    },
+    "judge_reason": "The generated answer correctly references Regulation 15A based on the text, but the retrieved evidence does not actually state the specific fee limit or numerical cap (it only mentions that they must not exceed the caps specified in the regulation). Therefore, the answer is fully grounded in the limited evidence provided, but incomplete and limited in relevance regarding the exact numerical limit requested by the user.",
+    "correct_answerability_handling": true,
+    "latencies_ms": {
+      "retrieval": 3658.89,
+      "reranking": 13415.92,
+      "generation": 7317.78,
+      "total": 24392.59
+    }
+  },
+  {
+    "id": "G003",
+    "question": "What is the Beta Version of T+0 Settlement introduced by SEBI?",
+    "answerability": "ANSWERABLE",
+    "expected_sources": [
+      "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a"
+    ],
+    "reference_answer": "SEBI introduced a beta version of optional T+0 settlement for a limited set of 25 scrips with a limited number of brokers to enable same-day trade settlement.",
+    "generated_answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+    "citations_count": 5,
+    "citations": [
+      {
+        "source_id": 1,
+        "title": "Introduction Of Beta Version Of T 0 Settlement",
+        "section": "Aug 26, 2026",
+        "document_id": "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a",
+        "url": "https://sebi.gov.in/legal/circulars/mar-2024/introduction-of-beta-version-of-t-0-settlement_82412.html"
+      },
+      {
+        "source_id": 2,
+        "title": "Introduction Of Beta Version Of T 0 Settlement",
+        "section": "Orders",
+        "document_id": "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a",
+        "url": "https://sebi.gov.in/legal/circulars/mar-2024/introduction-of-beta-version-of-t-0-settlement_82412.html"
+      },
+      {
+        "source_id": 3,
+        "title": "Introduction Of Beta Version Of T 0 Settlement",
+        "section": "Aug 25, 2026",
+        "document_id": "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a",
+        "url": "https://sebi.gov.in/legal/circulars/mar-2024/introduction-of-beta-version-of-t-0-settlement_82412.html"
+      },
+      {
+        "source_id": 4,
+        "title": "Introduction Of Beta Version Of T 0 Settlement",
+        "section": "Takeovers",
+        "document_id": "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a",
+        "url": "https://sebi.gov.in/legal/circulars/mar-2024/introduction-of-beta-version-of-t-0-settlement_82412.html"
+      },
+      {
+        "source_id": 5,
+        "title": "Introduction Of Beta Version Of T 0 Settlement",
+        "section": "Recovery Proceedings",
+        "document_id": "20518434fd1c3354786dc7e3b070553c266321c6f89ca971376d0d1ac64d3b4a",
+        "url": "https://sebi.gov.in/legal/circulars/mar-2024/introduction-of-beta-version-of-t-0-settlement_82412.html"
+      }
+    ],
+    "scores": {
+      "relevance": 2.5,
+      "completeness": 1.0,
+      "groundedness": 5.0,
+      "citation_integrity": 100.0
+    },
+    "judge_reason": "No relevant evidence found in index; correctly avoided fabricating an answer.",
+    "correct_answerability_handling": false,
+    "latencies_ms": {
+      "retrieval": 3858.95,
+      "reranking": 14149.49,
+      "generation": 7717.9,
+      "total": 25726.35
+    }
+  },
+  {
+    "id": "G005",
+    "question": "What is the role of BSE Administration and Supervision Limited BASL?",
+    "answerability": "ANSWERABLE",
+    "expected_sources": [
+      "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8"
+    ],
+    "reference_answer": "BASL acts as the recognized body for administration and supervision of registered Investment Advisers under SEBI supervision.",
+    "generated_answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+    "citations_count": 0,
+    "citations": [],
+    "scores": {
+      "relevance": 2.5,
+      "completeness": 1.0,
+      "groundedness": 5.0,
+      "citation_integrity": 100.0
+    },
+    "judge_reason": "No relevant evidence found in index; correctly avoided fabricating an answer.",
+    "correct_answerability_handling": false,
+    "latencies_ms": {
+      "retrieval": 3788.49,
+      "reranking": 13891.13,
+      "generation": 7576.98,
+      "total": 25256.6
+    }
+  },
+  {
+    "id": "G006",
+    "question": "What are the KYC obligations enforced by KYC Registration Agencies KRAs?",
+    "answerability": "ANSWERABLE",
+    "expected_sources": [
+      "be8461b8d553b86c321ad3affeac24c3acc57a045768ee24caf48d9d2924cb47"
+    ],
+    "reference_answer": "KRAs are required to upload, maintain, and verify KYC records of clients centrally for capital market intermediaries.",
+    "generated_answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+    "citations_count": 0,
+    "citations": [],
+    "scores": {
+      "relevance": 2.5,
+      "completeness": 1.0,
+      "groundedness": 5.0,
+      "citation_integrity": 100.0
+    },
+    "judge_reason": "No relevant evidence found in index; correctly avoided fabricating an answer.",
+    "correct_answerability_handling": false,
+    "latencies_ms": {
+      "retrieval": 3962.69,
+      "reranking": 14529.87,
+      "generation": 7925.38,
+      "total": 26417.94
+    }
+  },
+  {
+    "id": "G007",
+    "question": "What is the Inter-Operable Regulatory Sandbox IoRS?",
+    "answerability": "ANSWERABLE",
+    "expected_sources": [
+      "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72"
+    ],
+    "reference_answer": "IoRS is a coordinated testing mechanism set up by financial sector regulators (RBI, SEBI, IRDAI, IFSCA, PFRDA) for innovative fintech products spanning multiple jurisdictions.",
+    "generated_answer": "I could not find sufficient evidence in the indexed regulatory sources to explain what the Inter-Operable Regulatory Sandbox (IoRS) is, other than the appearance of its title in the provided document headers and circular references [1], [2], [3], [4], [5].",
+    "citations_count": 5,
+    "citations": [
+      {
+        "source_id": 1,
+        "title": "Standard Operating Procedure For Inter Operable Regulatory Sandbox",
+        "section": "Takeovers",
+        "document_id": "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72",
+        "url": "https://sebi.gov.in/legal/circulars/apr-2024/standard-operating-procedure-for-inter-operable-regulatory-sandbox_82811.html"
+      },
+      {
+        "source_id": 2,
+        "title": "Standard Operating Procedure For Inter Operable Regulatory Sandbox",
+        "section": "Aug 26, 2026",
+        "document_id": "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72",
+        "url": "https://sebi.gov.in/legal/circulars/apr-2024/standard-operating-procedure-for-inter-operable-regulatory-sandbox_82811.html"
+      },
+      {
+        "source_id": 3,
+        "title": "Standard Operating Procedure For Inter Operable Regulatory Sandbox",
+        "section": "Mutual Funds",
+        "document_id": "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72",
+        "url": "https://sebi.gov.in/legal/circulars/apr-2024/standard-operating-procedure-for-inter-operable-regulatory-sandbox_82811.html"
+      },
+      {
+        "source_id": 4,
+        "title": "Standard Operating Procedure For Inter Operable Regulatory Sandbox",
+        "section": "Aug 25, 2026",
+        "document_id": "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72",
+        "url": "https://sebi.gov.in/legal/circulars/apr-2024/standard-operating-procedure-for-inter-operable-regulatory-sandbox_82811.html"
+      },
+      {
+        "source_id": 5,
+        "title": "Standard Operating Procedure For Inter Operable Regulatory Sandbox",
+        "section": "Public Issues",
+        "document_id": "1ef425b69756aeab54d52eecd7f9e26b0802ad23c04891eb8e32860e576b1c72",
+        "url": "https://sebi.gov.in/legal/circulars/apr-2024/standard-operating-procedure-for-inter-operable-regulatory-sandbox_82811.html"
+      }
+    ],
+    "scores": {
+      "relevance": 2.5,
+      "completeness": 1.0,
+      "groundedness": 5.0,
+      "citation_integrity": 100.0
+    },
+    "judge_reason": "No relevant evidence found in index; correctly avoided fabricating an answer.",
+    "correct_answerability_handling": false,
+    "latencies_ms": {
+      "retrieval": 4047.06,
+      "reranking": 14839.23,
+      "generation": 8094.13,
+      "total": 26980.42
+    }
+  },
+  {
+    "id": "G008",
+    "question": "What are the additional disclosure mandates for high risk Foreign Portfolio Investors?",
+    "answerability": "ANSWERABLE",
+    "expected_sources": [
+      "b50dcc4966fb18892911ab18c9699431ad365ed2b12ba5d86e03d060a771fda5"
+    ],
+    "reference_answer": "FPIs meeting specified concentration criteria must provide granular ownership disclosures down to the natural person level.",
+    "generated_answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+    "citations_count": 0,
+    "citations": [],
+    "scores": {
+      "relevance": 2.5,
+      "completeness": 1.0,
+      "groundedness": 5.0,
+      "citation_integrity": 100.0
+    },
+    "judge_reason": "No relevant evidence found in index; correctly avoided fabricating an answer.",
+    "correct_answerability_handling": false,
+    "latencies_ms": {
+      "retrieval": 3671.59,
+      "reranking": 13462.5,
+      "generation": 7343.18,
+      "total": 24477.27
+    }
+  },
+  {
+    "id": "G009",
+    "question": "What are the rules regarding investment advisory agreements with clients?",
+    "answerability": "ANSWERABLE",
+    "expected_sources": [
+      "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8"
+    ],
+    "reference_answer": "Investment Advisers must enter into an advisory agreement detailing terms, fees, risk profiling, and conflict resolution before rendering advice.",
+    "generated_answer": "Investment Advisers are required to enter into an investment advisory agreement with their clients [1]. This agreement must detail terms, risk profiling mechanisms, and fee schedules [1]. Additionally, the fee charged by the Investment Adviser under the agreement must not exceed the regulatory caps specified in Regulation 15A [1].",
+    "citations_count": 1,
+    "citations": [
+      {
+        "source_id": 1,
+        "title": "Master Circular for Investment Advisers (IAs)",
+        "section": "2. Registration and Qualification Norms",
+        "document_id": "sebi_integration_test_doc_001",
+        "url": "https://sebi.gov.in/legal/circulars/may-2024/master-circular-for-investment-advisers-ias-_83556.html"
+      }
+    ],
+    "scores": {
+      "relevance": 3.0,
+      "completeness": 3.0,
+      "groundedness": 2.0,
+      "citation_integrity": 100.0
+    },
+    "judge_reason": "The generated answer correctly touches upon the requirement of an advisory agreement, but it mentions a regulatory cap under \"Regulation 15A\" which is completely missing from the provided retrieved evidence, making that claim ungrounded based solely on the supplied text.",
+    "correct_answerability_handling": true,
+    "latencies_ms": {
+      "retrieval": 3770.43,
+      "reranking": 13824.93,
+      "generation": 7540.87,
+      "total": 25136.23
+    }
+  },
+  {
+    "id": "G010",
+    "question": "What are the financial disincentives imposed for surveillance related lapses?",
+    "answerability": "ANSWERABLE",
+    "expected_sources": [
+      "6ca36ed21933573c6cfcf46873a202d604d156dc8fc6af55d0c04394961124ff"
+    ],
+    "reference_answer": "SEBI prescribes structured financial penalties on Market Infrastructure Institutions for lapses or delays in alert generation and surveillance reporting.",
+    "generated_answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+    "citations_count": 0,
+    "citations": [],
+    "scores": {
+      "relevance": 2.5,
+      "completeness": 1.0,
+      "groundedness": 5.0,
+      "citation_integrity": 100.0
+    },
+    "judge_reason": "No relevant evidence found in index; correctly avoided fabricating an answer.",
+    "correct_answerability_handling": false,
+    "latencies_ms": {
+      "retrieval": 3720.98,
+      "reranking": 13643.61,
+      "generation": 7441.97,
+      "total": 24806.56
+    }
+  },
+  {
+    "id": "G011",
+    "question": "Can an Investment Adviser receive distribution commissions from mutual funds for recommended schemes?",
+    "answerability": "ANSWERABLE",
+    "expected_sources": [
+      "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8"
+    ],
+    "reference_answer": "No, registered Investment Advisers and their family members/entities cannot accept commissions or distribution fees from products recommended to advisory clients.",
+    "generated_answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+    "citations_count": 0,
+    "citations": [],
+    "scores": {
+      "relevance": 2.5,
+      "completeness": 1.0,
+      "groundedness": 5.0,
+      "citation_integrity": 100.0
+    },
+    "judge_reason": "No relevant evidence found in index; correctly avoided fabricating an answer.",
+    "correct_answerability_handling": false,
+    "latencies_ms": {
+      "retrieval": 3610.5,
+      "reranking": 13238.5,
+      "generation": 7221.0,
+      "total": 24070.0
+    }
+  },
+  {
+    "id": "G012",
+    "question": "What is the overseas investment framework for Indian Mutual Funds?",
+    "answerability": "ANSWERABLE",
+    "expected_sources": [
+      "03dd333e09b21448a64bf9aac73fd1fde91b137f36937edf51dee1f99d54e7da",
+      "555ddaa81bc0ec0847a73444a40b7ce65ac7f7c9b44ddd3b9cf0d59e7f86b06b"
+    ],
+    "reference_answer": "Mutual Funds can invest in overseas securities, mutual funds, and unit trusts within the industry-wide aggregate cap specified by SEBI and RBI.",
+    "generated_answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+    "citations_count": 5,
+    "citations": [
+      {
+        "source_id": 1,
+        "title": "Simplification Of Framework For Overseas Investment By Mutual Funds",
+        "section": "Public Issues",
+        "document_id": "03dd333e09b21448a64bf9aac73fd1fde91b137f36937edf51dee1f99d54e7da",
+        "url": "https://sebi.gov.in/legal/circulars/nov-2023/simplification-of-framework-for-overseas-investment-by-mutual-funds_79255.html"
+      },
+      {
+        "source_id": 2,
+        "title": "Simplification Of Framework For Overseas Investment By Mutual Funds",
+        "section": "Aug 25, 2026",
+        "document_id": "03dd333e09b21448a64bf9aac73fd1fde91b137f36937edf51dee1f99d54e7da",
+        "url": "https://sebi.gov.in/legal/circulars/nov-2023/simplification-of-framework-for-overseas-investment-by-mutual-funds_79255.html"
+      },
+      {
+        "source_id": 3,
+        "title": "Simplification Of Framework For Overseas Investment By Mutual Funds",
+        "section": "Aug 26, 2026",
+        "document_id": "03dd333e09b21448a64bf9aac73fd1fde91b137f36937edf51dee1f99d54e7da",
+        "url": "https://sebi.gov.in/legal/circulars/nov-2023/simplification-of-framework-for-overseas-investment-by-mutual-funds_79255.html"
+      },
+      {
+        "source_id": 4,
+        "title": "Simplification Of Framework For Overseas Investment By Mutual Funds",
+        "section": "Recovery Proceedings",
+        "document_id": "03dd333e09b21448a64bf9aac73fd1fde91b137f36937edf51dee1f99d54e7da",
+        "url": "https://sebi.gov.in/legal/circulars/nov-2023/simplification-of-framework-for-overseas-investment-by-mutual-funds_79255.html"
+      },
+      {
+        "source_id": 5,
+        "title": "Simplification Of Framework For Overseas Investment By Mutual Funds",
+        "section": "Orders",
+        "document_id": "03dd333e09b21448a64bf9aac73fd1fde91b137f36937edf51dee1f99d54e7da",
+        "url": "https://sebi.gov.in/legal/circulars/nov-2023/simplification-of-framework-for-overseas-investment-by-mutual-funds_79255.html"
+      }
+    ],
+    "scores": {
+      "relevance": 2.5,
+      "completeness": 1.0,
+      "groundedness": 5.0,
+      "citation_integrity": 100.0
+    },
+    "judge_reason": "No relevant evidence found in index; correctly avoided fabricating an answer.",
+    "correct_answerability_handling": false,
+    "latencies_ms": {
+      "retrieval": 3845.28,
+      "reranking": 14099.35,
+      "generation": 7690.56,
+      "total": 25635.19
+    }
+  },
+  {
+    "id": "G013",
+    "question": "What safeguards are required against unauthorized electronic fund transfers?",
+    "answerability": "ANSWERABLE",
+    "expected_sources": [
+      "6dc7cd6f0e1b0643b116f473b616db61cda6d95bfb006f2c29aa1d385db352c4"
+    ],
+    "reference_answer": "Market intermediaries must establish automated alerting, multi-factor authentication, and designated grievance resolution mechanisms for unauthorized transfers.",
+    "generated_answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+    "citations_count": 0,
+    "citations": [],
+    "scores": {
+      "relevance": 2.5,
+      "completeness": 1.0,
+      "groundedness": 5.0,
+      "citation_integrity": 100.0
+    },
+    "judge_reason": "No relevant evidence found in index; correctly avoided fabricating an answer.",
+    "correct_answerability_handling": false,
+    "latencies_ms": {
+      "retrieval": 3505.85,
+      "reranking": 12854.79,
+      "generation": 7011.7,
+      "total": 23372.34
+    }
+  },
+  {
+    "id": "G014",
+    "question": "What are the operating guidelines for Investment Advisers in IFSC GIFT City?",
+    "answerability": "ANSWERABLE",
+    "expected_sources": [
+      "384edf54c1afbbf95237706cd2f5ca9f6742a0788056126b70baa6efb193c2c1"
+    ],
+    "reference_answer": "Investment Advisers in IFSC are permitted to provide advisory services to non-resident investors and eligible Indian entities subject to IFSCA/SEBI guidelines.",
+    "generated_answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+    "citations_count": 5,
+    "citations": [
+      {
+        "source_id": 1,
+        "title": "Operating Guidelines For Investment Advisers In International Financial Services Centre Ifsc",
+        "section": "Recovery Proceedings",
+        "document_id": "384edf54c1afbbf95237706cd2f5ca9f6742a0788056126b70baa6efb193c2c1",
+        "url": "https://sebi.gov.in/legal/circulars/sep-2020/operating-guidelines-for-investment-advisers-in-international-financial-services-centre-ifsc-_47545.html"
+      },
+      {
+        "source_id": 2,
+        "title": "Operating Guidelines For Investment Advisers In International Financial Services Centre Ifsc",
+        "section": "Recovery Proceedings",
+        "document_id": "384edf54c1afbbf95237706cd2f5ca9f6742a0788056126b70baa6efb193c2c1",
+        "url": "https://sebi.gov.in/legal/circulars/sep-2020/operating-guidelines-for-investment-advisers-in-international-financial-services-centre-ifsc-_47545.html"
+      },
+      {
+        "source_id": 3,
+        "title": "Operating Guidelines For Investment Advisers In International Financial Services Centre Ifsc",
+        "section": "Aug 26, 2026",
+        "document_id": "384edf54c1afbbf95237706cd2f5ca9f6742a0788056126b70baa6efb193c2c1",
+        "url": "https://sebi.gov.in/legal/circulars/sep-2020/operating-guidelines-for-investment-advisers-in-international-financial-services-centre-ifsc-_47545.html"
+      },
+      {
+        "source_id": 4,
+        "title": "Operating Guidelines For Investment Advisers In International Financial Services Centre Ifsc",
+        "section": "Processing Status",
+        "document_id": "384edf54c1afbbf95237706cd2f5ca9f6742a0788056126b70baa6efb193c2c1",
+        "url": "https://sebi.gov.in/legal/circulars/sep-2020/operating-guidelines-for-investment-advisers-in-international-financial-services-centre-ifsc-_47545.html"
+      },
+      {
+        "source_id": 5,
+        "title": "Operating Guidelines For Investment Advisers In International Financial Services Centre Ifsc",
+        "section": "Recovery Proceedings",
+        "document_id": "384edf54c1afbbf95237706cd2f5ca9f6742a0788056126b70baa6efb193c2c1",
+        "url": "https://sebi.gov.in/legal/circulars/sep-2020/operating-guidelines-for-investment-advisers-in-international-financial-services-centre-ifsc-_47545.html"
+      }
+    ],
+    "scores": {
+      "relevance": 2.5,
+      "completeness": 1.0,
+      "groundedness": 5.0,
+      "citation_integrity": 100.0
+    },
+    "judge_reason": "No relevant evidence found in index; correctly avoided fabricating an answer.",
+    "correct_answerability_handling": false,
+    "latencies_ms": {
+      "retrieval": 3828.35,
+      "reranking": 14037.29,
+      "generation": 7656.7,
+      "total": 25522.34
+    }
+  },
+  {
+    "id": "G015",
+    "question": "What are the research report disclosure rules for Research Analysts?",
+    "answerability": "ANSWERABLE",
+    "expected_sources": [
+      "f9ec4356c36ad999c9e1088a6c0c28c4de85ccb5ccd8bc65c98bec8454c42c66"
+    ],
+    "reference_answer": "Research Analysts must disclose their financial interest, shareholding, and any business relationships with the subject company in their research reports.",
+    "generated_answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+    "citations_count": 0,
+    "citations": [],
+    "scores": {
+      "relevance": 2.5,
+      "completeness": 1.0,
+      "groundedness": 5.0,
+      "citation_integrity": 100.0
+    },
+    "judge_reason": "No relevant evidence found in index; correctly avoided fabricating an answer.",
+    "correct_answerability_handling": false,
+    "latencies_ms": {
+      "retrieval": 3379.95,
+      "reranking": 12393.15,
+      "generation": 6759.9,
+      "total": 22533.0
+    }
+  },
+  {
+    "id": "G016",
+    "question": "What are the compliance audit requirements for Stock Brokers?",
+    "answerability": "ANSWERABLE",
+    "expected_sources": [
+      "d79215cbdbca03367cdfdcfe77df2d8f788619371bc2dc4f72dd98eac72ac6bf"
+    ],
+    "reference_answer": "Stock Brokers must undergo periodic internal and system audits by independent certified auditors to verify regulatory compliance.",
+    "generated_answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+    "citations_count": 0,
+    "citations": [],
+    "scores": {
+      "relevance": 2.5,
+      "completeness": 1.0,
+      "groundedness": 5.0,
+      "citation_integrity": 100.0
+    },
+    "judge_reason": "No relevant evidence found in index; correctly avoided fabricating an answer.",
+    "correct_answerability_handling": false,
+    "latencies_ms": {
+      "retrieval": 3546.21,
+      "reranking": 13002.75,
+      "generation": 7092.41,
+      "total": 23641.37
+    }
+  },
+  {
+    "id": "G017",
+    "question": "What are the risk profiling obligations before offering investment advice?",
+    "answerability": "ANSWERABLE",
+    "expected_sources": [
+      "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8"
+    ],
+    "reference_answer": "IAs must assess client risk appetite, investment goals, age, income, and past experience before recommending any financial product.",
+    "generated_answer": "Investment Advisers are required to enter into an investment advisory agreement with their clients that details the terms, risk profiling mechanisms, and fee schedules [1].",
+    "citations_count": 1,
+    "citations": [
+      {
+        "source_id": 1,
+        "title": "Master Circular for Investment Advisers (IAs)",
+        "section": "2. Registration and Qualification Norms",
+        "document_id": "sebi_integration_test_doc_001",
+        "url": "https://sebi.gov.in/legal/circulars/may-2024/master-circular-for-investment-advisers-ias-_83556.html"
+      }
+    ],
+    "scores": {
+      "relevance": 2.0,
+      "completeness": 1.0,
+      "groundedness": 4.0,
+      "citation_integrity": 100.0
+    },
+    "judge_reason": "The generated answer mentions that the agreement details risk profiling mechanisms, but it completely fails to answer the core question regarding what the actual risk profiling obligations are before offering investment advice. While mostly grounded in the context of agreements, it misses the required obligations and details entirely.",
+    "correct_answerability_handling": true,
+    "latencies_ms": {
+      "retrieval": 3624.62,
+      "reranking": 13290.29,
+      "generation": 7249.25,
+      "total": 24164.16
+    }
+  },
+  {
+    "id": "G018",
+    "question": "What are the requirements for Online Bond Platform Providers OBPP?",
+    "answerability": "ANSWERABLE",
+    "expected_sources": [
+      "d79215cbdbca03367cdfdcfe77df2d8f788619371bc2dc4f72dd98eac72ac6bf"
+    ],
+    "reference_answer": "OBPPs must be registered as stock brokers in the debt segment and route transactions through exchange settlement mechanisms.",
+    "generated_answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+    "citations_count": 0,
+    "citations": [],
+    "scores": {
+      "relevance": 2.5,
+      "completeness": 1.0,
+      "groundedness": 5.0,
+      "citation_integrity": 100.0
+    },
+    "judge_reason": "No relevant evidence found in index; correctly avoided fabricating an answer.",
+    "correct_answerability_handling": false,
+    "latencies_ms": {
+      "retrieval": 3752.09,
+      "reranking": 13757.66,
+      "generation": 7504.18,
+      "total": 25013.93
+    }
+  },
+  {
+    "id": "G019",
+    "question": "What is the timeline for depositories to resolve investor grievances?",
+    "answerability": "ANSWERABLE",
+    "expected_sources": [
+      "d34cf5aff0780724741a4d2e5d4f2a62b9d3b2a6b4af62f6400b492ead5dbeee"
+    ],
+    "reference_answer": "Depositories and depository participants must redress investor grievances within stipulated SEBI turnaround times.",
+    "generated_answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+    "citations_count": 0,
+    "citations": [],
+    "scores": {
+      "relevance": 2.5,
+      "completeness": 1.0,
+      "groundedness": 5.0,
+      "citation_integrity": 100.0
+    },
+    "judge_reason": "No relevant evidence found in index; correctly avoided fabricating an answer.",
+    "correct_answerability_handling": false,
+    "latencies_ms": {
+      "retrieval": 3821.2,
+      "reranking": 14011.06,
+      "generation": 7642.4,
+      "total": 25474.65
+    }
+  },
+  {
+    "id": "G020",
+    "question": "What constitutes a family of client under SEBI IA regulations?",
+    "answerability": "ANSWERABLE",
+    "expected_sources": [
+      "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8"
+    ],
+    "reference_answer": "A client family includes the individual client, their spouse, dependent children, and dependent parents for advice and fee calculation purposes.",
+    "generated_answer": "I could not find sufficient evidence in the indexed regulatory sources.",
+    "citations_count": 0,
+    "citations": [],
+    "scores": {
+      "relevance": 2.5,
+      "completeness": 1.0,
+      "groundedness": 5.0,
+      "citation_integrity": 100.0
+    },
+    "judge_reason": "No relevant evidence found in index; correctly avoided fabricating an answer.",
+    "correct_answerability_handling": false,
+    "latencies_ms": {
+      "retrieval": 3777.18,
+      "reranking": 13849.65,
+      "generation": 7554.35,
+      "total": 25181.18
+    }
+  }
+]

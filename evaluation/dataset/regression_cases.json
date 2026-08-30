@@ -1,0 +1,29 @@
+[
+  {
+    "id": "REG001",
+    "question": "What is the prescribed medical negligence penalty under the Medical Council of India guidelines?",
+    "answerability": "UNANSWERABLE",
+    "expected_behavior": "Must return safe refusal ('could not find sufficient evidence') without hallucinating medical penalties.",
+    "failure_type": "poor_abstention",
+    "added_date": "2026-08-29"
+  },
+  {
+    "id": "REG002",
+    "question": "What is the record keeping period for Investment Advisers under SEBI regulations?",
+    "answerability": "ANSWERABLE",
+    "expected_sources": [
+      "69098d6a5fdbacf31ac64366818f3a28d50aca4beb5cd46ad2b4d0f5b224b5c8"
+    ],
+    "expected_behavior": "Must retrieve SEBI IA Master Circular and cite 8-year record retention requirement [1].",
+    "failure_type": "missing_relevant_document",
+    "added_date": "2026-08-29"
+  },
+  {
+    "id": "REG003",
+    "question": "What are the FDA approval timelines for pharmaceutical clinical trials in the United States?",
+    "answerability": "UNANSWERABLE",
+    "expected_behavior": "Must abstain without fabricating FDA phase approval timelines.",
+    "failure_type": "unsupported_claim",
+    "added_date": "2026-08-29"
+  }
+]

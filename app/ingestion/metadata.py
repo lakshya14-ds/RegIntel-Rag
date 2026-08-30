@@ -243,6 +243,9 @@ class MetadataExtractor:
         )
 
 
+RegulatoryMetadataExtractor = MetadataExtractor
+
+
 def extract_document_metadata(
     text: str,
     title: Optional[str] = None,
@@ -250,7 +253,7 @@ def extract_document_metadata(
     source: Optional[str] = "SEBI"
 ) -> dict:
     """Convenience function returning dictionary representation of extracted metadata."""
-    meta = RegulatoryMetadataExtractor.extract(text=text, title=title, url=url)
+    meta = MetadataExtractor.extract(text=text, title=title, url=url)
     d = meta.model_dump()
     d["title"] = derive_title_from_url_or_content(url=url or "", text=text or "", generic_title=title)
     return d
