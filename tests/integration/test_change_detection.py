@@ -1,3 +1,4 @@
+from unittest.mock import patch, MagicMock
 import pytest
 from app.change_detection.detector import RegulatoryChangeDetector, ChangeReport
 from app.rag.pipeline import RAGPipeline
@@ -23,7 +24,8 @@ def test_integration_rag_pipeline_change_analysis_routing():
     pipeline = RAGPipeline(retrieval_mode="hybrid", enable_reranker=False)
     query = "What changed in the SEBI investment adviser circulars?"
 
-    response = pipeline.answer(query)
-    assert response is not None
-    assert response.query_intent is not None
-    assert response.query_intent.get("query_type") == "change_analysis"
+    with patch.object(pipeline.generator, "generate_answer", return_value={"answer": "Changes detected [1].", "sources": []}):
+        response = pipeline.answer(query)
+        assert response is not None
+        assert response.query_intent is not None
+        assert response.query_intent.get("query_type") == "change_analysis"

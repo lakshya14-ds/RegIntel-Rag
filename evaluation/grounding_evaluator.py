@@ -185,22 +185,28 @@ class GroundingEvaluator:
             logger.debug(f"LLM grounding evaluation failed ({e}); using deterministic keyword verification.")
 
         # Deterministic keyword verification fallback
+        STOPWORDS = {
+            "must", "shall", "will", "should", "have", "with", "from", "that", "this",
+            "about", "been", "were", "they", "their", "such", "into", "over", "after",
+            "before", "each", "every", "some", "only", "other", "under", "than", "then",
+            "also", "when", "what", "which", "more", "most", "less", "these", "those"
+        }
         results = []
         ev_lower = evidence_text.lower()
         for c in claims:
             c_tags = re.findall(r"\[(\d+)\]", c)
-            c_words = [w.lower() for w in re.findall(r"\b[a-zA-Z0-9]{4,}\b", c)]
+            c_words = [w.lower() for w in re.findall(r"\b[a-zA-Z0-9]{3,}\b", c) if w.lower() not in STOPWORDS]
             match_count = sum(1 for w in c_words if w in ev_lower)
             match_ratio = match_count / max(1, len(c_words))
 
-            if match_ratio >= 0.50:
+            if match_ratio >= 0.60:
                 results.append({
                     "claim": c,
                     "classification": "SUPPORTED",
                     "evidence_ids": c_tags,
                     "reason": f"Textual overlap ({match_ratio:.0%}) with retrieved evidence."
                 })
-            elif match_ratio >= 0.25:
+            elif match_ratio >= 0.40:
                 results.append({
                     "claim": c,
                     "classification": "PARTIALLY_SUPPORTED",

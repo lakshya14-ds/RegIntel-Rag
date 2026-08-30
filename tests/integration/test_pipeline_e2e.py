@@ -64,7 +64,10 @@ def test_end_to_end_chunk_and_validate(sample_sebi_document):
     assert report.duplicate_chunks == 0
 
 
-@pytest.mark.skipif(not settings.gemini_api_key, reason="GEMINI_API_KEY is not set")
+@pytest.mark.skipif(
+    os.getenv("RUN_GEMINI_INTEGRATION", "false").lower() not in ("true", "1") or not settings.gemini_api_key or settings.gemini_api_key == "mock_test_key",
+    reason="Live Gemini integration test disabled. Set RUN_GEMINI_INTEGRATION=true and provide a valid GEMINI_API_KEY."
+)
 def test_end_to_end_gemini_embedding_generation(sample_sebi_document):
     # 1. Chunk document
     chunks = chunk_document(sample_sebi_document)
