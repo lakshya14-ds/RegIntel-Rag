@@ -2,10 +2,15 @@
 Integration tests for Generation Evaluation Pipeline (Phase 42).
 """
 
+import os
 import pytest
 from evaluation.generation_evaluator import GenerationEvaluator
 
 
+@pytest.mark.skipif(
+    os.getenv("RUN_GEMINI_INTEGRATION", "false").lower() not in ("true", "1") or os.getenv("GEMINI_API_KEY") in (None, "", "mock_test_key"),
+    reason="Live Gemini integration test disabled. Set RUN_GEMINI_INTEGRATION=true."
+)
 def test_integration_generation_evaluator_subset():
     evaluator = GenerationEvaluator(enable_cache=True)
     dataset = evaluator.load_dataset()
