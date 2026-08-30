@@ -112,11 +112,12 @@ def render_comparison_page(client: RegIntelAPIClient) -> None:
                     st.markdown('</div>', unsafe_allow_html=True)
 
                 # Relationship & Confidence Badges
+                cache_badge = '<span class="badge badge-purple">⚡ CACHE HIT</span>' if comp_res.get("cached") else ""
                 st.markdown(
                     f'<span class="badge badge-blue">Relationship: {rel_type}</span>'
                     f'{get_confidence_badge(rel_conf)}'
                     f'<span class="badge badge-gray">Chronology Confidence: {order_conf}</span>'
-                    f'{"<span class=\"badge badge-purple\">⚡ CACHE HIT</span>" if comp_res.get("cached") else ""}',
+                    f'{cache_badge}',
                     unsafe_allow_html=True
                 )
 
