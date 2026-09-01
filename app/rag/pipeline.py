@@ -347,10 +347,16 @@ class RAGPipeline:
                 reranker_active = False
 
             top_score = ranked_chunks[0].score if ranked_chunks else 0.0
+            eval_score = max(
+                top_score,
+                getattr(ranked_chunks[0], "hybrid_score", 0.0) or 0.0,
+                getattr(ranked_chunks[0], "vector_score", 0.0) or 0.0,
+                getattr(ranked_chunks[0], "bm25_score", 0.0) or 0.0
+            ) if ranked_chunks else 0.0
 
             # 6. Grounding check
-            if top_score < threshold:
-                logger.info(f"Insufficient relevance score ({top_score:.4f} < {threshold}). Skipping generation.")
+            if eval_score < threshold:
+                logger.info(f"Insufficient relevance score ({eval_score:.4f} < {threshold}). Skipping generation.")
                 langfuse_tracer.update_trace(
                     trace,
                     output_data={"answer": "I could not find sufficient evidence in the indexed regulatory sources."},

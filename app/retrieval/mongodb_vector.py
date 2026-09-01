@@ -103,7 +103,10 @@ class MongoDBVectorRetriever:
             try:
                 with open(cf, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                for c in data.get("chunks", []):
+                chunk_list = data.get("chunks", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
+                for c in chunk_list:
+                    if not isinstance(c, dict):
+                        continue
                     emb = c.get("embedding")
                     if not emb or len(emb) != len(query_vector):
                         continue

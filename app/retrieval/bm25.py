@@ -75,8 +75,10 @@ class BM25Retriever:
             try:
                 with open(cf, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                for c_dict in data.get("chunks", []):
-                    loaded_chunks.append(from_mongo(DocumentChunk, c_dict))
+                chunk_items = data.get("chunks", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
+                for c_dict in chunk_items:
+                    if isinstance(c_dict, dict):
+                        loaded_chunks.append(from_mongo(DocumentChunk, c_dict))
             except Exception as e:
                 logger.error(f"Failed to read chunk file {cf.name}: {e}")
 

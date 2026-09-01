@@ -15,22 +15,34 @@ FASTAPI_BASE_URL = os.getenv("FASTAPI_BASE_URL", "http://localhost:8000").rstrip
 
 
 class RegIntelAPIClient:
-    """HTTP client communicating with the RegIntel FastAPI backend."""
+    """HTTP client communicating with the RegIntel FastAPI backend with host failover support."""
 
     def __init__(self, base_url: Optional[str] = None, timeout: int = 45):
-        self.base_url = (base_url or FASTAPI_BASE_URL).rstrip("/")
+        raw_url = (base_url or FASTAPI_BASE_URL).rstrip("/")
+        self.base_url = raw_url
         self.timeout = timeout
+
+    def _get_candidate_urls(self, path: str) -> List[str]:
+        primary = f"{self.base_url}/{path.lstrip('/')}"
+        candidates = [primary]
+        if "localhost" in self.base_url:
+            candidates.append(f"{self.base_url.replace('localhost', '127.0.0.1')}/{path.lstrip('/')}")
+        elif "127.0.0.1" in self.base_url:
+            candidates.append(f"{self.base_url.replace('127.0.0.1', 'localhost')}/{path.lstrip('/')}")
+        return candidates
 
     def health_check(self) -> Dict[str, Any]:
         """Calls GET /health."""
-        try:
-            resp = requests.get(f"{self.base_url}/health", timeout=5)
-            if resp.status_code == 200:
-                return resp.json()
-            return {"status": "degraded", "mongodb": False, "embedding_service": False}
-        except Exception as e:
-            logger.warning(f"Health check failed: {e}")
-            return {"status": "unavailable", "mongodb": False, "embedding_service": False}
+        for url in self._get_candidate_urls("health"):
+            try:
+                resp = requests.get(url, timeout=10)
+                if resp.status_code == 200:
+                    return resp.json()
+                return {"status": "degraded", "mongodb": False, "embedding_service": False}
+            except Exception as e:
+                logger.debug(f"Health check failed for {url}: {e}")
+                continue
+        return {"status": "unavailable", "mongodb": False, "embedding_service": False}
 
     def ask_question(
         self,
@@ -48,9 +60,18 @@ class RegIntelAPIClient:
             "category": category,
             "source": source
         }
-        resp = requests.post(f"{self.base_url}/ask", json=payload, timeout=self.timeout)
-        resp.raise_for_status()
-        return resp.json()
+        last_exc = None
+        for url in self._get_candidate_urls("ask"):
+            try:
+                resp = requests.post(url, json=payload, timeout=self.timeout)
+                resp.raise_for_status()
+                return resp.json()
+            except Exception as e:
+                last_exc = e
+                continue
+        if last_exc:
+            raise last_exc
+        raise requests.ConnectionError("Could not connect to /ask")
 
     def compare_documents(self, doc_a_id: str, doc_b_id: str) -> Dict[str, Any]:
         """Calls POST /compare."""
@@ -58,21 +79,48 @@ class RegIntelAPIClient:
             "document_a_id": doc_a_id.strip(),
             "document_b_id": doc_b_id.strip()
         }
-        resp = requests.post(f"{self.base_url}/compare", json=payload, timeout=self.timeout)
-        resp.raise_for_status()
-        return resp.json()
+        last_exc = None
+        for url in self._get_candidate_urls("compare"):
+            try:
+                resp = requests.post(url, json=payload, timeout=self.timeout)
+                resp.raise_for_status()
+                return resp.json()
+            except Exception as e:
+                last_exc = e
+                continue
+        if last_exc:
+            raise last_exc
+        raise requests.ConnectionError("Could not connect to /compare")
 
     def get_document(self, document_id: str) -> Dict[str, Any]:
         """Calls GET /document/{document_id}."""
-        resp = requests.get(f"{self.base_url}/document/{document_id.strip()}", timeout=self.timeout)
-        resp.raise_for_status()
-        return resp.json()
+        last_exc = None
+        for url in self._get_candidate_urls(f"document/{document_id.strip()}"):
+            try:
+                resp = requests.get(url, timeout=self.timeout)
+                resp.raise_for_status()
+                return resp.json()
+            except Exception as e:
+                last_exc = e
+                continue
+        if last_exc:
+            raise last_exc
+        raise requests.ConnectionError(f"Could not fetch document {document_id}")
 
     def get_document_versions(self, document_id: str) -> Dict[str, Any]:
         """Calls GET /document/{document_id}/versions."""
-        resp = requests.get(f"{self.base_url}/document/{document_id.strip()}/versions", timeout=self.timeout)
-        resp.raise_for_status()
-        return resp.json()
+        last_exc = None
+        for url in self._get_candidate_urls(f"document/{document_id.strip()}/versions"):
+            try:
+                resp = requests.get(url, timeout=self.timeout)
+                resp.raise_for_status()
+                return resp.json()
+            except Exception as e:
+                last_exc = e
+                continue
+        if last_exc:
+            raise last_exc
+        raise requests.ConnectionError(f"Could not fetch versions for {document_id}")
 
     def get_latest(
         self,
@@ -86,9 +134,18 @@ class RegIntelAPIClient:
             params["source"] = source
         if category:
             params["category"] = category
-        resp = requests.get(f"{self.base_url}/latest", params=params, timeout=self.timeout)
-        resp.raise_for_status()
-        return resp.json()
+        last_exc = None
+        for url in self._get_candidate_urls("latest"):
+            try:
+                resp = requests.get(url, params=params, timeout=self.timeout)
+                resp.raise_for_status()
+                return resp.json()
+            except Exception as e:
+                last_exc = e
+                continue
+        if last_exc:
+            raise last_exc
+        raise requests.ConnectionError("Could not fetch latest documents")
 
     def search_documents(
         self,
@@ -106,6 +163,15 @@ class RegIntelAPIClient:
             "category": category,
             "source": source
         }
-        resp = requests.post(f"{self.base_url}/search", json=payload, timeout=self.timeout)
-        resp.raise_for_status()
-        return resp.json()
+        last_exc = None
+        for url in self._get_candidate_urls("search"):
+            try:
+                resp = requests.post(url, json=payload, timeout=self.timeout)
+                resp.raise_for_status()
+                return resp.json()
+            except Exception as e:
+                last_exc = e
+                continue
+        if last_exc:
+            raise last_exc
+        raise requests.ConnectionError("Could not execute search")

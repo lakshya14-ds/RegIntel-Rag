@@ -63,10 +63,19 @@ class MongoDBManager:
         if self._client is None:
             logger.info("Connecting to MongoDB Atlas")
             try:
+                kwargs = {
+                    "serverSelectionTimeoutMS": 3000,
+                    "connectTimeoutMS": 3000
+                }
+                try:
+                    import certifi
+                    kwargs["tlsCAFile"] = certifi.where()
+                except Exception:
+                    pass
+
                 self._client = MongoClient(
                     self._uri,
-                    serverSelectionTimeoutMS=5000,
-                    connectTimeoutMS=5000
+                    **kwargs
                 )
             except Exception as e:
                 logger.error("Failed to initialize MongoDB client")

@@ -8,6 +8,13 @@ Interacts exclusively with the FastAPI REST backend:
 4. Search Documents (Multi-Method BM25/Vector/Hybrid Evidence Search)
 5. Document Timeline (Regulatory Version Lineage & Predecessor/Successor Graph)
 """
+import sys
+from pathlib import Path
+
+# Ensure project root is on sys.path for direct streamlit execution
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 import streamlit as st
 from frontend.api_client import RegIntelAPIClient
@@ -106,6 +113,9 @@ with st.sidebar:
 
     if status_str == "unavailable":
         st.warning("⚠️ RegIntel backend is currently unavailable. Please start the FastAPI service (`uvicorn app.main:app --port 8000`).")
+
+    if st.button("🔄 Refresh Status", use_container_width=True):
+        st.rerun()
 
     st.divider()
     st.subheader("Retrieval Engine Settings")
