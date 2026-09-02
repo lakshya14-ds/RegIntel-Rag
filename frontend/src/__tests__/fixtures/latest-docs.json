@@ -1,0 +1,28 @@
+[
+  {
+    "document_id": "sebi_ia_master_circular_2024",
+    "title": "Master Circular for Investment Advisers",
+    "source": "SEBI",
+    "category": "Investment Adviser",
+    "document_type": "Master Circular",
+    "circular_number": "SEBI/HO/MIRSD/2024/05",
+    "published_date": "2024-05-15",
+    "effective_date": "2024-06-01",
+    "status": "current",
+    "url": "https://www.sebi.gov.in/ia2024.html",
+    "document_version": "2.0"
+  },
+  {
+    "document_id": "sebi_ia_circular_2020",
+    "title": "Guidelines for Investment Advisers 2020",
+    "source": "SEBI",
+    "category": "Investment Adviser",
+    "document_type": "Circular",
+    "circular_number": "SEBI/HO/IMD/DF1/CIR/P/2020/182",
+    "published_date": "2020-09-23",
+    "effective_date": "2021-04-01",
+    "status": "historical",
+    "url": "https://www.sebi.gov.in/ia2020.html",
+    "document_version": "1.0"
+  }
+]

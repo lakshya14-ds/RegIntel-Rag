@@ -72,7 +72,7 @@ async def correlation_id_middleware(request: Request, call_next):
 # -------------------------------------------------------------
 cors_origins_list = [origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()]
 if not cors_origins_list:
-    cors_origins_list = ["http://localhost:8501", "http://127.0.0.1:8501"]
+    cors_origins_list = ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:8501", "http://127.0.0.1:8501"]
 
 app.add_middleware(
     CORSMiddleware,

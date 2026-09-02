@@ -5,7 +5,9 @@
 [![CI/CD Pipeline](https://github.com/lakshya14-ds/RegIntel-Rag/actions/workflows/ci.yml/badge.svg)](https://github.com/lakshya14-ds/RegIntel-Rag)
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688.svg)](https://fastapi.tiangolo.com)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.40-FF4B4B.svg)](https://streamlit.io)
+[![React 18](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6.svg)](https://www.typescriptlang.org)
+[![Vite](https://img.shields.io/badge/Vite-5.4-646CFF.svg)](https://vitejs.dev)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
 
 ---
@@ -37,7 +39,7 @@ Financial regulations issued by authorities like the **Securities and Exchange B
 - **Metadata-Guided Query Understanding**: Automatic intent classification (`general_search`, `current_requirement`, `change_analysis`, `historical_lookup`).
 - **Temporal Ranking Heuristics**: Deterministic date-weighting ensuring current circulars supersede outdated guidance.
 - **Document Version Lineage**: Automatic regex extraction of referenced and superseded circular IDs.
-- **Interactive Web UI & REST API**: Streamlit 4-tab compliance dashboard and FastAPI backend with OpenAPI documentation.
+- **Interactive Web UI & REST API**: Production-grade React + TypeScript + Vite compliance dashboard (Port 5173) and FastAPI backend with OpenAPI documentation.
 - **Production Observability**: Full request tracing via Langfuse and systematic benchmark experiment tracking with MLflow.
 - **Containerized & CI-Ready**: Multi-service Docker Compose with GitHub Actions CI/CD test automation.
 
@@ -49,7 +51,7 @@ Financial regulations issued by authorities like the **Securities and Exchange B
                                 USER / COMPLIANCE OFFICER
                                            │
                                            ▼
-                                  Streamlit Web UI (:8501)
+                            React + TypeScript + Vite UI (:5173)
                                            │
                                            ▼
                                    FastAPI Backend (:8000)
@@ -90,7 +92,7 @@ Financial regulations issued by authorities like the **Securities and Exchange B
 - **Neural Cross-Encoder**: `BAAI/bge-reranker-v2-m3` via `sentence-transformers` & PyTorch
 - **Crawler & Extraction**: `crawl4ai`, BeautifulSoup4, Markdown cleaning utilities
 - **Backend API**: FastAPI, Pydantic v2, Uvicorn, HTTPX
-- **Frontend Dashboard**: Streamlit (Chat Assistant, Document Search, Change Detection, Version Lineage)
+- **Frontend Dashboard**: React 18, TypeScript, Vite, React Router, Vitest, Testing Library (Ask Assistant, Document Search, Change Detection, Version Lineage)
 - **Observability & Tracking**: Langfuse (Spans & Traces), MLflow (Runs, Metrics & Artifacts)
 - **DevOps & Testing**: Docker, Docker Compose, GitHub Actions CI, Pytest (130+ automated tests)
 
@@ -172,8 +174,8 @@ Evaluated systematically across 50+ benchmark scenarios and ground-truth questio
 │               Container Environment (Docker)             │
 │                                                           │
 │  ┌───────────────────────┐     ┌───────────────────────┐  │
-│  │   Streamlit Frontend  │────►│    FastAPI Backend    │  │
-│  │      Port 8501        │     │       Port 8000       │  │
+│  │    React / Vite UI    │────►│    FastAPI Backend    │  │
+│  │   Port 5173 (Nginx)   │     │       Port 8000       │  │
 │  └───────────────────────┘     └───────────┬───────────┘  │
 │                                            │              │
 │  ┌───────────────────────┐                 │              │
@@ -239,16 +241,19 @@ See full documentation: [Observability Guide](docs/observability.md).
 docker compose up --build
 ```
 - FastAPI Backend: `http://localhost:8000` (Docs: `http://localhost:8000/docs`)
-- Streamlit UI: `http://localhost:8501`
+- React + Vite UI: `http://localhost:5173`
 - MLflow UI: `http://localhost:5000`
 
-### 5. Run Directly (Without Docker)
+### 6. Run Directly (Without Docker)
 ```bash
 # Terminal 1 — Start Backend
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 
-# Terminal 2 — Start Frontend
-streamlit run frontend/streamlit_app.py
+# Terminal 2 — Start React Frontend
+cd frontend
+npm install
+npm run dev
+# Open http://localhost:5173 in browser
 ```
 
 ---

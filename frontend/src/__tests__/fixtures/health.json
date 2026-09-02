@@ -1,0 +1,7 @@
+{
+  "status": "ok",
+  "mongodb": true,
+  "embedding_service": true,
+  "environment": "development",
+  "version": "1.0.0"
+}

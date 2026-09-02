@@ -1,0 +1,40 @@
+{
+  "answer": "Under SEBI Investment Advisers regulations [1], client agreements must strictly adhere to the standardized terms and specify fee caps. Investment Advisers are prohibited from charging fees exceeding 2.5% of AUA per annum [2].",
+  "sources": [
+    {
+      "source_id": 1,
+      "chunk_id": "chunk-101",
+      "document_id": "sebi_ia_master_circular_2024",
+      "source": "SEBI",
+      "title": "Master Circular for Investment Advisers",
+      "section": "Section 4.1 Client Agreement",
+      "published_date": "2024-05-15",
+      "effective_date": "2024-06-01",
+      "url": "https://www.sebi.gov.in/legal/master-circulars/ia-2024.html",
+      "score": 0.9421
+    },
+    {
+      "source_id": 2,
+      "chunk_id": "chunk-102",
+      "document_id": "sebi_ia_master_circular_2024",
+      "source": "SEBI",
+      "title": "Master Circular for Investment Advisers",
+      "section": "Section 4.2 Fee Schedule",
+      "published_date": "2024-05-15",
+      "effective_date": "2024-06-01",
+      "url": "https://www.sebi.gov.in/legal/master-circulars/ia-2024.html",
+      "score": 0.8915
+    }
+  ],
+  "query_intent": {
+    "query_type": "current_requirement",
+    "time_intent": "latest",
+    "source": "SEBI",
+    "category": "Investment Adviser",
+    "document_type": "Circular",
+    "circular_number": "SEBI/HO/MIRSD/2024",
+    "is_comparison": false
+  },
+  "sufficient_evidence": true,
+  "disclaimer": "Based on indexed regulatory sources. Does not constitute official legal advice."
+}

@@ -1,0 +1,37 @@
+{
+  "query": "investment adviser fee cap",
+  "retrieval_mode": "hybrid_reranked",
+  "total_results": 2,
+  "results": [
+    {
+      "rank": 1,
+      "chunk_id": "chk-001",
+      "document_id": "sebi_ia_master_circular_2024",
+      "title": "Master Circular for Investment Advisers",
+      "section": "Section 4.2 Fee Schedule",
+      "source": "SEBI",
+      "category": "Investment Adviser",
+      "document_type": "Master Circular",
+      "published_date": "2024-05-15",
+      "effective_date": "2024-06-01",
+      "url": "https://www.sebi.gov.in/ia2024.html",
+      "score": 0.9542,
+      "content_snippet": "The maximum fees that may be charged by an Investment Adviser shall not exceed 2.5% of AUA per annum per client across all services."
+    },
+    {
+      "rank": 2,
+      "chunk_id": "chk-002",
+      "document_id": "sebi_ia_circular_2020",
+      "title": "Guidelines for Investment Advisers 2020",
+      "section": "Clause 2 Fees",
+      "source": "SEBI",
+      "category": "Investment Adviser",
+      "document_type": "Circular",
+      "published_date": "2020-09-23",
+      "effective_date": "2021-04-01",
+      "url": "https://www.sebi.gov.in/ia2020.html",
+      "score": 0.8123,
+      "content_snippet": "Investment Advisers shall charge fees from clients in the manner specified by SEBI from time to time."
+    }
+  ]
+}
