@@ -182,37 +182,55 @@ def get_latest_documents(
     """
     Returns recently published regulatory documents sorted by published_date descending.
     """
-    all_docs: List[dict] = []
-    
-    # Check local processed directory
+    all_docs_by_id: dict = {}
+
+    # 1. Fetch from MongoDB first
+    try:
+        repo = get_doc_repo()
+        mongo_docs = repo.list_documents(source=source, category=category, limit=max(limit * 2, 50))
+        for d in mongo_docs:
+            doc_id = d.get("document_id")
+            if doc_id:
+                all_docs_by_id[doc_id] = d
+    except Exception as e:
+        logger.warning(f"Error querying MongoDB in get_latest_documents: {e}")
+
+    # 2. Check local processed directory as fallback/supplement
     if settings.processed_data_dir.exists():
         for f in settings.processed_data_dir.glob("*.json"):
+            if f.name.endswith("_chunks.json"):
+                continue
             try:
                 with open(f, "r", encoding="utf-8") as jf:
-                    doc = json.load(f)
+                    doc = json.load(jf)
                     if isinstance(doc, dict) and "document_id" in doc:
-                        all_docs.append(doc)
+                        doc_id = doc.get("document_id")
+                        if doc_id and doc_id not in all_docs_by_id:
+                            all_docs_by_id[doc_id] = doc
             except Exception:
                 continue
 
     # Filter
     filtered: List[dict] = []
-    for d in all_docs:
+    clean_source = source.strip() if source and source.strip() and source.strip() != "All" else None
+    clean_cat = category.strip() if category and category.strip() and category.strip() != "All" else None
+
+    for d in all_docs_by_id.values():
         meta = d.get("metadata", {})
         d_src = d.get("source") or meta.get("source", "SEBI")
         d_cat = d.get("category") or meta.get("category", "")
 
-        if source and d_src.upper() != source.strip().upper():
+        if clean_source and d_src.upper() != clean_source.upper():
             continue
-        if category and category.lower() not in (d_cat or "").lower():
+        if clean_cat and clean_cat.lower() not in (d_cat or "").lower():
             continue
         filtered.append(d)
 
     # Sort descending by published_date (fallback scraped_at)
     filtered.sort(
         key=lambda x: (
-            x.get("published_date") or x.get("metadata", {}).get("published_date") or "1970-01-01",
-            x.get("scraped_at", "")
+            str(x.get("published_date") or x.get("metadata", {}).get("published_date") or "1970-01-01"),
+            str(x.get("scraped_at", ""))
         ),
         reverse=True
     )

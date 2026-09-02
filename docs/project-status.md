@@ -24,7 +24,7 @@
 | **Deterministic Citation Mapping** | `app/rag/citations.py` | Complete (100% Verifiable) |
 | **Multi-LLM Routing & Fallback** | `app/llm/fallback.py` | Complete (Gemini $\rightarrow$ Ollama) |
 | **FastAPI REST Service** | `app/main.py`, `app/api/` | Complete (OpenAPI, Request ID) |
-| **Streamlit Interactive UI** | `frontend/streamlit_app.py` | Complete (4-Tab Dashboard) |
+| **React + TypeScript + Vite UI** | `frontend/src/` | Complete (Production SPA) |
 | **MLflow Experiment Tracking** | `app/observability/mlflow_tracker.py` | Complete (Offline Benchmarks) |
 | **Langfuse Distributed Tracing** | `app/observability/langfuse_tracer.py` | Complete (11 Span Hierarchy) |
 | **Docker & Docker Compose** | `Dockerfile`, `docker-compose.yml` | Complete |

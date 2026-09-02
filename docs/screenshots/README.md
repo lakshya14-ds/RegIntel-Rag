@@ -7,33 +7,33 @@ This directory contains visual captures and UI walkthrough representations of th
 ## 1. Interface Views & Captures
 
 ### 1.1 Home / Grounded Question Answering (`01_ask_regintel.png`)
-- **Location**: `frontend/streamlit_app.py` (Tab 1: Ask RegIntel)
+- **Location**: `frontend/src/pages/Ask.tsx` (`/ask`)
 - **Features Captured**:
   - Regulatory query prompt bar with auto-intent classification badge (`current_requirement`, `category: Investment Adviser`).
   - Answer synthesis panel featuring verified bracketed source indices (`[1]`, `[2]`).
   - LLM telemetry badge (`Gemini Flash Lite`, latency, fallback status).
 
 ### 1.2 Citation Evidence Drawer (`02_citation_evidence.png`)
-- **Location**: `frontend/components/citations.py`
+- **Location**: `frontend/src/components/citations/CitationDrawer.tsx`
 - **Features Captured**:
   - Expandable evidence cards showing exact source circular titles, section clauses, and SEBI source URLs.
   - 100% verification badge guaranteeing zero hallucinated citation indices.
 
 ### 1.3 Direct Document Comparison Engine (`03_document_comparison.png`)
-- **Location**: `frontend/components/comparison.py` (Tab 2: Compare Circulars)
+- **Location**: `frontend/src/pages/Compare.tsx` (`/compare`)
 - **Features Captured**:
   - Executive Summary of changes between two circular versions.
   - Summary count badges (`1 ADDED`, `2 MODIFIED`, `0 REMOVED`, `14 UNCHANGED`).
   - Side-by-side section delta diff with compliance impact summaries.
 
 ### 1.4 Regulatory Version Lineage Graph (`04_version_timeline.png`)
-- **Location**: `frontend/components/timeline.py` (Tab 4: Document Timeline)
+- **Location**: `frontend/src/pages/Timeline.tsx` (`/document/:id/timeline`)
 - **Features Captured**:
   - Chronological version timeline showing `SUPERSEDES` and `SUPERSEDED` relationships.
   - Active legal currentness badges (`CURRENT` vs. `HISTORICAL`).
 
 ### 1.5 Multi-Method Regulatory Search (`05_document_search.png`)
-- **Location**: `frontend/components/documents.py` (Tab 3: Search Documents)
+- **Location**: `frontend/src/pages/Search.tsx` (`/search`)
 - **Features Captured**:
   - Side-by-side retrieval mode selector (`Vector`, `BM25`, `Hybrid`).
   - Relevance score distribution and metadata filtering.

@@ -1,7 +1,7 @@
 # RegIntel RAG — Master Resume Bullets (Phase 55.1)
 
 **Project Title**: RegIntel RAG — Regulatory Intelligence & Change Analysis System  
-**Core Technologies**: Python, FastAPI, Streamlit, MongoDB Atlas Vector Search, BM25Plus, BAAI/bge-reranker-v2-m3, Google Gemini, Ollama, Langfuse, MLflow, Docker, GitHub Actions CI/CD.
+**Core Technologies**: Python, FastAPI, React, TypeScript, Vite, MongoDB Atlas Vector Search, BM25Plus, BAAI/bge-reranker-v2-m3, Google Gemini, Ollama, Langfuse, MLflow, Docker, GitHub Actions CI/CD.
 
 ---
 
@@ -11,4 +11,4 @@
 
 - **Regulatory Change Detection & Lineage Tracking**: Developed an automated 4-tier AST-based regulatory comparison engine and legal supersession tracker (`SUPERSEDES` / `UPDATE` / `NEW`) to extract clause deltas (`ADDED`, `MODIFIED`, `REMOVED`, `UNCHANGED`) across circular revisions, achieving **100% verifiable citation integrity** and zero hallucinated references.
 
-- **Resilient Dual-LLM & Observability Architecture**: Architected a production-ready FastAPI REST service with Streamlit dashboard featuring transparent Google Gemini $\rightarrow$ local Ollama (`llama3.2`) failover routing and 11-span distributed tracing via Langfuse with **+0.37 ms overhead**, validated through a 278-test suite with **78% code coverage** in Docker CI/CD.
+- **Resilient Dual-LLM & Observability Architecture**: Architected a production-ready FastAPI REST service with React + TypeScript dashboard featuring transparent Google Gemini $\rightarrow$ local Ollama (`llama3.2`) failover routing and 11-span distributed tracing via Langfuse with **+0.37 ms overhead**, validated through a 278-test suite with **78% code coverage** in Docker CI/CD.

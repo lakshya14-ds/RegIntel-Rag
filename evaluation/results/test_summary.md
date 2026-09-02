@@ -11,7 +11,7 @@
 | **Security & Governance** | `tests/security/` | 1 test file (4 cases) | **PASSED** | Secret redaction, stack trace suppression, input validation |
 | **Performance Benchmarks** | `tests/performance/` | 1 test file (3 cases) | **PASSED** | BM25, Fusion, and Pipeline latency |
 | **API Contract Validation** | `tests/api/` | 2 test files (12 cases) | **PASSED** | Request ID propagation, status codes, error schemas |
-| **Frontend Client Tests** | `tests/frontend/` | 1 test file (3 cases) | **PASSED** | Streamlit API client serialization |
+| **Frontend Tests (Vitest)** | `frontend/src/__tests__/` | 6 test files (12 cases) | **PASSED** | React 18, TypeScript, Vitest & RTL |
 
 ---
 

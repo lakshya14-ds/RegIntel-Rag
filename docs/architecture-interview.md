@@ -22,4 +22,4 @@
 > *"Beyond search, our 4-tier section comparison engine automatically aligns clauses between circular revisions, categorizing requirements into ADDED, MODIFIED, REMOVED, and UNCHANGED, saving compliance teams dozens of hours of manual audit work."*
 
 ### 5. Resilient Microservices & Observability (20 Seconds)
-> *"The system is wrapped in a FastAPI REST backend and Streamlit UI, with automatic fallback from Gemini to local Ollama (`llama3.2`), and full 11-span distributed tracing via Langfuse with only **+0.37 ms** overhead."*
+> *"The system is wrapped in a FastAPI REST backend and React + TypeScript + Vite UI, with automatic fallback from Gemini to local Ollama (`llama3.2`), and full 11-span distributed tracing via Langfuse with only **+0.37 ms** overhead."*

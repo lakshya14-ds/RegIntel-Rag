@@ -69,11 +69,12 @@ This document provides in-depth technical justifications for every major design 
 
 ---
 
-## 7. Frontend: Streamlit vs. Next.js / React
+## 7. Frontend: React + TypeScript + Vite vs. Streamlit
 
-- **Decision**: Streamlit Python Dashboard.
+- **Decision**: Production-grade React 18 SPA built with TypeScript and Vite.
 - **Rationale**:
-  - **Zero Serialization Friction**: Direct integration with Python data structures and Pydantic models.
-  - **Rapid Compliance Prototyping**: Complete 4-tab interactive workspace (Ask, Compare, Version Timeline, Catalog) built in pure Python.
-  - **Free Cloud Hosting**: Streamlit Community Cloud deploys directly from GitHub in 1 click.
-- **Tradeoff**: Slightly less granular CSS/DOM control compared to bespoke React single-page applications.
+  - **Granular DOM & Interactive UI**: Native side-by-side textual diffing, interactive inline citation chips `[1]`, slide-out inspection drawer, and custom CSS design system.
+  - **Type Safety & Maintainability**: Strict TypeScript contracts mirroring FastAPI Pydantic schemas (`/ask`, `/compare`, `/latest`, `/document/{id}/versions`).
+  - **Performance & Responsiveness**: Sub-millisecond client-side routing with React Router 6 and sub-75 kB production gzipped bundle.
+  - **Testing**: Dedicated component test suite with Vitest and React Testing Library.
+- **Tradeoff**: Requires Node.js build tooling and multi-stage Docker / Nginx containerization.

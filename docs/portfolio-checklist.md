@@ -6,7 +6,7 @@
 
 ### 1. Deployment & Infrastructure
 - [x] **FastAPI Backend Production-Ready**: Dynamic `PORT` binding, `0.0.0.0` host, production CORS handling.
-- [x] **Streamlit Frontend Configured**: Dynamic `FASTAPI_BASE_URL` reading with interactive 5-tab workspace.
+- [x] **React + TypeScript + Vite Frontend Configured**: Dynamic `VITE_API_BASE_URL` reading with interactive compliance workspace.
 - [x] **MongoDB Atlas Connection**: Free M0 tier compatibility with vector search indexing documentation.
 - [x] **Docker Containerization**: Multi-stage `Dockerfile` and `docker-compose.yml` operational.
 - [x] **Zero Secret Leakage**: All `.env` files protected in `.gitignore`, API keys scrubbed in error envelopes and traces.

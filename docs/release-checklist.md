@@ -44,7 +44,7 @@
 - [x] FastAPI REST endpoints: `/health`, `/ask`, `/search`, `/compare`, `/latest`, `/document/{id}`
 - [x] `X-Request-ID` correlation middleware for distributed request tracing
 - [x] Pydantic 422 input validation & clean error response envelopes
-- [x] Streamlit 4-tab compliance dashboard (Ask, Compare, Version Timeline, Analytics)
+- [x] React + TypeScript + Vite compliance dashboard (Ask, Compare, Version Timeline, Catalog, Search, About)
 
 ### 7. Observability & Infrastructure
 - [x] Langfuse live distributed tracing with 11-span profiling hierarchy

@@ -13,8 +13,8 @@ This guide documents the production deployment architecture, step-by-step cloud 
                                      │
                                      ▼
        ┌───────────────────────────────────────────────────────────┐
-       │          STREAMLIT CLOUD (Frontend Web UI)                │
-       │          - FASTAPI_BASE_URL: https://<backend-url>        │
+       │     STATIC HOSTING / DOCKER NGINX (React Frontend UI)     │
+       │     - VITE_API_BASE_URL: https://<backend-url>            │
        └─────────────────────────────┬─────────────────────────────┘
                                      │ HTTPS REST API
                                      ▼
@@ -56,7 +56,7 @@ This guide documents the production deployment architecture, step-by-step cloud 
    MONGODB_DB_NAME=regintel_db
    MONGODB_COLLECTION=raw_documents
    MONGODB_CHUNKS_COLLECTION=document_chunks
-   CORS_ALLOWED_ORIGINS=https://<your-streamlit-app>.streamlit.app
+   CORS_ALLOWED_ORIGINS=https://<your-frontend-domain>.com
    LLM_PROVIDER=gemini
    LLM_FALLBACK_ENABLED=false
    ENABLE_RERANKER=true
@@ -66,14 +66,18 @@ This guide documents the production deployment architecture, step-by-step cloud 
    ```
 4. Deploy the service and verify health at `https://<your-backend>.onrender.com/health`.
 
-### C. Frontend: Streamlit Community Cloud
-1. Link your repository to [Streamlit Community Cloud](https://share.streamlit.io).
-2. Set the main file path to: `frontend/streamlit_app.py`.
-3. In **App Settings $\rightarrow$ Secrets / Environment Variables**, configure:
-   ```toml
-   FASTAPI_BASE_URL = "https://<your-backend>.onrender.com"
+### C. Frontend: Static Hosting (Vercel, Netlify, Render, or Docker Nginx)
+1. Build production static assets:
+   ```bash
+   cd frontend
+   npm run build
    ```
-4. Deploy and verify all 5 tabs: Ask, Compare, Catalog, Search, and Timeline.
+2. Set environment variable during build:
+   ```env
+   VITE_API_BASE_URL=https://<your-backend>.onrender.com
+   ```
+3. Deploy the `frontend/dist` directory or use the provided `frontend/Dockerfile` for containerized Nginx serving.
+4. Verify all routes: Overview, Ask, Compare, Catalog, Search, Timeline, and About.
 
 ---
 
@@ -82,8 +86,8 @@ This guide documents the production deployment architecture, step-by-step cloud 
 | Issue Category | Symptom | Root Cause | Solution |
 | :--- | :--- | :--- | :--- |
 | **Backend Startup** | Container crashes with `Port binding failed` | Hardcoded port `8000` instead of reading cloud `$PORT` | RegIntel reads `os.getenv("PORT") or os.getenv("FASTAPI_PORT", "8000")`. Ensure Docker CMD binds to `0.0.0.0`. |
-| **Frontend Connectivity** | Streamlit shows `Backend Unavailable (503 / ConnectionError)` | `FASTAPI_BASE_URL` defaults to `localhost:8000` | Set `FASTAPI_BASE_URL=https://<backend-domain>` in Streamlit Cloud Secrets. |
-| **CORS Block** | Browser console logs `CORS policy: No 'Access-Control-Allow-Origin' header` | Frontend origin is missing from backend `CORS_ALLOWED_ORIGINS` | Add the exact Streamlit URL (e.g. `https://regintel.streamlit.app`) to backend `CORS_ALLOWED_ORIGINS`. |
+| **Frontend Connectivity** | Frontend shows `Backend Unavailable (503 / ConnectionError)` | `VITE_API_BASE_URL` defaults to `localhost:8000` | Set `VITE_API_BASE_URL=https://<backend-domain>` during frontend build. |
+| **CORS Block** | Browser console logs `CORS policy: No 'Access-Control-Allow-Origin' header` | Frontend origin is missing from backend `CORS_ALLOWED_ORIGINS` | Add the exact frontend origin URL (e.g. `http://localhost:5173` or `https://regintel.app`) to backend `CORS_ALLOWED_ORIGINS`. |
 | **MongoDB Atlas** | `MongoDBConnectionError: connection timeout` | Atlas IP whitelist blocks cloud container IP | Add `0.0.0.0/0` in Atlas **Network Access $\rightarrow$ IP Access List**. |
 | **Gemini Quota** | HTTP 429 `Resource Exhausted` | Free-tier rate limits reached during high-concurrency requests | RegIntel includes exponential backoff retry. For local deployments, enable `LLM_FALLBACK_ENABLED=true` to route to local Ollama. |
 | **Free-Tier Sleep / Cold Start** | First request takes 30–50s | Free-tier platforms (Render/Koyeb) spin down containers after 15 min idle | Normal behavior on free tier. Document cold start transparently; subsequent queries complete in <1.5s. |

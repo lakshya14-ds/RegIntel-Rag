@@ -94,6 +94,28 @@ class DocumentRepository:
             return from_mongo(RegulatoryDocument, data)
         return None
 
+    def list_documents(
+        self,
+        source: Optional[str] = None,
+        category: Optional[str] = None,
+        limit: int = 50
+    ) -> List[Dict[str, Any]]:
+        """Lists documents from MongoDB matching optional metadata filters."""
+        if getattr(self, "_is_offline", False):
+            return []
+        try:
+            query: Dict[str, Any] = {}
+            if source and source.strip() and source.strip() != "All":
+                query["source"] = {"$regex": f"^{source.strip()}$", "$options": "i"}
+            if category and category.strip() and category.strip() != "All":
+                query["category"] = {"$regex": category.strip(), "$options": "i"}
+
+            return list(self.collection.find(query, {"_id": 0}).limit(limit))
+        except Exception as e:
+            self._is_offline = True
+            logger.warning(f"Error querying documents from MongoDB in list_documents: {e}")
+            return []
+
     def save_document(self, document: RegulatoryDocument) -> str:
         """
         Upserts a processed regulatory document into MongoDB.

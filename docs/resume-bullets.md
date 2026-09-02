@@ -13,7 +13,7 @@ Recruiter-ready bullet points based strictly on implemented features and measure
 ---
 
 ### Option 2: Full-Stack RAG / Software Engineer
-* **RegIntel RAG — Autonomous Regulatory Compliance Platform** | *FastAPI, Streamlit, MongoDB, SentenceTransformers, Langfuse, GitHub Actions*
-  * Built a high-reliability regulatory analysis application with FastAPI and Streamlit, featuring query intent classification, version supersession tracking, and side-by-side regulatory diff visualizations.
+* **RegIntel RAG — Autonomous Regulatory Compliance Platform** | *FastAPI, React, TypeScript, Vite, MongoDB, SentenceTransformers, Langfuse, GitHub Actions*
+  * Built a high-reliability regulatory analysis application with FastAPI and React + TypeScript, featuring query intent classification, version supersession tracking, and side-by-side regulatory diff visualizations.
   * Integrated comprehensive observability with Langfuse hierarchical request tracing and MLflow experiment tracking; containerized multi-service architecture using Docker Compose with automated GitHub Actions CI/CD.
   * Evaluated systematic RAG quality across 50+ benchmark scenarios, achieving an average answer relevance score of **4.8/5.0** and **100% grounded evidence verification**.

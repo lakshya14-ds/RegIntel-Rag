@@ -7,8 +7,8 @@ on:
     branches: [ main, master ]
 
 jobs:
-  test:
-    name: Build, Lint & Test
+  backend-test:
+    name: Backend Build, Lint & Test
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -32,7 +32,7 @@ jobs:
 
       - name: Code Quality & Syntax Check
         run: |
-          python -m compileall app/ frontend/ evaluation/ tests/
+          python -m compileall app/ evaluation/ tests/
 
       - name: Run Test Suite
         env:
@@ -44,6 +44,44 @@ jobs:
         run: |
           pytest -v --ignore=tests/integration/test_db_live.py
 
-      - name: Verify Docker Container Build
+      - name: Verify Backend Docker Container Build
         run: |
-          docker build -t regintel-rag:ci-test .
+          docker build -t regintel-backend:ci-test .
+
+  frontend-test:
+    name: Frontend Lint, Typecheck, Test & Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: TypeScript Typecheck
+        working-directory: ./frontend
+        run: npm run typecheck
+
+      - name: ESLint Validation
+        working-directory: ./frontend
+        run: npm run lint
+
+      - name: Run Unit & Component Tests
+        working-directory: ./frontend
+        run: npm run test
+
+      - name: Build Production Bundle
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Verify Frontend Docker Container Build
+        run: |
+          docker build -t regintel-frontend:ci-test ./frontend

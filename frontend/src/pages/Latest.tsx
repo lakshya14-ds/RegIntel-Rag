@@ -17,9 +17,10 @@ export const Latest: React.FC = () => {
     limit,
   });
 
+  const docsList = docs || [];
   const filteredDocs = docTypeFilter === 'All'
-    ? docs
-    : docs.filter((d) => (d.document_type || '').toLowerCase() === docTypeFilter.toLowerCase());
+    ? docsList
+    : docsList.filter((d) => (d.document_type || '').trim().toLowerCase() === docTypeFilter.trim().toLowerCase());
 
   return (
     <div className="page-container">

@@ -12,12 +12,12 @@
 ---
 
 ## 2. Launch & System Overview (30 seconds)
-> *"RegIntel features a FastAPI backend, a Streamlit dashboard, a local neural reranker, and dual LLM routing with Gemini and Ollama. Let's open the interface at `http://localhost:8501`."*
+> *"RegIntel features a FastAPI backend, a React + TypeScript + Vite dashboard, a local neural reranker, and dual LLM routing with Gemini and Ollama. Let's open the interface at `http://localhost:5173`."*
 
 ---
 
 ## 3. Query Answering & Grounded Citations (60 seconds)
-1. Navigate to **Tab 1: Ask RegIntel**.
+1. Navigate to **Ask RegIntel (`/ask`)**.
 2. Submit Query:
    > *"What are the latest qualification and record keeping requirements for SEBI Investment Advisers?"*
 3. **Showcase**:

@@ -22,8 +22,8 @@ RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/wh
 # Copy application source code and data assets
 COPY . .
 
-# Expose default ports (FastAPI: 8000, Streamlit: 8501, MLflow: 5000)
-EXPOSE 8000 8501 5000
+# Expose default ports (FastAPI: 8000, MLflow: 5000)
+EXPOSE 8000 5000
 
 # Default entrypoint runs FastAPI server
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

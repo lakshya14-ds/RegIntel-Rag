@@ -22,10 +22,9 @@ google-genai>=0.1.0
 rank-bm25>=0.2.2
 sentence-transformers>=2.7.0
 
-# Web Backend & Frontend
+# Web Backend & API Client
 fastapi>=0.110.0
 uvicorn>=0.28.0
-streamlit>=1.32.0
 httpx>=0.27.0
 
 # Observability & Tracking (Phases 32 & 33)

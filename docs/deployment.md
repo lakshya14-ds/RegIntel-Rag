@@ -1,7 +1,7 @@
 # Containerization & Deployment: Docker & Docker Compose
 
 ## 1. Overview
-The RegIntel RAG stack is fully containerized for seamless multi-service orchestration with isolated environments for the FastAPI backend, Streamlit frontend, MongoDB database, and MLflow tracking server.
+The RegIntel RAG stack is fully containerized for seamless multi-service orchestration with isolated environments for the FastAPI backend, React + TypeScript + Vite frontend (served via Nginx), MongoDB database, and MLflow tracking server.
 
 ---
 
@@ -11,11 +11,11 @@ The RegIntel RAG stack is fully containerized for seamless multi-service orchest
                        HOST MACHINE
                             │
        ┌────────────────────┼────────────────────┐
-       │:8000               │:8501               │:5000
+       │:8000               │:5173               │:5000
        ▼                    ▼                    ▼
 ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│  FastAPI     │◄────│  Streamlit   │     │  MLflow      │
-│  Service     │     │  Frontend    │     │  Tracker     │
+│  FastAPI     │◄────│  React/Vite  │     │  MLflow      │
+│  Service     │     │  (Nginx)     │     │  Tracker     │
 └──────┬───────┘     └──────────────┘     └──────┬───────┘
        │                                         │
        ▼                                         ▼
@@ -31,16 +31,16 @@ The RegIntel RAG stack is fully containerized for seamless multi-service orchest
 
 ### Build and Launch Services
 ```bash
-docker-compose up --build -d
+docker compose up --build -d
 ```
 
 ### Checking Service Health
 ```bash
-docker-compose ps
+docker compose ps
 ```
 
 ### Accessing Endpoints
-- **Streamlit Dashboard**: [http://localhost:8501](http://localhost:8501)
+- **React Dashboard**: [http://localhost:5173](http://localhost:5173)
 - **FastAPI REST Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
 - **MLflow Tracking UI**: [http://localhost:5000](http://localhost:5000)
 
