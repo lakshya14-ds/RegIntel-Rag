@@ -65,9 +65,48 @@ export const Compare: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
+  const handleDownloadMarkdown = () => {
+    if (!data) return;
+    const lines = [
+      `# REGULATORY CHANGE REPORT: ${data.older_document?.title || 'Prior'} vs ${data.newer_document?.title || 'Current'}`,
+      `**Generated on**: ${new Date().toISOString()}`,
+      `**Relationship**: ${data.version_relationship} (Confidence: ${data.relationship_confidence})`,
+      `**Chronology Confidence**: ${data.document_order_confidence}\n`,
+      `## Executive Summary`,
+      data.executive_summary || data.summary || 'Comparison completed.',
+      `\n## Statistics`,
+      `- Added: ${data.added_count}`,
+      `- Modified: ${data.modified_count}`,
+      `- Removed: ${data.removed_count}`,
+      `- Unchanged: ${data.unchanged_count}\n`,
+      `## Detailed Section Changes\n`
+    ];
+
+    data.changes.forEach((ch, i) => {
+      if (ch.change_type !== 'UNCHANGED') {
+        lines.push(`### ${i + 1}. [${ch.change_type}] ${ch.heading}`);
+        if (ch.summary) lines.push(`- **Summary**: ${ch.summary}`);
+        if (ch.old_requirement) lines.push(`- **Previous**: ${ch.old_requirement}`);
+        if (ch.new_requirement) lines.push(`- **Current**: ${ch.new_requirement}`);
+        if (ch.compliance_impact || ch.impact) lines.push(`- **Impact**: ${ch.compliance_impact || ch.impact}`);
+        lines.push('');
+      }
+    });
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `regulatory_changes_${(data.older_document?.document_id || 'A').slice(0, 8)}_${(data.newer_document?.document_id || 'B').slice(0, 8)}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const filteredChanges = data?.changes
     ? activeFilter === 'ALL'
       ? data.changes
+      : activeFilter === 'HIGH_IMPACT'
+      ? data.changes.filter((c) => c.substantive_change && ['HIGH', 'CRITICAL'].includes((c.category || '').toUpperCase()))
       : data.changes.filter((c) => (c.change_type || '').toUpperCase() === activeFilter)
     : [];
 
@@ -293,9 +332,14 @@ export const Compare: React.FC = () => {
               ))}
             </div>
 
-            <button className="btn btn-secondary btn-sm" onClick={handleDownloadJson}>
-              <Download size={14} /> Export Report (JSON)
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button className="btn btn-secondary btn-sm" onClick={handleDownloadMarkdown}>
+                <Download size={14} /> Export (Markdown)
+              </button>
+              <button className="btn btn-secondary btn-sm" onClick={handleDownloadJson}>
+                <Download size={14} /> Export (JSON)
+              </button>
+            </div>
           </div>
 
           {/* Section Delta Cards */}

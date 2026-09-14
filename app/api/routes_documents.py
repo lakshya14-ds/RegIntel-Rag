@@ -8,7 +8,7 @@ from typing import Optional, List
 from pathlib import Path
 from fastapi import APIRouter, HTTPException, Query, status
 
-from app.schemas.responses import DocumentMetadataResponse, DocumentVersionResponse
+from app.schemas.responses import DocumentMetadataResponse, DocumentVersionResponse, DocumentRelationshipResponse
 from app.ingestion.repository import DocumentRepository
 from app.config import settings
 
@@ -94,13 +94,13 @@ def get_document_metadata(document_id: str) -> DocumentMetadataResponse:
     )
 
 
-@router.get("/document/{document_id}/versions", response_model=DocumentVersionResponse, summary="Get Version Relationships")
+@router.get("/document/{document_id}/versions", response_model=DocumentVersionResponse, summary="Get Version Relationships & Timeline 2.0")
 def get_document_versions(document_id: str) -> DocumentVersionResponse:
     """
-    Returns explicit version relationships, predecessor, successor, related documents, and chronological timeline.
+    Returns explicit version relationships, predecessor, successor, and multi-branch chronological timeline (Phase 58).
     """
-    from app.ingestion.version_tracker import VersionTracker
-    from app.schemas.responses import TimelineNodeResponse
+    from app.versioning.timeline import get_document_timeline
+    from app.schemas.responses import TimelineNodeResponse, DocumentRelationshipResponse
 
     doc_dict = _load_doc_from_local_or_mongo(document_id)
     if not doc_dict:
@@ -109,68 +109,129 @@ def get_document_versions(document_id: str) -> DocumentVersionResponse:
             detail=f"Regulatory document with ID '{document_id}' not found."
         )
 
-    tracker = VersionTracker()
-    version_info = tracker.get_document_versions(document_id)
+    timeline_data = get_document_timeline(document_id)
+    raw_events = timeline_data.get("events", [])
+    raw_rels = timeline_data.get("relationships", [])
 
-    pred_doc = None
-    if version_info.get("predecessor"):
-        pred_dict = version_info["predecessor"]
-        pred_meta = pred_dict.get("metadata", {})
-        pred_doc = DocumentMetadataResponse(
-            document_id=pred_dict.get("document_id", ""),
-            title=pred_dict.get("title"),
-            source=pred_dict.get("source", "SEBI"),
-            category=pred_dict.get("category") or pred_meta.get("category"),
-            document_type=pred_dict.get("document_type") or pred_meta.get("document_type"),
-            circular_number=pred_dict.get("circular_number") or pred_meta.get("circular_number"),
-            published_date=pred_dict.get("published_date") or pred_meta.get("published_date"),
-            effective_date=pred_dict.get("effective_date") or pred_meta.get("effective_date"),
-            status=pred_dict.get("status") or pred_meta.get("status", "historical"),
-            url=pred_dict.get("url", "")
-        )
+    events_out: List[TimelineNodeResponse] = []
+    for ev in raw_events:
+        events_out.append(TimelineNodeResponse(
+            document_id=ev.get("document_id", ""),
+            title=ev.get("title"),
+            published_date=ev.get("published_date"),
+            effective_date=ev.get("effective_date"),
+            status=ev.get("status", "UNKNOWN"),
+            relationship=ev.get("relationship_to_previous", "RELATED_TO"),
+            relationship_to_previous=ev.get("relationship_to_previous"),
+            relationship_confidence=ev.get("relationship_confidence", "LOW"),
+            evidence=ev.get("evidence"),
+            is_branch=ev.get("is_branch", False),
+            parent_document_id=ev.get("parent_document_id"),
+            chronology_uncertain=ev.get("chronology_uncertain", False),
+            order=ev.get("order", 0)
+        ))
 
-    succ_doc = None
-    if version_info.get("successor"):
-        succ_dict = version_info["successor"]
-        succ_meta = succ_dict.get("metadata", {})
-        succ_doc = DocumentMetadataResponse(
-            document_id=succ_dict.get("document_id", ""),
-            title=succ_dict.get("title"),
-            source=succ_dict.get("source", "SEBI"),
-            category=succ_dict.get("category") or succ_meta.get("category"),
-            document_type=succ_dict.get("document_type") or succ_meta.get("document_type"),
-            circular_number=succ_dict.get("circular_number") or succ_meta.get("circular_number"),
-            published_date=succ_dict.get("published_date") or succ_meta.get("published_date"),
-            effective_date=succ_dict.get("effective_date") or succ_meta.get("effective_date"),
-            status=succ_dict.get("status") or succ_meta.get("status", "current"),
-            url=succ_dict.get("url", "")
+    rels_out: List[DocumentRelationshipResponse] = [
+        DocumentRelationshipResponse(
+            source_document_id=r.get("source_document_id", ""),
+            target_document_id=r.get("target_document_id", ""),
+            relationship_type=r.get("relationship_type", "RELATED_TO"),
+            confidence=r.get("confidence", "LOW"),
+            evidence=r.get("evidence"),
+            is_explicit=r.get("is_explicit", False)
         )
-
-    timeline_nodes: List[TimelineNodeResponse] = [
-        TimelineNodeResponse(
-            document_id=n.get("document_id", ""),
-            title=n.get("title"),
-            published_date=n.get("published_date"),
-            status=n.get("status", "unknown"),
-            relationship=n.get("relationship", "related")
-        )
-        for n in version_info.get("timeline", [])
+        for r in raw_rels
     ]
 
+    # Predecessor doc if reliable
+    pred_doc = None
+    pred_id = timeline_data.get("predecessor_id")
+    if pred_id:
+        pred_dict = _load_doc_from_local_or_mongo(pred_id)
+        if pred_dict:
+            pred_meta = pred_dict.get("metadata", {})
+            pred_doc = DocumentMetadataResponse(
+                document_id=pred_dict.get("document_id", pred_id),
+                title=pred_dict.get("title"),
+                source=pred_dict.get("source", "SEBI"),
+                category=pred_dict.get("category") or pred_meta.get("category"),
+                document_type=pred_dict.get("document_type") or pred_meta.get("document_type"),
+                circular_number=pred_dict.get("circular_number") or pred_meta.get("circular_number"),
+                published_date=pred_dict.get("published_date") or pred_meta.get("published_date"),
+                effective_date=pred_dict.get("effective_date") or pred_meta.get("effective_date"),
+                status=pred_dict.get("status") or pred_meta.get("status", "HISTORICAL"),
+                url=pred_dict.get("url", "")
+            )
+
+    # Successor doc if any
+    succ_doc = None
+    succ_rel = next((r for r in raw_rels if r.get("target_document_id") == document_id and r.get("relationship_type") in ("SUPERSEDES", "REPLACES")), None)
+    if succ_rel:
+        succ_id = succ_rel.get("source_document_id")
+        succ_dict = _load_doc_from_local_or_mongo(succ_id)
+        if succ_dict:
+            succ_meta = succ_dict.get("metadata", {})
+            succ_doc = DocumentMetadataResponse(
+                document_id=succ_dict.get("document_id", succ_id),
+                title=succ_dict.get("title"),
+                source=succ_dict.get("source", "SEBI"),
+                category=succ_dict.get("category") or succ_meta.get("category"),
+                document_type=succ_dict.get("document_type") or succ_meta.get("document_type"),
+                circular_number=succ_dict.get("circular_number") or succ_meta.get("circular_number"),
+                published_date=succ_dict.get("published_date") or succ_meta.get("published_date"),
+                effective_date=succ_dict.get("effective_date") or succ_meta.get("effective_date"),
+                status=succ_dict.get("status") or succ_meta.get("status", "CURRENT"),
+                url=succ_dict.get("url", "")
+            )
+
+    doc_meta = doc_dict.get("metadata", {})
     return DocumentVersionResponse(
         document_id=document_id,
         title=doc_dict.get("title"),
-        status=version_info.get("status", "unknown"),
-        document_version=version_info.get("document_version", "1.0"),
+        status=timeline_data.get("status", "UNKNOWN"),
+        document_version=doc_dict.get("document_version") or doc_meta.get("document_version", "1.0"),
         supersedes=pred_doc.document_id if pred_doc else None,
         superseded_by=succ_doc.document_id if succ_doc else None,
         predecessor=pred_doc,
         successor=succ_doc,
-        predecessor_candidates=[d.get("document_id") for d in version_info.get("related_documents", []) if d.get("document_id")],
-        relationship_type=version_info.get("relationship_type"),
-        relationship_confidence=version_info.get("relationship_confidence"),
-        timeline=timeline_nodes
+        predecessor_candidates=[ev.document_id for ev in events_out if ev.document_id != document_id],
+        relationship_type=raw_rels[0].get("relationship_type") if raw_rels else "UNKNOWN",
+        relationship_confidence=raw_rels[0].get("confidence") if raw_rels else "LOW",
+        has_reliable_predecessor=timeline_data.get("has_reliable_predecessor", False),
+        chronology_uncertain=timeline_data.get("chronology_uncertain", False),
+        timeline=events_out,
+        events=events_out,
+        relationships=rels_out
     )
+
+
+@router.get("/document/{document_id}/relationships", response_model=List[DocumentRelationshipResponse], summary="Get Document Relationships")
+def get_document_relationships_endpoint(document_id: str) -> List[DocumentRelationshipResponse]:
+    """
+    Returns explicit and inferred relationships (amendments, supersessions, corrigenda, references) for a document (Phase 58.11).
+    """
+    from app.versioning.timeline import get_document_relationships
+    from app.schemas.responses import DocumentRelationshipResponse
+
+    doc_dict = _load_doc_from_local_or_mongo(document_id)
+    if not doc_dict:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Regulatory document with ID '{document_id}' not found."
+        )
+
+    rels = get_document_relationships(document_id)
+    return [
+        DocumentRelationshipResponse(
+            source_document_id=r.get("source_document_id", ""),
+            target_document_id=r.get("target_document_id", ""),
+            relationship_type=r.get("relationship_type", "RELATED_TO"),
+            confidence=r.get("confidence", "LOW"),
+            evidence=r.get("evidence"),
+            is_explicit=r.get("is_explicit", False)
+        )
+        for r in rels
+    ]
 
 
 @router.get("/latest", response_model=List[DocumentMetadataResponse], summary="List Latest Regulatory Documents")

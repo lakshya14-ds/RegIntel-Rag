@@ -1,14 +1,44 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ExternalLink, GitBranch, Scale, ArrowLeft, RefreshCw, AlertCircle } from 'lucide-react';
+import { ExternalLink, GitBranch, Scale, ArrowLeft, RefreshCw, AlertCircle, ClipboardCheck, CheckCircle2 } from 'lucide-react';
 import { useDocument } from '../hooks/useDocuments';
 import { formatDate } from '../utils/dates';
 import { Badge } from '../components/common/Badge';
+import { RegulatoryRequirement, RegulatoryObligation } from '../types/api';
+import { fetchDocumentRequirements, extractDocumentRequirements, fetchObligations } from '../api/compliance';
+import { RequirementCard } from '../components/compliance/RequirementCard';
+import { ObligationCard } from '../components/compliance/ObligationCard';
 
 export const Document: React.FC = () => {
   const { documentId } = useParams<{ documentId: string }>();
   const navigate = useNavigate();
   const { data: doc, isLoading, error } = useDocument(documentId);
+
+  // Compliance Intelligence State
+  const [requirements, setRequirements] = useState<RegulatoryRequirement[]>([]);
+  const [obligations, setObligations] = useState<RegulatoryObligation[]>([]);
+  const [showCompliance, setShowCompliance] = useState(false);
+  const [isLoadingCompliance, setIsLoadingCompliance] = useState(false);
+  const [complianceSubTab, setComplianceSubTab] = useState<'reqs' | 'obs'>('reqs');
+
+  useEffect(() => {
+    if (documentId && showCompliance && requirements.length === 0) {
+      setIsLoadingCompliance(true);
+      fetchDocumentRequirements(documentId)
+        .then((reqs) => {
+          if (reqs && reqs.length > 0) {
+            setRequirements(reqs);
+          } else {
+            // Trigger extraction if not yet extracted
+            return extractDocumentRequirements(documentId).then((r) => setRequirements(r));
+          }
+        })
+        .then(() => fetchObligations({ document_id: documentId }))
+        .then((obs) => setObligations(obs || []))
+        .catch((err) => console.error('Error loading document compliance:', err))
+        .finally(() => setIsLoadingCompliance(false));
+    }
+  }, [documentId, showCompliance]);
 
   if (isLoading) {
     return (
@@ -82,9 +112,21 @@ export const Document: React.FC = () => {
 
         {/* Action Buttons */}
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
-          <Link to={`/document/${doc.document_id}/timeline`} className="btn btn-primary">
+          <button
+            onClick={() => setShowCompliance(!showCompliance)}
+            className="btn btn-primary"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+          >
+            <ClipboardCheck size={16} /> {showCompliance ? 'Hide Compliance Intelligence' : 'Requirements & Obligations'}
+          </button>
+          <Link to={`/document/${doc.document_id}/timeline`} className="btn btn-secondary">
             <GitBranch size={16} /> View Version Timeline
           </Link>
+          {doc.supersedes && (
+            <Link to={`/compare?docA=${doc.supersedes}&docB=${doc.document_id}`} className="btn btn-secondary">
+              <Scale size={16} /> Compare with Previous Version
+            </Link>
+          )}
           <Link to={`/compare?docA=${doc.document_id}`} className="btn btn-secondary">
             <Scale size={16} /> Compare with Another Document
           </Link>
@@ -94,6 +136,51 @@ export const Document: React.FC = () => {
             </a>
           )}
         </div>
+
+        {/* Requirements & Obligations Section */}
+        {showCompliance && (
+          <div style={{ borderTop: '2px solid #e2e8f0', paddingTop: '1.5rem', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  className={`btn btn-sm ${complianceSubTab === 'reqs' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => setComplianceSubTab('reqs')}
+                >
+                  Requirements ({requirements.length})
+                </button>
+                <button
+                  className={`btn btn-sm ${complianceSubTab === 'obs' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => setComplianceSubTab('obs')}
+                >
+                  Obligations ({obligations.length})
+                </button>
+              </div>
+
+              <Link to="/compliance" className="btn btn-outline btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <CheckCircle2 size={14} /> Open Compliance Checklists Dashboard
+              </Link>
+            </div>
+
+            {isLoadingCompliance ? (
+              <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                <RefreshCw size={24} className="animate-spin" style={{ margin: '0 auto 0.5rem auto', color: '#2563eb' }} />
+                Extracting and validating regulatory requirements...
+              </div>
+            ) : complianceSubTab === 'reqs' ? (
+              requirements.length === 0 ? (
+                <p style={{ color: '#64748b' }}>No regulatory requirements detected for this document.</p>
+              ) : (
+                requirements.map((req) => <RequirementCard key={req.requirement_id} requirement={req} />)
+              )
+            ) : (
+              obligations.length === 0 ? (
+                <p style={{ color: '#64748b' }}>No operational obligations detected for this document.</p>
+              ) : (
+                obligations.map((ob) => <ObligationCard key={ob.obligation_id} obligation={ob} />)
+              )
+            )}
+          </div>
+        )}
 
         {/* Technical Metadata */}
         <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1.25rem' }}>
@@ -125,3 +212,4 @@ export const Document: React.FC = () => {
     </div>
   );
 };
+

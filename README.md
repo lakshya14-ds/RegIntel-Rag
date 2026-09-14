@@ -38,7 +38,11 @@ Financial regulations issued by authorities like the **Securities and Exchange B
 - **Structure-Aware Chunking**: Section-aware token chunking respecting regulatory headings, circular numbering, and tables.
 - **Metadata-Guided Query Understanding**: Automatic intent classification (`general_search`, `current_requirement`, `change_analysis`, `historical_lookup`).
 - **Temporal Ranking Heuristics**: Deterministic date-weighting ensuring current circulars supersede outdated guidance.
-- **Document Version Lineage**: Automatic regex extraction of referenced and superseded circular IDs.
+- **Document Version Lineage & Timeline 2.0**: Automatic multi-branch lineage tracking, evidence-based status calculation (`CURRENT`, `HISTORICAL`, `SUPERSEDED`), and relationship graphs.
+- **Section-Level Regulatory Diff & "What Changed?" Engine**: Hierarchical section extraction, 5-tier section matching, numeric parameter change detection (`30 days -> 15 days`, `5% -> 10%`), and relocation detection.
+- **Requirement Extraction Engine (Phase 61)**: Converts regulatory text into structured, atomic, grounded requirements with controlled taxonomies, numeric/temporal thresholds, and deduplication.
+- **Regulatory Obligation Intelligence (Phase 62)**: Translates requirements into operational obligations (WHO, WHAT, WHEN, CONDITIONS, EVIDENCE, LIFECYCLE) with strict deontic classification (`MANDATORY`, `PROHIBITION`, `RECOMMENDED`).
+- **Compliance Checklist Generation & Audit (Phase 63)**: Generates evidence-grounded checklists with control questions, audit review status tracking, change propagation, Markdown/JSON export, and full bidirectional traceability.
 - **Interactive Web UI & REST API**: Production-grade React + TypeScript + Vite compliance dashboard (Port 5173) and FastAPI backend with OpenAPI documentation.
 - **Production Observability**: Full request tracing via Langfuse and systematic benchmark experiment tracking with MLflow.
 - **Containerized & CI-Ready**: Multi-service Docker Compose with GitHub Actions CI/CD test automation.
@@ -80,6 +84,43 @@ Financial regulations issued by authorities like the **Securities and Exchange B
              │
              ▼
     Citation & Grounding Validator (100% Verified)
+```
+
+### 4.1 Regulatory Requirement, Obligation & Compliance Pipeline (Phases 61–63)
+
+```text
+               SEBI Regulatory Instrument (Circular / Regulation)
+                                       │
+                                       ▼
+                       Hierarchical Sections & Paragraphs
+                                       │
+                                       ▼
+                    Deterministic Candidate Detection (61.3)
+                    (Regex Deontic Triggers: shall, must, prohibited)
+                                       │
+                                       ▼
+                 Requirement Normalization & Atomic Splitting (61.5, 61.6)
+                 (Subject, Action, Object, Thresholds, Conditions)
+                                       │
+                                       ▼
+                    LLM Semantic Extraction & Grounding (61.4)
+                    (Structured Pydantic Validation & Zero Hallucination)
+                                       │
+                                       ▼
+                   RegulatoryRequirement Models (Phase 61)
+                   (Requirement ID, Source Locator, Exact Evidence)
+                                       │
+                                       ▼
+                   Operational Obligation Engine (Phase 62)
+                   (Deontic Classifier, Lifecycle Status, Evidence Proof)
+                                       │
+                                       ▼
+                     Compliance Checklist Generator (Phase 63)
+                     (Actionable Control Questions, Entity Filters)
+                                       │
+                                       ▼
+                  Interactive Audit Dashboard & Provenance Traceability
+                  (Bidirectional Trace: Item ↔ Obligation ↔ Requirement ↔ Evidence)
 ```
 
 ---

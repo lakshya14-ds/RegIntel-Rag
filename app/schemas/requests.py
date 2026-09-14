@@ -100,3 +100,23 @@ class SearchRequest(BaseModel):
         if not cleaned:
             raise ValueError("Query string cannot be empty.")
         return cleaned
+
+
+class ChangeIntelligenceRequest(BaseModel):
+    """Request payload for Change Intelligence ('What Changed?') endpoint (Phase 59)."""
+    document_id: Optional[str] = Field(
+        default=None,
+        description="Target document ID for automatic reliable predecessor comparison (Mode A)."
+    )
+    document_a_id: Optional[str] = Field(
+        default=None,
+        description="Prior document ID for explicit comparison (Mode B)."
+    )
+    document_b_id: Optional[str] = Field(
+        default=None,
+        description="Current document ID for explicit comparison (Mode B)."
+    )
+    generate_summaries: bool = Field(
+        default=True,
+        description="Whether to generate semantic summaries via Gemini."
+    )

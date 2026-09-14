@@ -100,8 +100,26 @@ class TimelineNodeResponse(BaseModel):
     document_id: str
     title: Optional[str] = None
     published_date: Optional[str] = None
-    status: str = "unknown"
-    relationship: str = "related"
+    effective_date: Optional[str] = None
+    status: str = "UNKNOWN"
+    relationship: str = "RELATED_TO"
+    relationship_to_previous: Optional[str] = None
+    relationship_confidence: Optional[str] = "LOW"
+    evidence: Optional[str] = None
+    is_branch: bool = False
+    parent_document_id: Optional[str] = None
+    chronology_uncertain: bool = False
+    order: int = 0
+
+
+class DocumentRelationshipResponse(BaseModel):
+    """Direct relationship edge between two regulatory documents."""
+    source_document_id: str
+    target_document_id: str
+    relationship_type: str
+    confidence: str = "LOW"
+    evidence: Optional[str] = None
+    is_explicit: bool = False
 
 
 class DocumentVersionResponse(BaseModel):
@@ -117,7 +135,11 @@ class DocumentVersionResponse(BaseModel):
     predecessor_candidates: List[str] = Field(default_factory=list)
     relationship_type: Optional[str] = None
     relationship_confidence: Optional[str] = None
+    has_reliable_predecessor: bool = False
+    chronology_uncertain: bool = False
     timeline: List[TimelineNodeResponse] = Field(default_factory=list)
+    events: List[TimelineNodeResponse] = Field(default_factory=list)
+    relationships: List[DocumentRelationshipResponse] = Field(default_factory=list)
 
 
 class EvidenceSourceResponse(BaseModel):
@@ -147,6 +169,9 @@ class SectionChangeResponse(BaseModel):
     compliance_impact: Optional[str] = None
     impact: Optional[str] = None
     similarity_score: Optional[float] = None
+    is_moved: bool = False
+    old_section_number: Optional[str] = None
+    numerical_changes: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
     evidence: Optional[Any] = None
     old_source: Optional[EvidenceSourceResponse] = None
     new_source: Optional[EvidenceSourceResponse] = None

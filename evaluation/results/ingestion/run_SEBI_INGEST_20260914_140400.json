@@ -1,0 +1,39 @@
+{
+  "run_id": "SEBI_INGEST_20260914_140400",
+  "source": "SEBI",
+  "started_at": "2026-09-14T14:04:00.517787",
+  "completed_at": "2026-09-14T14:04:00.518929",
+  "status": "FAILED",
+  "discovered": 2,
+  "unique": 2,
+  "new": 0,
+  "changed": 0,
+  "unchanged": 0,
+  "duplicate": 0,
+  "failed": 2,
+  "unsupported": 0,
+  "chunks_created": 0,
+  "chunks_reused": 0,
+  "chunks_changed": 0,
+  "embeddings_created": 0,
+  "embeddings_reused": 0,
+  "embeddings_failed": 0,
+  "version_relationships_created": 0,
+  "change_analyses_created": 0,
+  "failures": [
+    {
+      "run_id": "SEBI_INGEST_20260914_140400",
+      "url": "",
+      "stage": "discovery",
+      "error_type": "MissingData",
+      "message": "Missing URL or raw markdown content"
+    },
+    {
+      "run_id": "SEBI_INGEST_20260914_140400",
+      "url": "https://sebi.gov.in/empty.html",
+      "stage": "discovery",
+      "error_type": "MissingData",
+      "message": "Missing URL or raw markdown content"
+    }
+  ]
+}

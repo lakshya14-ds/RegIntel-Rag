@@ -16,6 +16,7 @@ from app.config import settings
 from app.api.routes_health import router as health_router
 from app.api.routes_rag import router as rag_router
 from app.api.routes_documents import router as documents_router
+from app.api.routes_compliance import router as compliance_router
 
 # Setup logging
 logging.basicConfig(
@@ -130,6 +131,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 app.include_router(health_router)
 app.include_router(rag_router)
 app.include_router(documents_router)
+app.include_router(compliance_router)
 
 
 if __name__ == "__main__":

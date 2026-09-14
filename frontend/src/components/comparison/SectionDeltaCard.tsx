@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
+import { ChevronDown, ChevronUp, BookOpen, MoveRight, Hash } from 'lucide-react';
 import { SectionChangeResponse } from '../../types/api';
 import { Badge } from '../common/Badge';
 import { DiffBox } from './DiffBox';
@@ -9,16 +9,18 @@ interface SectionDeltaCardProps {
 }
 
 export const SectionDeltaCard: React.FC<SectionDeltaCardProps> = ({ change }) => {
-  const [isExpanded, setIsExpanded] = useState(change.change_type === 'MODIFIED');
+  const [isExpanded, setIsExpanded] = useState(change.change_type === 'MODIFIED' || !!change.is_moved);
 
-  const ctype = (change.change_type || 'MODIFIED').toUpperCase();
-  const variantMap: Record<string, 'green' | 'red' | 'amber' | 'gray'> = {
+  const ctype = (change.is_moved ? 'MOVED' : change.change_type || 'MODIFIED').toUpperCase();
+  const variantMap: Record<string, 'green' | 'red' | 'amber' | 'blue' | 'gray'> = {
     ADDED: 'green',
     REMOVED: 'red',
     MODIFIED: 'amber',
+    MOVED: 'blue',
     UNCHANGED: 'gray',
   };
   const badgeVariant = variantMap[ctype] || 'gray';
+  const numChanges = change.numerical_changes || [];
 
   return (
     <div
@@ -48,8 +50,20 @@ export const SectionDeltaCard: React.FC<SectionDeltaCardProps> = ({ change }) =>
             {change.section ? `Sec ${change.section}: ` : ''}
             {change.heading || 'Untitled Section'}
           </span>
+          {change.is_moved && change.old_section_number && (
+            <Badge variant="blue">
+              <MoveRight size={12} style={{ display: 'inline', marginRight: '3px' }} />
+              Moved from Sec {change.old_section_number}
+            </Badge>
+          )}
           {change.substantive_change && (
             <Badge variant="purple">Substantive</Badge>
+          )}
+          {numChanges.length > 0 && (
+            <Badge variant="amber">
+              <Hash size={12} style={{ display: 'inline', marginRight: '2px' }} />
+              {numChanges.length} Numerical Shift{numChanges.length > 1 ? 's' : ''}
+            </Badge>
           )}
           {change.modification_category && (
             <Badge variant="gray">{change.modification_category}</Badge>
@@ -60,6 +74,29 @@ export const SectionDeltaCard: React.FC<SectionDeltaCardProps> = ({ change }) =>
 
       {isExpanded && (
         <div style={{ padding: '1rem', fontSize: '0.9rem' }}>
+          {/* Numerical & Threshold Shifts Highlight (60.11) */}
+          {numChanges.length > 0 && (
+            <div
+              style={{
+                marginBottom: '0.85rem',
+                padding: '0.6rem 0.85rem',
+                backgroundColor: '#fffbeb',
+                borderLeft: '3px solid #f59e0b',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '0.85rem',
+              }}
+            >
+              <strong style={{ color: '#b45309' }}>⚡ NUMERICAL / THRESHOLD CHANGES:</strong>
+              <ul style={{ margin: '0.35rem 0 0 1.2rem', padding: 0 }}>
+                {numChanges.map((nc, idx) => (
+                  <li key={idx}>
+                    <strong>{nc.parameter}</strong>: <code>{nc.previous_value}</code> → <strong><code>{nc.new_value}</code></strong>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {change.summary && (
             <div style={{ marginBottom: '0.75rem' }}>
               <strong style={{ color: 'var(--text-secondary)' }}>WHAT CHANGED: </strong>
@@ -84,7 +121,7 @@ export const SectionDeltaCard: React.FC<SectionDeltaCardProps> = ({ change }) =>
             </div>
           )}
 
-          {/* Diff Box */}
+          {/* Side-by-Side Diff Box (60.17) */}
           <DiffBox
             previousText={change.previous_text}
             currentText={change.current_text}

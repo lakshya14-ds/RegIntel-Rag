@@ -38,6 +38,15 @@ class Settings(BaseSettings):
     mongodb_chunks_collection: str = Field(
         default_factory=lambda: os.getenv("MONGODB_CHUNKS_COLLECTION", "chunks")
     )
+    mongodb_requirements_collection: str = Field(
+        default_factory=lambda: os.getenv("MONGODB_REQUIREMENTS_COLLECTION", "regulatory_requirements")
+    )
+    mongodb_obligations_collection: str = Field(
+        default_factory=lambda: os.getenv("MONGODB_OBLIGATIONS_COLLECTION", "regulatory_obligations")
+    )
+    mongodb_checklists_collection: str = Field(
+        default_factory=lambda: os.getenv("MONGODB_CHECKLISTS_COLLECTION", "compliance_checklists")
+    )
 
     # Gemini / LLM key & Embedding Settings
     gemini_api_key: Optional[str] = Field(

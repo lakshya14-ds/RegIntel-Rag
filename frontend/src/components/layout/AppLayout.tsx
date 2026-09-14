@@ -10,6 +10,7 @@ import {
   Menu,
   X,
   RefreshCw,
+  ClipboardCheck,
 } from 'lucide-react';
 import { StatusPill } from '../common/StatusPill';
 import { useHealth } from '../../hooks/useHealth';
@@ -21,6 +22,7 @@ export const AppLayout: React.FC = () => {
 
   const navItems = [
     { to: '/', label: 'Overview', icon: Home },
+    { to: '/compliance', label: 'Compliance & Checklists', icon: ClipboardCheck },
     { to: '/ask', label: 'Ask RegIntel', icon: MessageSquareText },
     { to: '/compare', label: 'Compare Regulations', icon: Scale },
     { to: '/latest', label: 'Latest Regulations', icon: FileText },

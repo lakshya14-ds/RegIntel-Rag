@@ -61,11 +61,14 @@ class DetailedSectionChange(BaseModel):
     """Detailed change description for a single regulatory section."""
     section: str
     heading: str
-    change_type: Literal["ADDED", "REMOVED", "MODIFIED", "UNCHANGED"]
+    change_type: Literal["ADDED", "REMOVED", "MODIFIED", "UNCHANGED", "MOVED"]
     substantive_change: bool = False
     modification_category: Optional[str] = None
     matching_method: Optional[str] = None
     matching_confidence: Optional[str] = None
+    is_moved: bool = False
+    old_section_number: Optional[str] = None
+    numerical_changes: List[Dict[str, Any]] = Field(default_factory=list)
     previous_text: Optional[str] = None
     current_text: Optional[str] = None
     summary: Optional[str] = None
@@ -644,7 +647,11 @@ class DocumentComparator:
         # 3B. Candidate Substantive Modification
         # Infer regulatory category from keywords
         from app.change_detection.section_comparer import SectionComparer
+        from app.change_detection.diff_engine import detect_numerical_changes
+
         mod_cat = SectionComparer.infer_modification_category(f"{new_s.content} {new_s.heading}")
+        num_changes = [nc.model_dump() for nc in detect_numerical_changes(old_s.content, new_s.content)]
+        is_moved = bool(old_s.section_number and new_s.section_number and old_s.section_number != new_s.section_number)
 
         # If LLM client is available, generate structured assessment
         if client:
@@ -663,6 +670,9 @@ class DocumentComparator:
                     modification_category=mod_cat,
                     matching_method=pair.matching_method,
                     matching_confidence=pair.matching_confidence,
+                    is_moved=is_moved,
+                    old_section_number=old_s.section_number if is_moved else None,
+                    numerical_changes=num_changes,
                     previous_text=old_s.content,
                     current_text=new_s.content,
                     summary=llm_res.get("summary", "Section provisions amended."),
@@ -683,6 +693,9 @@ class DocumentComparator:
             modification_category=mod_cat,
             matching_method=pair.matching_method,
             matching_confidence=pair.matching_confidence,
+            is_moved=is_moved,
+            old_section_number=old_s.section_number if is_moved else None,
+            numerical_changes=num_changes,
             previous_text=old_s.content,
             current_text=new_s.content,
             summary=f"Section '{new_s.heading}' amended ({mod_cat}).",

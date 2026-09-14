@@ -118,6 +118,12 @@ class DocumentMetadata(BaseModel):
     source_status: Optional[str] = "SOURCE_CURRENT"  # SOURCE_CURRENT, SOURCE_MISSING (Phase 55.17)
     supersedes: Optional[str] = None
     superseded_by: Optional[str] = None
+    amends: Optional[str] = None
+    amended_by: Optional[List[str]] = Field(default_factory=list)
+    corrigendum_of: Optional[str] = None
+    corrigenda: Optional[List[str]] = Field(default_factory=list)
+    references: Optional[List[str]] = Field(default_factory=list)
+    relationships: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
     predecessor_candidates: Optional[List[str]] = Field(default_factory=list)
     relationship_confidence: Optional[str] = None  # high, medium, low
     content_hash: Optional[str] = None
@@ -154,6 +160,12 @@ class RegulatoryDocument(BaseModel):
     source_status: Optional[str] = "SOURCE_CURRENT"
     supersedes: Optional[str] = None
     superseded_by: Optional[str] = None
+    amends: Optional[str] = None
+    amended_by: Optional[List[str]] = Field(default_factory=list)
+    corrigendum_of: Optional[str] = None
+    corrigenda: Optional[List[str]] = Field(default_factory=list)
+    references: Optional[List[str]] = Field(default_factory=list)
+    relationships: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
     predecessor_candidates: Optional[List[str]] = Field(default_factory=list)
     relationship_confidence: Optional[str] = None
     content_hash: Optional[str] = None
@@ -201,6 +213,18 @@ class RegulatoryDocument(BaseModel):
                 self.supersedes = self.metadata.supersedes
             if self.superseded_by is None:
                 self.superseded_by = self.metadata.superseded_by
+            if self.amends is None:
+                self.amends = self.metadata.amends
+            if not self.amended_by and self.metadata.amended_by:
+                self.amended_by = self.metadata.amended_by
+            if self.corrigendum_of is None:
+                self.corrigendum_of = self.metadata.corrigendum_of
+            if not self.corrigenda and self.metadata.corrigenda:
+                self.corrigenda = self.metadata.corrigenda
+            if not self.references and self.metadata.references:
+                self.references = self.metadata.references
+            if not self.relationships and self.metadata.relationships:
+                self.relationships = self.metadata.relationships
             if not self.predecessor_candidates and self.metadata.predecessor_candidates:
                 self.predecessor_candidates = self.metadata.predecessor_candidates
             if self.relationship_confidence is None:

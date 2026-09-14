@@ -3,7 +3,7 @@ import logging
 from typing import Optional, Dict, Any, List
 from fastapi import APIRouter, HTTPException, Request, status
 
-from app.schemas.requests import AskRequest, SearchRequest, CompareRequest
+from app.schemas.requests import AskRequest, SearchRequest, CompareRequest, ChangeIntelligenceRequest
 from app.schemas.responses import (
     AskResponse,
     SourceCitationResponse,
@@ -344,6 +344,9 @@ def compare_documents(req: CompareRequest, request: Request = None) -> CompareRe
                     compliance_impact=ch.impact,
                     impact=ch.impact,
                     similarity_score=1.0 if ch.change_type == "UNCHANGED" else 0.0,
+                    is_moved=ch.is_moved,
+                    old_section_number=ch.old_section_number,
+                    numerical_changes=ch.numerical_changes,
                     evidence=ch.evidence,
                     old_source=old_src_resp,
                     new_source=new_src_resp
@@ -384,3 +387,55 @@ def compare_documents(req: CompareRequest, request: Request = None) -> CompareRe
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to execute document comparison."
             )
+
+
+@router.post("/change-intelligence", summary="What Changed? Regulatory Change Intelligence (Phase 59)")
+def get_change_intelligence(req: ChangeIntelligenceRequest, request: Request = None) -> Dict[str, Any]:
+    """
+    Evaluates what actually changed between regulatory instruments:
+    - Mode A: Provide document_id -> automatically identifies reliable predecessor.
+    - Mode B: Provide document_a_id and document_b_id -> explicit comparison.
+    """
+    from app.change_detection.change_intelligence import get_change_intelligence_engine
+
+    engine = get_change_intelligence_engine()
+
+    try:
+        if req.document_id:
+            report = engine.analyze_document_changes(
+                current_document_id=req.document_id,
+                generate_summaries=req.generate_summaries
+            )
+        elif req.document_a_id and req.document_b_id:
+            report = engine.compare_pair(
+                doc_a_id=req.document_a_id,
+                doc_b_id=req.document_b_id,
+                generate_summaries=req.generate_summaries
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Either 'document_id' (Mode A) or both 'document_a_id' and 'document_b_id' (Mode B) must be supplied."
+            )
+
+        if report.status == "ERROR":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND if "not found" in (report.message or "").lower() else status.HTTP_400_BAD_REQUEST,
+                detail=report.message or "Change intelligence failed."
+            )
+
+        res = report.model_dump()
+        res["markdown_export"] = report.export_markdown()
+        return res
+
+    except HTTPException:
+        raise
+    except ValueError as ve:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
+    except Exception as e:
+        logger.error(f"Error in /change-intelligence: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to execute regulatory change intelligence."
+        )
+

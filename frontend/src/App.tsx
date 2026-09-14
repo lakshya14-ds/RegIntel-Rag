@@ -10,6 +10,7 @@ import { Compare } from './pages/Compare';
 import { Document } from './pages/Document';
 import { Timeline } from './pages/Timeline';
 import { About } from './pages/About';
+import { Compliance } from './pages/Compliance';
 
 export const App: React.FC = () => {
   return (
@@ -18,6 +19,8 @@ export const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<AppLayout />}>
             <Route index element={<Home />} />
+            <Route path="compliance" element={<Compliance />} />
+            <Route path="compliance/checklist/:checklistId" element={<Compliance />} />
             <Route path="ask" element={<Ask />} />
             <Route path="search" element={<Search />} />
             <Route path="latest" element={<Latest />} />

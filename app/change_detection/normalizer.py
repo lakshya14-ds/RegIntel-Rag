@@ -116,8 +116,9 @@ def are_texts_substantively_equal(text_a: str, text_b: str) -> bool:
     if norm_a == norm_b:
         return True
 
-    # Check case-insensitive and collapsed whitespace identity
-    collapsed_a = re.sub(r"\s+", " ", norm_a).lower()
-    collapsed_b = re.sub(r"\s+", " ", norm_b).lower()
+    # Check case-insensitive and collapsed whitespace identity, standardizing quote styles
+    collapsed_a = re.sub(r"\s+", " ", norm_a).lower().replace('"', "'")
+    collapsed_b = re.sub(r"\s+", " ", norm_b).lower().replace('"', "'")
 
     return collapsed_a == collapsed_b
+

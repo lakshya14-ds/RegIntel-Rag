@@ -94,6 +94,18 @@ class MongoDBManager:
     def chunks_collection(self) -> Collection:
         return self.db[self._chunks_collection_name]
 
+    @property
+    def requirements_collection(self) -> Collection:
+        return self.db[settings.mongodb_requirements_collection]
+
+    @property
+    def obligations_collection(self) -> Collection:
+        return self.db[settings.mongodb_obligations_collection]
+
+    @property
+    def checklists_collection(self) -> Collection:
+        return self.db[settings.mongodb_checklists_collection]
+
     def ping(self) -> bool:
         """Pings the MongoDB server to verify active connectivity."""
         try:
@@ -137,6 +149,21 @@ def get_chunks_collection() -> Collection:
     return _db_manager.chunks_collection
 
 
+def get_requirements_collection() -> Collection:
+    """Returns the requirements collection handle from the connected database."""
+    return _db_manager.requirements_collection
+
+
+def get_obligations_collection() -> Collection:
+    """Returns the obligations collection handle from the connected database."""
+    return _db_manager.obligations_collection
+
+
+def get_checklists_collection() -> Collection:
+    """Returns the compliance checklists collection handle from the connected database."""
+    return _db_manager.checklists_collection
+
+
 # Module-level lazy attribute access
 def __getattr__(name: str):
     if name == "client":
@@ -147,4 +174,10 @@ def __getattr__(name: str):
         return _db_manager.documents_collection
     if name == "chunks_collection":
         return _db_manager.chunks_collection
+    if name == "requirements_collection":
+        return _db_manager.requirements_collection
+    if name == "obligations_collection":
+        return _db_manager.obligations_collection
+    if name == "checklists_collection":
+        return _db_manager.checklists_collection
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
