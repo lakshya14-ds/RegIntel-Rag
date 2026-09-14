@@ -165,6 +165,9 @@ class DocumentRepository:
                 name="idx_chunk_doc_and_index"
             ))
 
+            # Index on content_hash for fast embedding reuse (Phase 55.11)
+            created.append(coll.create_index([("content_hash", ASCENDING)], name="idx_chunk_content_hash"))
+
             logger.info("MongoDB chunk indexes created successfully")
             return created
         except (PyMongoError, Exception) as e:
@@ -186,6 +189,33 @@ class DocumentRepository:
         except Exception as e:
             logger.error(f"Error fetching chunk {chunk_id}: {e}")
             return None
+
+    def get_chunk_by_hash(self, content_hash: str) -> Optional[Dict[str, Any]]:
+        """Fetches an existing chunk with valid embedding matching content_hash (Phase 55.11)."""
+        if getattr(self, "_is_offline", False):
+            return None
+        try:
+            return self.chunks_collection.find_one({
+                "content_hash": content_hash,
+                "embedding": {"$exists": True, "$ne": None}
+            })
+        except Exception as e:
+            logger.debug(f"Error fetching chunk by content_hash {content_hash}: {e}")
+            return None
+
+    def mark_document_missing(self, document_id: str) -> bool:
+        """Safely updates document source_status to SOURCE_MISSING (Phase 55.17). Never deletes."""
+        if getattr(self, "_is_offline", False):
+            return False
+        try:
+            res = self.collection.update_one(
+                {"document_id": document_id},
+                {"$set": {"source_status": "SOURCE_MISSING", "metadata.source_status": "SOURCE_MISSING"}}
+            )
+            return res.modified_count > 0
+        except Exception as e:
+            logger.error(f"Failed to mark document {document_id} as missing: {e}")
+            return False
 
     def get_chunks_by_document(self, document_id: str) -> List[Dict[str, Any]]:
         """Fetches all chunks belonging to a document ordered by chunk_index."""
@@ -266,3 +296,11 @@ def get_chunks_by_document(document_id: str, chunks_collection: Optional[Collect
 def create_chunk_indexes(chunks_collection: Optional[Collection] = None) -> List[str]:
     repo = DocumentRepository(chunks_collection=chunks_collection) if chunks_collection else _default_repository
     return repo.create_chunk_indexes()
+
+def get_chunk_by_hash(content_hash: str, chunks_collection: Optional[Collection] = None) -> Optional[Dict[str, Any]]:
+    repo = DocumentRepository(chunks_collection=chunks_collection) if chunks_collection else _default_repository
+    return repo.get_chunk_by_hash(content_hash)
+
+def mark_document_missing(document_id: str, collection: Optional[Collection] = None) -> bool:
+    repo = DocumentRepository(collection=collection) if collection else _default_repository
+    return repo.mark_document_missing(document_id)

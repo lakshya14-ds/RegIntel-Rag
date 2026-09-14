@@ -1,5 +1,11 @@
 """
-Integration Test for End-to-End Incremental Ingestion Workflow (Phases 46 & 47).
+Integration Test for End-to-End Incremental Ingestion Workflow (Phase 55.36).
+
+Validates:
+- 10-Document Corpus Ingestion
+- Run 1: 10 NEW documents -> 10 chunked, all embeddings created
+- Run 2: 10 UNCHANGED documents -> 0 chunked, 0 embeddings created (100% IDEMPOTENCY)
+- Run 3: 1 CHANGED document, 9 UNCHANGED documents -> only changed chunks embedded, unchanged chunks reused
 """
 
 import pytest
@@ -7,10 +13,10 @@ from unittest.mock import MagicMock
 from app.config import settings
 from app.ingestion.models import generate_document_id
 from app.ingestion.pipeline import IngestionPipeline, compute_content_hash
-from app.versioning.timeline import get_document_timeline
 
 
 def test_incremental_ingestion_and_version_chain_workflow():
+    """Validates 3-stage lifecycle for an individual document: NEW -> UNCHANGED -> CHANGED."""
     pipeline = IngestionPipeline()
 
     url = "https://sebi.gov.in/legal/circulars/ia_test.html"
@@ -77,7 +83,6 @@ def test_incremental_ingestion_and_version_chain_workflow():
         "content": content_v2
     }]
 
-    # Chunk 0 has unchanged content
     stored_chunks = {
         f"{doc_id}_chunk_0": {
             "chunk_id": f"{doc_id}_chunk_0",
@@ -93,3 +98,109 @@ def test_incremental_ingestion_and_version_chain_workflow():
     assert stats_run3["updated"] == 1
     assert stats_run3["embeddings_skipped"] >= 1  # Unchanged chunk reused
     assert stats_run3["embeddings_generated"] >= 1  # Changed/new chunk embedded
+
+
+def test_ten_document_corpus_multi_run_idempotency_and_delta():
+    """
+    Phase 55.36 Specification Scenario:
+    Corpus: 10 documents
+    Run 1: 10 NEW
+    Run 2: 10 UNCHANGED (0 embeddings generated)
+    Run 3: 1 CHANGED, 9 UNCHANGED (only changed chunks embedded)
+    """
+    pipeline = IngestionPipeline()
+
+    # Generate 10 distinct document candidates
+    corpus = []
+    for i in range(1, 11):
+        body = (
+            f"## Section {i}: Compliance Framework for Category {i}\n"
+            f"Mandatory requirement for regulated entities under circular index {i}. "
+            f"All registered market participants shall maintain compliance records for verification. "
+            f"Failure to adhere to these provisions will attract regulatory enforcement and penalty actions under the SEBI Act. "
+        ) * 8
+        corpus.append({
+            "url": f"https://sebi.gov.in/legal/circulars/doc_{i}.html",
+            "title": f"Regulatory Notice {i}",
+            "content": body
+        })
+
+    mock_db = {}
+    mock_chunk_db = {}
+
+    def mock_load_doc(doc_id):
+        return mock_db.get(doc_id)
+
+    def mock_load_chunks(doc_id):
+        return {c["chunk_id"]: c for c in mock_chunk_db.get(doc_id, [])}
+
+    def mock_save_doc(doc):
+        mock_db[doc.document_id] = {
+            "document_id": doc.document_id,
+            "content_hash": doc.content_hash,
+            "content": doc.content
+        }
+
+    def mock_save_chunks(chunks):
+        if chunks:
+            did = chunks[0].document_id
+            mock_chunk_db[did] = [c.model_dump() for c in chunks]
+
+    pipeline._load_stored_document = MagicMock(side_effect=mock_load_doc)
+    pipeline._load_stored_chunk_hashes = MagicMock(side_effect=mock_load_chunks)
+    pipeline.repository.save_document = MagicMock(side_effect=mock_save_doc)
+    pipeline.repository.save_chunks = MagicMock(side_effect=mock_save_chunks)
+
+    def mock_embed(chunks):
+        for c in chunks:
+            c.embedding = [0.12] * settings.embedding_dimension
+        return chunks
+
+    pipeline.embedding_service.embed_chunks_batch = MagicMock(side_effect=mock_embed)
+
+    # -------------------------------------------------------------
+    # RUN 1: 10 NEW Documents
+    # -------------------------------------------------------------
+    pipeline.discover_candidates = MagicMock(return_value=(corpus, 0))
+    run1 = pipeline.run(source="sebi", dry_run=False)
+
+    assert run1.new == 10
+    assert run1.changed == 0
+    assert run1.unchanged == 0
+    assert run1.embeddings_created >= 10
+    assert run1.embeddings_reused == 0
+
+    # -------------------------------------------------------------
+    # RUN 2: 10 UNCHANGED Documents (100% Idempotency)
+    # -------------------------------------------------------------
+    pipeline.discover_candidates = MagicMock(return_value=(corpus, 0))
+    run2 = pipeline.run(source="sebi", dry_run=False)
+
+    assert run2.new == 0
+    assert run2.changed == 0
+    assert run2.unchanged == 10
+    assert run2.embeddings_created == 0  # Zero embedding calls!
+    assert run2.embeddings_reused == 0
+
+    # -------------------------------------------------------------
+    # RUN 3: 1 CHANGED, 9 UNCHANGED (Controlled Section Delta)
+    # -------------------------------------------------------------
+    modified_corpus = [dict(d) for d in corpus]
+    # Modify document 1 by appending a new section exceeding min_chunk_tokens
+    new_sec_body = (
+        "## Section 1B: Enhanced Risk Surveillance and Mandatory Client Disclosures\n"
+        "1. All registered investment entities shall implement algorithmic risk profiling systems. "
+        "2. Periodic reports on portfolio concentration risks shall be submitted to the supervisory body. "
+        "3. Any breach of risk exposure caps shall be rectified within 3 business days of notification. "
+        "4. Non-compliance with these surveillance limits shall trigger administrative inspections. "
+    ) * 8
+    modified_corpus[0]["content"] += f"\n\n{new_sec_body}"
+
+    pipeline.discover_candidates = MagicMock(return_value=(modified_corpus, 0))
+    run3 = pipeline.run(source="sebi", dry_run=False)
+
+    assert run3.new == 0
+    assert run3.changed == 1
+    assert run3.unchanged == 9
+    assert run3.embeddings_created >= 1  # Only the modified document was chunked/embedded
+    assert run3.embeddings_reused >= 1   # Unchanged chunk from doc 1 reused

@@ -9,6 +9,17 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 # Supported Sources
 SourceType = Literal["SEBI", "Moneycontrol"]
 
+# Document Processing Status (Phase 55.2)
+DocumentProcessingStatus = Literal[
+    "NEW",
+    "UNCHANGED",
+    "CHANGED",
+    "DUPLICATE",
+    "FAILED",
+    "UNSUPPORTED",
+    "SOURCE_MISSING"
+]
+
 TRACKING_PARAMS = {
     "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
     "ref", "fbclid", "gclid", "_ga", "ncid"
@@ -63,6 +74,14 @@ def generate_document_id(source: str, url: str) -> str:
     return hashlib.sha256(identity_string.encode("utf-8")).hexdigest()
 
 
+def compute_content_hash(text: str) -> str:
+    """Computes deterministic SHA-256 hash of normalized text content (Phase 55.4)."""
+    if not text:
+        return ""
+    normalized = " ".join(text.strip().split())
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+
 class RawDocument(BaseModel):
     """Represents a raw scraped web page or document before transformation."""
     document_id: str
@@ -96,6 +115,7 @@ class DocumentMetadata(BaseModel):
     effective_date: Optional[str] = None  # ISO YYYY-MM-DD
     section: Optional[str] = None
     status: Optional[str] = "unknown"     # current, historical, unknown
+    source_status: Optional[str] = "SOURCE_CURRENT"  # SOURCE_CURRENT, SOURCE_MISSING (Phase 55.17)
     supersedes: Optional[str] = None
     superseded_by: Optional[str] = None
     predecessor_candidates: Optional[List[str]] = Field(default_factory=list)
@@ -131,6 +151,7 @@ class RegulatoryDocument(BaseModel):
     effective_date: Optional[str] = None
     section: Optional[str] = None
     status: Optional[str] = "unknown"
+    source_status: Optional[str] = "SOURCE_CURRENT"
     supersedes: Optional[str] = None
     superseded_by: Optional[str] = None
     predecessor_candidates: Optional[List[str]] = Field(default_factory=list)
@@ -174,6 +195,8 @@ class RegulatoryDocument(BaseModel):
                 self.section = self.metadata.section
             if self.status == "unknown" and self.metadata.status != "unknown":
                 self.status = self.metadata.status
+            if self.source_status == "SOURCE_CURRENT" and self.metadata.source_status != "SOURCE_CURRENT":
+                self.source_status = self.metadata.source_status
             if self.supersedes is None:
                 self.supersedes = self.metadata.supersedes
             if self.superseded_by is None:
@@ -232,6 +255,66 @@ class DocumentChunk(BaseModel):
         if v <= 0:
             raise ValueError("Token count must be greater than zero")
         return v
+
+
+class IngestionRunSummary(BaseModel):
+    """Model tracking aggregate metrics for an ingestion run (Phase 55.20)."""
+    run_id: str
+    source: str
+    started_at: str
+    completed_at: Optional[str] = None
+    status: str = "COMPLETED"  # "COMPLETED", "PARTIAL", "FAILED"
+    discovered: int = 0
+    unique: int = 0
+    new: int = 0
+    changed: int = 0
+    unchanged: int = 0
+    duplicate: int = 0
+    failed: int = 0
+    unsupported: int = 0
+    chunks_created: int = 0
+    chunks_reused: int = 0
+    chunks_changed: int = 0
+    embeddings_created: int = 0
+    embeddings_reused: int = 0
+    embeddings_failed: int = 0
+    version_relationships_created: int = 0
+    change_analyses_created: int = 0
+    failures: List[Dict[str, Any]] = Field(default_factory=list)
+
+    def __getitem__(self, key: str) -> Any:
+        aliases = {
+            "updated": "changed",
+            "duplicates": "duplicate",
+            "embeddings_skipped": "embeddings_reused",
+            "embeddings_generated": "embeddings_created",
+            "new_chunks": "chunks_created",
+            "updated_chunks": "chunks_changed",
+            "documents_chunked": "chunks_created",
+        }
+        actual_key = aliases.get(key, key)
+        if hasattr(self, actual_key):
+            return getattr(self, actual_key)
+        raise KeyError(key)
+
+    def __contains__(self, key: str) -> bool:
+        aliases = {
+            "updated": "changed",
+            "duplicates": "duplicate",
+            "embeddings_skipped": "embeddings_reused",
+            "embeddings_generated": "embeddings_created",
+            "new_chunks": "chunks_created",
+            "updated_chunks": "chunks_changed",
+            "documents_chunked": "chunks_created",
+        }
+        actual_key = aliases.get(key, key)
+        return hasattr(self, actual_key) or actual_key in self.model_fields
+
+    def get(self, key: str, default: Any = None) -> Any:
+        try:
+            return self[key]
+        except KeyError:
+            return default
 
 
 # Serialization Helpers
