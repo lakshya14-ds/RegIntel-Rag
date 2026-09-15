@@ -148,7 +148,18 @@ class BM25Retriever:
             if filter_dict:
                 match = True
                 for k, v in filter_dict.items():
-                    if getattr(chunk, k, None) != v:
+                    val = getattr(chunk, k, None)
+                    if k in ("authority", "source") and val is None:
+                        val = getattr(chunk, "authority", None) or getattr(chunk, "source", None)
+                    if isinstance(v, dict) and "$in" in v:
+                        if val not in v["$in"]:
+                            match = False
+                            break
+                    elif isinstance(v, (list, tuple, set)):
+                        if val not in v:
+                            match = False
+                            break
+                    elif val != v:
                         match = False
                         break
                 if not match:

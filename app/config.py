@@ -47,6 +47,21 @@ class Settings(BaseSettings):
     mongodb_checklists_collection: str = Field(
         default_factory=lambda: os.getenv("MONGODB_CHECKLISTS_COLLECTION", "compliance_checklists")
     )
+    mongodb_date_events_collection: str = Field(
+        default_factory=lambda: os.getenv("MONGODB_DATE_EVENTS_COLLECTION", "regulatory_date_events")
+    )
+    mongodb_events_collection: str = Field(
+        default_factory=lambda: os.getenv("MONGODB_EVENTS_COLLECTION", "regulatory_events")
+    )
+    mongodb_deadlines_collection: str = Field(
+        default_factory=lambda: os.getenv("MONGODB_DEADLINES_COLLECTION", "regulatory_deadlines")
+    )
+    mongodb_alerts_collection: str = Field(
+        default_factory=lambda: os.getenv("MONGODB_ALERTS_COLLECTION", "regulatory_alerts")
+    )
+    mongodb_watchlists_collection: str = Field(
+        default_factory=lambda: os.getenv("MONGODB_WATCHLISTS_COLLECTION", "regulatory_watchlists")
+    )
 
     # Gemini / LLM key & Embedding Settings
     gemini_api_key: Optional[str] = Field(

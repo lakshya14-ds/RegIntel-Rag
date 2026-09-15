@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   ClipboardCheck,
   PlusCircle,
   AlertTriangle,
   FileText,
-  RefreshCw,
-  Scale,
+  Bell,
+  Clock,
+  Calendar as CalendarIcon,
+  Eye,
+  Play,
+  CheckCircle2,
 } from 'lucide-react';
 import {
   ComplianceChecklist,
@@ -14,6 +18,8 @@ import {
   ChecklistStatus,
   RegulatoryRequirement,
   RegulatoryObligation,
+  RegulatoryAlert,
+  Watchlist,
 } from '../types/api';
 import {
   fetchChecklists,
@@ -24,18 +30,28 @@ import {
   exportChecklist,
   fetchRequirements,
   fetchObligations,
+  fetchAlerts,
+  markAlertRead,
+  dismissAlert,
+  fetchWatchlists,
+  triggerAlertEvaluation,
 } from '../api/compliance';
 import { ChecklistProgressDashboard } from '../components/compliance/ChecklistProgressDashboard';
 import { EvidenceDrawer } from '../components/compliance/EvidenceDrawer';
 import { RequirementCard } from '../components/compliance/RequirementCard';
 import { ObligationCard } from '../components/compliance/ObligationCard';
+import { AlertCard } from '../components/compliance/AlertCard';
+import { RegulatoryCalendarView } from '../components/compliance/RegulatoryCalendarView';
+import { DeadlineList } from '../components/compliance/DeadlineList';
+import { WatchlistModal } from '../components/compliance/WatchlistModal';
+
+type TabType = 'alerts' | 'deadlines' | 'calendar' | 'checklists' | 'requirements' | 'obligations';
 
 export const Compliance: React.FC = () => {
   const { checklistId } = useParams<{ checklistId?: string }>();
-  const navigate = useNavigate();
 
-  // Tab State: 'checklists' | 'requirements' | 'obligations'
-  const [activeTab, setActiveTab] = useState<'checklists' | 'requirements' | 'obligations'>('checklists');
+  // Tab State
+  const [activeTab, setActiveTab] = useState<TabType>('alerts');
 
   // Checklists State
   const [checklists, setChecklists] = useState<ComplianceChecklist[]>([]);
@@ -44,6 +60,13 @@ export const Compliance: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [isLoading, setIsLoading] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
+
+  // Alerts State (Phase 65)
+  const [alerts, setAlerts] = useState<RegulatoryAlert[]>([]);
+  const [alertSeverityFilter, setAlertSeverityFilter] = useState<string>('ALL');
+  const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
+  const [showWatchlistModal, setShowWatchlistModal] = useState(false);
+  const [isEvaluating, setIsEvaluating] = useState(false);
 
   // New Checklist Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -56,6 +79,24 @@ export const Compliance: React.FC = () => {
   const [explorerReqs, setExplorerReqs] = useState<RegulatoryRequirement[]>([]);
   const [explorerObs, setExplorerObs] = useState<RegulatoryObligation[]>([]);
 
+  // Load Alerts & Watchlists
+  const loadAlerts = () => {
+    fetchAlerts({ limit: 100 })
+      .then(setAlerts)
+      .catch((err) => console.error('Error fetching alerts:', err));
+  };
+
+  const loadWatchlistsData = () => {
+    fetchWatchlists()
+      .then(setWatchlists)
+      .catch((err) => console.error('Error fetching watchlists:', err));
+  };
+
+  useEffect(() => {
+    loadAlerts();
+    loadWatchlistsData();
+  }, []);
+
   // Load Checklists List
   useEffect(() => {
     fetchChecklists()
@@ -63,8 +104,13 @@ export const Compliance: React.FC = () => {
         setChecklists(data);
         if (checklistId) {
           const target = data.find((c) => c.checklist_id === checklistId);
-          if (target) setCurrentChecklist(target);
-          else loadChecklistDetail(checklistId);
+          if (target) {
+            setCurrentChecklist(target);
+            setActiveTab('checklists');
+          } else {
+            loadChecklistDetail(checklistId);
+            setActiveTab('checklists');
+          }
         } else if (data.length > 0 && !currentChecklist) {
           setCurrentChecklist(data[0]);
         }
@@ -88,6 +134,36 @@ export const Compliance: React.FC = () => {
       fetchObligations({ limit: 50 }).then(setExplorerObs).catch(console.error);
     }
   }, [activeTab]);
+
+  const handleMarkAlertRead = async (alertId: string) => {
+    try {
+      const updated = await markAlertRead(alertId);
+      setAlerts((prev) => prev.map((a) => (a.alert_id === updated.alert_id ? updated : a)));
+    } catch (err) {
+      console.error('Failed to mark read:', err);
+    }
+  };
+
+  const handleDismissAlert = async (alertId: string) => {
+    try {
+      await dismissAlert(alertId);
+      setAlerts((prev) => prev.filter((a) => a.alert_id !== alertId));
+    } catch (err) {
+      console.error('Failed to dismiss alert:', err);
+    }
+  };
+
+  const handleTriggerEvaluation = async () => {
+    setIsEvaluating(true);
+    try {
+      await triggerAlertEvaluation();
+      loadAlerts();
+    } catch (err) {
+      console.error('Failed to evaluate alerts:', err);
+    } finally {
+      setIsEvaluating(false);
+    }
+  };
 
   const handleStatusChange = async (itemId: string, newStatus: ChecklistStatus) => {
     if (!currentChecklist) return;
@@ -167,6 +243,12 @@ export const Compliance: React.FC = () => {
       })
     : [];
 
+  const unreadAlerts = alerts.filter((a) => a.status === 'UNREAD');
+  const filteredAlerts = alerts.filter((a) => {
+    if (alertSeverityFilter === 'ALL') return true;
+    return a.severity === alertSeverityFilter;
+  });
+
   return (
     <div className="page-container">
       {/* Top Header */}
@@ -174,24 +256,130 @@ export const Compliance: React.FC = () => {
         <div>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
             <ClipboardCheck size={28} style={{ color: '#2563eb' }} />
-            Compliance & Regulatory Intelligence
+            Regulatory Intelligence, Alerts & Compliance
           </h1>
           <p style={{ color: '#64748b', fontSize: '0.88rem', margin: '4px 0 0 0' }}>
-            Convert SEBI regulations into structured requirements, operational obligations, and audited checklists.
+            Event-driven regulatory intelligence: track effective dates, compliance deadlines, deduplicated alerts, and audited checklists.
           </p>
         </div>
 
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="btn btn-primary"
-          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-        >
-          <PlusCircle size={16} /> Generate New Checklist
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => setShowWatchlistModal(true)}
+            className="btn btn-secondary"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Eye size={15} /> Watchlists ({watchlists.length})
+          </button>
+          <button
+            onClick={handleTriggerEvaluation}
+            className="btn btn-secondary"
+            disabled={isEvaluating}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Play size={15} /> {isEvaluating ? 'Evaluating...' : 'Run Intelligence Evaluation'}
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="btn btn-primary"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+          >
+            <PlusCircle size={16} /> Generate Checklist
+          </button>
+        </div>
       </div>
 
+      {/* Unread Alert Notification Banner */}
+      {unreadAlerts.length > 0 && activeTab !== 'alerts' && (
+        <div
+          onClick={() => setActiveTab('alerts')}
+          className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3.5 mb-6 flex items-center justify-between cursor-pointer hover:bg-amber-500/15 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <Bell className="w-5 h-5 text-amber-400 shrink-0" />
+            <div>
+              <span className="text-sm font-semibold text-amber-200">
+                {unreadAlerts.length} Regulatory Alert{unreadAlerts.length > 1 ? 's' : ''} Require Attention
+              </span>
+              <p className="text-xs text-amber-300/80">
+                Click to view upcoming effective dates, deadline alerts, and modified obligations.
+              </p>
+            </div>
+          </div>
+          <span className="text-xs font-semibold text-amber-400 bg-amber-950/60 px-3 py-1 rounded-full border border-amber-700/50">
+            View Alerts →
+          </span>
+        </div>
+      )}
+
       {/* Navigation Tabs */}
-      <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '2px solid #e2e8f0', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '2px solid #e2e8f0', marginBottom: '1.5rem', overflowX: 'auto' }}>
+        <button
+          className={`tab-button ${activeTab === 'alerts' ? 'active' : ''}`}
+          onClick={() => setActiveTab('alerts')}
+          style={{
+            padding: '0.6rem 1.2rem',
+            border: 'none',
+            background: 'none',
+            fontWeight: 700,
+            fontSize: '0.92rem',
+            color: activeTab === 'alerts' ? '#2563eb' : '#64748b',
+            borderBottom: activeTab === 'alerts' ? '3px solid #2563eb' : 'none',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <Bell size={16} />
+          Alerts {unreadAlerts.length > 0 && `(${unreadAlerts.length})`}
+        </button>
+
+        <button
+          className={`tab-button ${activeTab === 'deadlines' ? 'active' : ''}`}
+          onClick={() => setActiveTab('deadlines')}
+          style={{
+            padding: '0.6rem 1.2rem',
+            border: 'none',
+            background: 'none',
+            fontWeight: 700,
+            fontSize: '0.92rem',
+            color: activeTab === 'deadlines' ? '#2563eb' : '#64748b',
+            borderBottom: activeTab === 'deadlines' ? '3px solid #2563eb' : 'none',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <Clock size={16} />
+          Deadlines & Schedules
+        </button>
+
+        <button
+          className={`tab-button ${activeTab === 'calendar' ? 'active' : ''}`}
+          onClick={() => setActiveTab('calendar')}
+          style={{
+            padding: '0.6rem 1.2rem',
+            border: 'none',
+            background: 'none',
+            fontWeight: 700,
+            fontSize: '0.92rem',
+            color: activeTab === 'calendar' ? '#2563eb' : '#64748b',
+            borderBottom: activeTab === 'calendar' ? '3px solid #2563eb' : 'none',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <CalendarIcon size={16} />
+          Calendar & Timeline
+        </button>
+
         <button
           className={`tab-button ${activeTab === 'checklists' ? 'active' : ''}`}
           onClick={() => setActiveTab('checklists')}
@@ -204,10 +392,12 @@ export const Compliance: React.FC = () => {
             color: activeTab === 'checklists' ? '#2563eb' : '#64748b',
             borderBottom: activeTab === 'checklists' ? '3px solid #2563eb' : 'none',
             cursor: 'pointer',
+            whiteSpace: 'nowrap',
           }}
         >
           Compliance Checklists ({checklists.length})
         </button>
+
         <button
           className={`tab-button ${activeTab === 'requirements' ? 'active' : ''}`}
           onClick={() => setActiveTab('requirements')}
@@ -220,10 +410,12 @@ export const Compliance: React.FC = () => {
             color: activeTab === 'requirements' ? '#2563eb' : '#64748b',
             borderBottom: activeTab === 'requirements' ? '3px solid #2563eb' : 'none',
             cursor: 'pointer',
+            whiteSpace: 'nowrap',
           }}
         >
           Extracted Requirements (Phase 61)
         </button>
+
         <button
           className={`tab-button ${activeTab === 'obligations' ? 'active' : ''}`}
           onClick={() => setActiveTab('obligations')}
@@ -236,13 +428,67 @@ export const Compliance: React.FC = () => {
             color: activeTab === 'obligations' ? '#2563eb' : '#64748b',
             borderBottom: activeTab === 'obligations' ? '3px solid #2563eb' : 'none',
             cursor: 'pointer',
+            whiteSpace: 'nowrap',
           }}
         >
           Operational Obligations (Phase 62)
         </button>
       </div>
 
-      {/* TAB 1: COMPLIANCE CHECKLISTS */}
+      {/* TAB 1: REGULATORY ALERTS (Phase 65) */}
+      {activeTab === 'alerts' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-4 p-4 bg-slate-900/80 border border-slate-800 rounded-xl flex-wrap">
+            <div className="flex items-center gap-2 text-slate-200 font-medium">
+              <Bell className="w-5 h-5 text-sky-400" />
+              <span>Proactive Regulatory Alerts ({alerts.length})</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400">Filter Severity:</span>
+              {['ALL', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map((sev) => (
+                <button
+                  key={sev}
+                  onClick={() => setAlertSeverityFilter(sev)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-colors ${
+                    alertSeverityFilter === sev
+                      ? 'bg-sky-600 text-white border-sky-500'
+                      : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'
+                  }`}
+                >
+                  {sev}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {filteredAlerts.length === 0 ? (
+            <div className="p-12 text-center bg-slate-900/40 border border-slate-800 rounded-xl">
+              <CheckCircle2 className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+              <p className="text-slate-400 text-sm">No regulatory alerts matching this severity filter.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredAlerts.map((alert) => (
+                <AlertCard
+                  key={alert.alert_id}
+                  alert={alert}
+                  onMarkRead={handleMarkAlertRead}
+                  onDismiss={handleDismissAlert}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB 2: DEADLINES & SCHEDULES (Phase 65) */}
+      {activeTab === 'deadlines' && <DeadlineList />}
+
+      {/* TAB 3: CALENDAR & TIMELINE (Phase 64) */}
+      {activeTab === 'calendar' && <RegulatoryCalendarView />}
+
+      {/* TAB 4: COMPLIANCE CHECKLISTS (Phase 63) */}
       {activeTab === 'checklists' && (
         <>
           {currentChecklist && (
@@ -278,213 +524,199 @@ export const Compliance: React.FC = () => {
                   if (c) setCurrentChecklist(c);
                 }}
                 className="select select-sm"
-                style={{ maxWidth: '280px', fontSize: '0.82rem' }}
               >
-                {checklists.map((chk) => (
-                  <option key={chk.checklist_id} value={chk.checklist_id}>
-                    {chk.title} ({chk.completion_rate}%)
+                {checklists.map((c) => (
+                  <option key={c.checklist_id} value={c.checklist_id}>
+                    {c.title} ({c.items.length} items)
                   </option>
                 ))}
               </select>
             )}
           </div>
 
-          {/* Checklist Items List */}
+          {/* Items List */}
           {isLoading ? (
-            <div className="card" style={{ textAlign: 'center', padding: '3rem 1rem', color: '#64748b' }}>
-              <RefreshCw size={24} className="animate-spin" style={{ margin: '0 auto 0.5rem auto', color: '#2563eb' }} />
-              Loading checklist details...
-            </div>
+            <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>Loading checklist...</div>
           ) : filteredItems.length === 0 ? (
-            <div className="card" style={{ textAlign: 'center', padding: '3rem 1rem', color: '#64748b' }}>
-              <p>No checklist items match the current status filter.</p>
+            <div style={{ padding: '3rem', textAlign: 'center', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <p style={{ color: '#64748b', fontSize: '0.92rem', margin: 0 }}>No checklist items match the selected status.</p>
             </div>
           ) : (
-            filteredItems.map((item, idx) => (
-              <div
-                key={item.item_id}
-                className="card"
-                style={{
-                  padding: '1.25rem',
-                  marginBottom: '0.75rem',
-                  borderLeft: `4px solid ${
-                    item.status === 'COMPLIANT'
-                      ? '#10b981'
-                      : item.status === 'NON_COMPLIANT'
-                      ? '#ef4444'
-                      : item.status === 'NEEDS_REVIEW'
-                      ? '#f59e0b'
-                      : '#cbd5e1'
-                  }`,
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                      <span style={{ fontWeight: 800, color: '#3b82f6', fontSize: '0.9rem' }}>#{idx + 1}</span>
-                      <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#1e293b' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {filteredItems.map((item) => (
+                <div
+                  key={item.item_id}
+                  style={{
+                    background: '#ffffff',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    padding: '1.25rem',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '0.5rem' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                        <span style={{ fontSize: '0.72rem', fontFamily: 'monospace', color: '#64748b', background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px' }}>
+                          {item.item_id}
+                        </span>
+                        {item.obligated_party && (
+                          <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#1e40af', background: '#dbeafe', padding: '2px 6px', borderRadius: '4px' }}>
+                            {item.obligated_party}
+                          </span>
+                        )}
+                        {item.is_changed && (
+                          <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#b45309', background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <AlertTriangle size={12} /> MODIFIED IN LATEST VERSION
+                          </span>
+                        )}
+                      </div>
+
+                      <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#0f172a', margin: '0 0 6px 0' }}>
                         {item.control_question}
                       </h4>
+
+                      <p style={{ fontSize: '0.85rem', color: '#334155', margin: '0 0 8px 0' }}>
+                        <strong>Action Required:</strong> {item.compliance_action}
+                      </p>
+
+                      {item.evidence_required && item.evidence_required.length > 0 && (
+                        <div style={{ fontSize: '0.78rem', color: '#475569', marginBottom: '8px' }}>
+                          <strong>Expected Evidence:</strong> {item.evidence_required.join(', ')}
+                        </div>
+                      )}
                     </div>
 
-                    {item.is_changed && (
-                      <div
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+                      <select
+                        value={item.status}
+                        onChange={(e) => handleStatusChange(item.item_id, e.target.value as ChecklistStatus)}
+                        className="select select-sm"
                         style={{
+                          fontWeight: 700,
+                          fontSize: '0.8rem',
+                          background:
+                            item.status === 'COMPLIANT'
+                              ? '#dcfce7'
+                              : item.status === 'NON_COMPLIANT'
+                              ? '#fee2e2'
+                              : item.status === 'NEEDS_REVIEW'
+                              ? '#fef3c7'
+                              : '#f1f5f9',
+                          color:
+                            item.status === 'COMPLIANT'
+                              ? '#166534'
+                              : item.status === 'NON_COMPLIANT'
+                              ? '#991b1b'
+                              : item.status === 'NEEDS_REVIEW'
+                              ? '#92400e'
+                              : '#475569',
+                          borderColor: 'transparent',
+                        }}
+                      >
+                        <option value="NOT_REVIEWED">NOT REVIEWED</option>
+                        <option value="COMPLIANT">COMPLIANT</option>
+                        <option value="PARTIALLY_COMPLIANT">PARTIALLY COMPLIANT</option>
+                        <option value="NON_COMPLIANT">NON COMPLIANT</option>
+                        <option value="NEEDS_REVIEW">NEEDS REVIEW</option>
+                        <option value="NOT_APPLICABLE">NOT APPLICABLE</option>
+                      </select>
+
+                      <button
+                        onClick={() => setSelectedItemForEvidence(item)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#2563eb',
+                          fontSize: '0.78rem',
+                          cursor: 'pointer',
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: '4px',
-                          marginTop: '4px',
-                          padding: '2px 8px',
-                          backgroundColor: '#fef3c7',
-                          color: '#b45309',
-                          borderRadius: '12px',
-                          fontSize: '0.74rem',
-                          fontWeight: 700,
+                          padding: '2px 4px',
                         }}
                       >
-                        <AlertTriangle size={12} />
-                        Recent Regulatory Change: {item.change_summary}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Status Dropdown */}
-                  <select
-                    value={item.status}
-                    onChange={(e) => handleStatusChange(item.item_id, e.target.value as ChecklistStatus)}
-                    style={{
-                      padding: '4px 8px',
-                      borderRadius: 'var(--radius-sm)',
-                      fontWeight: 700,
-                      fontSize: '0.82rem',
-                      border: '1px solid #cbd5e1',
-                      backgroundColor:
-                        item.status === 'COMPLIANT'
-                          ? '#ecfdf5'
-                          : item.status === 'NON_COMPLIANT'
-                          ? '#fef2f2'
-                          : item.status === 'NEEDS_REVIEW'
-                          ? '#fffbeb'
-                          : '#ffffff',
-                    }}
-                  >
-                    <option value="NOT_REVIEWED">⏳ Not Reviewed</option>
-                    <option value="COMPLIANT">✅ Compliant</option>
-                    <option value="NON_COMPLIANT">❌ Non-Compliant</option>
-                    <option value="PARTIALLY_COMPLIANT">⚠️ Partially Compliant</option>
-                    <option value="NEEDS_REVIEW">🔍 Needs Review</option>
-                    <option value="NOT_APPLICABLE">⚪ Not Applicable</option>
-                  </select>
-                </div>
-
-                <div style={{ fontSize: '0.86rem', color: '#475569', marginBottom: '0.5rem' }}>
-                  <strong>Required Action:</strong> {item.compliance_action}
-                </div>
-
-                {/* Proof & Traceability Buttons */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.75rem', paddingTop: '0.5rem', borderTop: '1px solid #f1f5f9' }}>
-                  <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                    {item.evidence_required && item.evidence_required.length > 0 && (
-                      <span>
-                        <strong>Required Evidence:</strong> {item.evidence_required.join(', ')}
-                      </span>
-                    )}
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button
-                      onClick={() => setSelectedItemForEvidence(item)}
-                      className="btn btn-secondary btn-sm"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.76rem' }}
-                    >
-                      <FileText size={13} /> View Audit Trail & Evidence
-                    </button>
-                    {item.is_changed && (
-                      <button
-                        onClick={() => navigate(`/compare?docA=${item.document_id}`)}
-                        className="btn btn-outline btn-sm"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.76rem' }}
-                      >
-                        <Scale size={13} /> View What Changed
+                        <FileText size={12} /> View Evidence
                       </button>
-                    )}
+                    </div>
+                  </div>
+
+                  <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '8px', marginTop: '8px' }}>
+                    <input
+                      type="text"
+                      defaultValue={item.notes || ''}
+                      onBlur={(e) => handleNotesChange(item.item_id, e.target.value)}
+                      placeholder="Add compliance notes or internal audit reference..."
+                      className="input input-sm"
+                      style={{ width: '100%', fontSize: '0.78rem' }}
+                    />
                   </div>
                 </div>
-
-                {/* Review Notes Area */}
-                <div style={{ marginTop: '0.5rem' }}>
-                  <input
-                    type="text"
-                    defaultValue={item.notes || ''}
-                    placeholder="Add internal audit notes or verification reference..."
-                    onBlur={(e) => handleNotesChange(item.item_id, e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '4px 8px',
-                      fontSize: '0.8rem',
-                      borderRadius: 'var(--radius-sm)',
-                      border: '1px solid #e2e8f0',
-                      backgroundColor: '#f8fafc',
-                    }}
-                  />
-                </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </>
       )}
 
-      {/* TAB 2: EXTRACTED REQUIREMENTS EXPLORER */}
+      {/* TAB 5: REQUIREMENTS EXPLORER (Phase 61) */}
       {activeTab === 'requirements' && (
-        <div>
-          <p style={{ color: '#64748b', fontSize: '0.88rem', marginBottom: '1rem' }}>
-            Browse structured regulatory requirements extracted across ingested SEBI circulars and regulations.
-          </p>
-          {explorerReqs.length === 0 ? (
-            <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>
-              <RefreshCw size={24} className="animate-spin" style={{ margin: '0 auto 0.5rem auto', color: '#2563eb' }} />
-              Loading extracted requirements...
-            </div>
-          ) : (
-            explorerReqs.map((req) => <RequirementCard key={req.requirement_id} requirement={req} />)
-          )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
+              Showing {explorerReqs.length} extracted regulatory requirements across indexed instruments.
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {explorerReqs.map((req) => (
+              <RequirementCard key={req.requirement_id} requirement={req} />
+            ))}
+          </div>
         </div>
       )}
 
-      {/* TAB 3: OPERATIONAL OBLIGATIONS EXPLORER */}
+      {/* TAB 6: OBLIGATIONS EXPLORER (Phase 62) */}
       {activeTab === 'obligations' && (
-        <div>
-          <p style={{ color: '#64748b', fontSize: '0.88rem', marginBottom: '1rem' }}>
-            Inspect operational regulatory obligations categorized by deontic force (WHO, WHAT, WHEN, CONDITIONS, EVIDENCE).
-          </p>
-          {explorerObs.length === 0 ? (
-            <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>
-              <RefreshCw size={24} className="animate-spin" style={{ margin: '0 auto 0.5rem auto', color: '#2563eb' }} />
-              Loading operational obligations...
-            </div>
-          ) : (
-            explorerObs.map((ob) => <ObligationCard key={ob.obligation_id} obligation={ob} />)
-          )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
+              Showing {explorerObs.length} operational regulatory obligations (WHO, WHAT, CONDITIONS, DEADLINES).
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {explorerObs.map((ob) => (
+              <ObligationCard key={ob.obligation_id} obligation={ob} />
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Generate Checklist Modal */}
+      {/* Create Checklist Modal */}
       {showCreateModal && (
         <div
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            zIndex: 50,
+            backgroundColor: 'rgba(0,0,0,0.5)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '1rem',
+            zIndex: 1000,
           }}
         >
-          <div className="card" style={{ width: '100%', maxWidth: '500px', padding: '1.75rem', backgroundColor: '#ffffff' }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: '0 0 1rem 0', color: '#0f172a' }}>
-              Generate Regulatory Compliance Checklist
+          <div
+            style={{
+              background: '#ffffff',
+              borderRadius: '12px',
+              padding: '1.5rem',
+              width: '100%',
+              maxWidth: '500px',
+              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
+            }}
+          >
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 1rem 0', color: '#0f172a' }}>
+              Generate New Compliance Checklist
             </h3>
 
             <form onSubmit={handleCreateChecklist}>
@@ -496,7 +728,6 @@ export const Compliance: React.FC = () => {
                   type="text"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  required
                   className="input"
                   style={{ width: '100%' }}
                 />
@@ -546,6 +777,17 @@ export const Compliance: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Watchlist Modal */}
+      <WatchlistModal
+        isOpen={showWatchlistModal}
+        onClose={() => setShowWatchlistModal(false)}
+        onWatchlistSaved={() => {
+          loadWatchlistsData();
+          setShowWatchlistModal(false);
+        }}
+        watchlists={watchlists}
+      />
 
       {/* Evidence and Traceability Drawer */}
       <EvidenceDrawer

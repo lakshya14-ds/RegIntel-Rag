@@ -408,3 +408,217 @@ export interface TraceabilityNode {
   issues: string[];
 }
 
+// ==========================================
+// Phase 64: Effective-Date Intelligence
+// ==========================================
+export interface RegulatoryDateEvent {
+  event_id: string;
+  document_id: string;
+  document_version_id?: string | null;
+  section_id?: string | null;
+  event_type: string;
+  date?: string | null;
+  date_precision?: string;
+  source_text: string;
+  source_locator?: Record<string, any>;
+  confidence: string;
+  extraction_method: string;
+  derivation_type: string;
+  derivation_rule?: string | null;
+  base_event_type?: string | null;
+  offset_days?: number | null;
+  created_at?: string;
+}
+
+export interface DateConflict {
+  document_id: string;
+  event_type: string;
+  conflicting_values: Record<string, any>[];
+  evidence: string;
+  severity: 'WARNING' | 'ERROR' | 'UNKNOWN';
+  resolution_status: string;
+  notes?: string | null;
+}
+
+export interface TemporalStateEvaluation {
+  document_id: string;
+  document_version_id?: string | null;
+  as_of_date: string;
+  state: 'NOT_YET_EFFECTIVE' | 'EFFECTIVE' | 'EXPIRED' | 'SUPERSEDED' | 'REPEALED' | 'WITHDRAWN' | 'UNKNOWN';
+  effective_date?: string | null;
+  published_date?: string | null;
+  expiry_date?: string | null;
+  superseded_date?: string | null;
+  derivation_type: string;
+  reason: string;
+  conflicts: DateConflict[];
+  provenance: Record<string, any>;
+}
+
+export interface RequirementTemporalState {
+  requirement_id: string;
+  document_id: string;
+  as_of_date: string;
+  is_active: boolean;
+  state: string;
+  effective_date?: string | null;
+  superseded_date?: string | null;
+  reason: string;
+}
+
+export interface ObligationTemporalState {
+  obligation_id: string;
+  requirement_id: string;
+  document_id: string;
+  as_of_date: string;
+  status: 'FUTURE' | 'ACTIVE' | 'HISTORICAL' | 'SUPERSEDED' | 'EXPIRED' | 'UNKNOWN';
+  effective_date?: string | null;
+  days_until_effective?: number | null;
+  reason: string;
+}
+
+export interface ChecklistItemTemporalState {
+  item_id: string;
+  obligation_id: string;
+  as_of_date: string;
+  temporal_status: 'ACTIVE' | 'UPCOMING' | 'HISTORICAL' | 'NOT_YET_APPLICABLE' | 'SUPERSEDED' | 'UNKNOWN';
+  effective_date?: string | null;
+  days_until_effective?: number | null;
+  is_actionable_now: boolean;
+}
+
+// ==========================================
+// Phase 65: Regulatory Alerts & Deadlines
+// ==========================================
+export type AlertSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'INFO';
+export type AlertStatus = 'UNREAD' | 'READ' | 'DISMISSED';
+
+export interface AlertExplanation {
+  why_am_i_seeing_this: string;
+  what_changed?: string | null;
+  when_effective?: string | null;
+  affected_requirement?: string | null;
+  affected_obligation?: string | null;
+  action_recommended?: string | null;
+  source?: string | null;
+}
+
+export interface RegulatoryAlert {
+  alert_id: string;
+  dedup_hash: string;
+  alert_type: string;
+  severity: AlertSeverity;
+  title: string;
+  message: string;
+  event_id?: string | null;
+  document_id?: string | null;
+  requirement_id?: string | null;
+  obligation_id?: string | null;
+  checklist_item_id?: string | null;
+  trigger_date: string;
+  effective_date?: string | null;
+  deadline?: string | null;
+  source_reference: Record<string, any>;
+  explanation: AlertExplanation;
+  status: AlertStatus;
+  channel: string;
+  created_at: string;
+  read_at?: string | null;
+  dismissed_at?: string | null;
+}
+
+export interface RegulatoryDeadline {
+  deadline_id: string;
+  obligation_id: string;
+  requirement_id?: string | null;
+  document_id: string;
+  deadline_type: string;
+  trigger_event?: string | null;
+  deadline_expression: string;
+  due_date?: string | null;
+  due_date_derivation: string;
+  frequency?: string | null;
+  grace_period?: string | null;
+  source_evidence: string;
+  confidence: string;
+  status: 'UPCOMING' | 'DUE_SOON' | 'DUE_TODAY' | 'OVERDUE' | 'COMPLETED' | 'NOT_APPLICABLE' | 'UNKNOWN';
+  days_remaining?: number | null;
+  recurrence_rule?: Record<string, any> | null;
+  created_at?: string;
+}
+
+export interface Watchlist {
+  watchlist_id: string;
+  user_id: string;
+  name: string;
+  authorities: string[];
+  document_ids: string[];
+  topics: string[];
+  requirement_types: string[];
+  obligation_types: string[];
+  event_types: string[];
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// ==========================================
+// Multi-Regulator Authority & Connectors (Phases 66–69)
+// ==========================================
+export type RegulatoryAuthority = 'SEBI' | 'RBI' | 'IRDAI' | 'PFRDA' | 'IFSCA';
+
+export interface AuthorityMetadata {
+  code: RegulatoryAuthority;
+  name: string;
+  short_name: string;
+  country: string;
+  domain: string;
+  official_domain: string;
+  description: string;
+  enabled: boolean;
+  default_document_types: string[];
+}
+
+export interface RegulatorySourceInfo {
+  source_id: string;
+  authority: RegulatoryAuthority;
+  source_type: string;
+  name: string;
+  base_url: string;
+  listing_url: string;
+  enabled: boolean;
+  crawl_frequency: string;
+  document_types: string[];
+  category?: string | null;
+  priority: number;
+}
+
+export interface ConnectorRun {
+  run_id: string;
+  authority: RegulatoryAuthority;
+  started_at: string;
+  completed_at?: string | null;
+  status: 'RUNNING' | 'SUCCESS' | 'PARTIAL_SUCCESS' | 'FAILED';
+  discovered_count: number;
+  downloaded_count: number;
+  new_documents: number;
+  changed_documents: number;
+  skipped_documents: number;
+  failed_documents: number;
+  errors: any[];
+  warnings: string[];
+  duration_seconds?: number | null;
+}
+
+export interface ConnectorHealth {
+  authority: RegulatoryAuthority;
+  status: 'HEALTHY' | 'WARNING' | 'FAILED' | 'UNKNOWN';
+  last_run_at?: string | null;
+  last_run_status?: string | null;
+  last_run_id?: string | null;
+  total_discovered_last_run: number;
+  consecutive_failures: number;
+  error_summary?: string | null;
+}
+
+

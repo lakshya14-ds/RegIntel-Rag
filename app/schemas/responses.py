@@ -21,6 +21,7 @@ class SourceCitationResponse(BaseModel):
     chunk_id: str
     document_id: str
     source: str
+    authority: Optional[str] = "SEBI"
     title: str
     section: Optional[str] = "General"
     published_date: Optional[str] = "N/A"
@@ -58,6 +59,7 @@ class SearchItemResponse(BaseModel):
     title: Optional[str] = None
     section: Optional[str] = None
     source: str = "SEBI"
+    authority: Optional[str] = "SEBI"
     category: Optional[str] = None
     document_type: Optional[str] = None
     published_date: Optional[str] = None

@@ -10,6 +10,7 @@ Supports:
 
 import json
 import logging
+from datetime import datetime
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 
@@ -20,6 +21,13 @@ from app.compliance.models import (
     ComplianceChecklist,
     ChecklistItem,
 )
+from app.compliance.temporal_models import RegulatoryDateEvent
+from app.compliance.alert_models import (
+    RegulatoryEvent,
+    RegulatoryDeadline,
+    RegulatoryAlert,
+    Watchlist,
+)
 
 logger = logging.getLogger(__name__)
 if not logger.hasHandlers():
@@ -28,7 +36,8 @@ if not logger.hasHandlers():
 
 class ComplianceRepository:
     """
-    Manages database and filesystem persistence for requirements, obligations, and checklists.
+    Manages database and filesystem persistence for requirements, obligations, checklists,
+    date events, regulatory events, deadlines, alerts, and watchlists.
     """
 
     def __init__(self, data_dir: Optional[Path] = None):
@@ -36,11 +45,21 @@ class ComplianceRepository:
         self.req_dir = self.base_data_dir / "requirements"
         self.ob_dir = self.base_data_dir / "obligations"
         self.chk_dir = self.base_data_dir / "checklists"
+        self.date_events_dir = self.base_data_dir / "date_events"
+        self.events_dir = self.base_data_dir / "events"
+        self.deadlines_dir = self.base_data_dir / "deadlines"
+        self.alerts_dir = self.base_data_dir / "alerts"
+        self.watchlists_dir = self.base_data_dir / "watchlists"
 
         # Ensure local fallback storage directories exist
         self.req_dir.mkdir(parents=True, exist_ok=True)
         self.ob_dir.mkdir(parents=True, exist_ok=True)
         self.chk_dir.mkdir(parents=True, exist_ok=True)
+        self.date_events_dir.mkdir(parents=True, exist_ok=True)
+        self.events_dir.mkdir(parents=True, exist_ok=True)
+        self.deadlines_dir.mkdir(parents=True, exist_ok=True)
+        self.alerts_dir.mkdir(parents=True, exist_ok=True)
+        self.watchlists_dir.mkdir(parents=True, exist_ok=True)
 
     # -------------------------------------------------------------------------
     # REQUIREMENTS PERSISTENCE (Phase 61)
@@ -235,6 +254,7 @@ class ComplianceRepository:
         self,
         document_id: Optional[str] = None,
         requirement_id: Optional[str] = None,
+        authority: Optional[str] = None,
         obligated_party: Optional[str] = None,
         obligation_type: Optional[str] = None,
         status: Optional[str] = None,
@@ -252,6 +272,8 @@ class ComplianceRepository:
                 query["document_id"] = document_id
             if requirement_id:
                 query["requirement_id"] = requirement_id
+            if authority:
+                query["authority"] = authority
             if obligated_party:
                 query["obligated_party"] = {"$regex": obligated_party, "$options": "i"}
             if obligation_type:
@@ -281,6 +303,8 @@ class ComplianceRepository:
                     if document_id and ob.document_id != document_id:
                         continue
                     if requirement_id and ob.requirement_id != requirement_id:
+                        continue
+                    if authority and ob.authority != authority:
                         continue
                     if obligated_party and (not ob.obligated_party or obligated_party.lower() not in ob.obligated_party.lower()):
                         continue
@@ -358,12 +382,21 @@ class ComplianceRepository:
 
         return None
 
-    def get_checklists(self, limit: int = 50, offset: int = 0) -> List[ComplianceChecklist]:
-        """Lists saved compliance checklists."""
+    def get_checklists(
+        self,
+        authority: Optional[str] = None,
+        limit: int = 50,
+        offset: int = 0
+    ) -> List[ComplianceChecklist]:
+        """Lists saved compliance checklists with optional authority filtering."""
+        query = {}
+        if authority:
+            query["authority"] = authority
+
         try:
             from app.db import get_checklists_collection
             coll = get_checklists_collection()
-            cursor = coll.find({}).sort("updated_at", -1).skip(offset).limit(limit)
+            cursor = coll.find(query).sort("updated_at", -1).skip(offset).limit(limit)
             results = []
             for doc in cursor:
                 doc.pop("_id", None)
@@ -381,6 +414,8 @@ class ComplianceRepository:
                 with open(fp, "r", encoding="utf-8") as f:
                     chk = ComplianceChecklist.model_validate(json.load(f))
                     chk.recalculate_metrics()
+                    if authority and chk.authority != authority:
+                        continue
                     all_chks.append(chk)
             except Exception:
                 continue
@@ -420,6 +455,448 @@ class ComplianceRepository:
             self.save_checklist(chk)
             return chk
 
+        return None
+
+    # -------------------------------------------------------------------------
+    # REGULATORY DATE EVENTS PERSISTENCE (Phase 64)
+    # -------------------------------------------------------------------------
+
+    def save_date_events(self, events: List[RegulatoryDateEvent]) -> int:
+        """Upserts regulatory date events to MongoDB and local filesystem."""
+        if not events:
+            return 0
+
+        count = 0
+        for ev in events:
+            try:
+                fp = self.date_events_dir / f"{ev.event_id}.json"
+                with open(fp, "w", encoding="utf-8") as f:
+                    json.dump(ev.model_dump(), f, indent=2, ensure_ascii=False)
+                count += 1
+            except Exception as e:
+                logger.warning(f"Error saving date event {ev.event_id} locally: {e}")
+
+        try:
+            from app.db import get_date_events_collection
+            coll = get_date_events_collection()
+            for ev in events:
+                data = ev.model_dump()
+                coll.update_one(
+                    {"event_id": ev.event_id},
+                    {"$set": data},
+                    upsert=True
+                )
+        except Exception as e:
+            logger.debug(f"MongoDB save_date_events bypassed/failed: {e}")
+
+        return count
+
+    def get_date_events(
+        self,
+        document_id: Optional[str] = None,
+        event_type: Optional[str] = None,
+        limit: int = 100,
+        offset: int = 0
+    ) -> List[RegulatoryDateEvent]:
+        """Queries stored regulatory date events with optional filters."""
+        query: Dict[str, Any] = {}
+        if document_id:
+            query["document_id"] = document_id.strip()
+        if event_type:
+            query["event_type"] = event_type.strip().upper()
+
+        try:
+            from app.db import get_date_events_collection
+            coll = get_date_events_collection()
+            cursor = coll.find(query).sort("date", 1).skip(offset).limit(limit)
+            results = []
+            for doc in cursor:
+                doc.pop("_id", None)
+                results.append(RegulatoryDateEvent.model_validate(doc))
+            if results or coll.count_documents(query) > 0:
+                return results
+        except Exception:
+            pass
+
+        events = []
+        for fp in self.date_events_dir.glob("*.json"):
+            try:
+                with open(fp, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if document_id and data.get("document_id") != document_id.strip():
+                        continue
+                    if event_type and data.get("event_type") != event_type.strip().upper():
+                        continue
+                    events.append(RegulatoryDateEvent.model_validate(data))
+            except Exception:
+                continue
+
+        events.sort(key=lambda x: x.date or "9999-99-99")
+        return events[offset: offset + limit]
+
+    def get_calendar_date_events(
+        self,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        event_type: Optional[str] = None
+    ) -> List[RegulatoryDateEvent]:
+        """Returns chronological date events within a date window for calendar views."""
+        all_events = self.get_date_events(event_type=event_type, limit=500)
+        filtered = []
+        for ev in all_events:
+            if not ev.date:
+                continue
+            if start_date and ev.date < start_date:
+                continue
+            if end_date and ev.date > end_date:
+                continue
+            filtered.append(ev)
+        filtered.sort(key=lambda x: x.date or "")
+        return filtered
+
+    def get_upcoming_date_events(
+        self,
+        days: int = 30,
+        as_of_date: Optional[str] = None,
+        event_type: Optional[str] = None
+    ) -> List[RegulatoryDateEvent]:
+        """Returns regulatory changes becoming effective/due in the next N days (64.15)."""
+        from datetime import datetime, timedelta
+        ref_str = as_of_date or datetime.utcnow().strftime("%Y-%m-%d")
+        try:
+            ref_dt = datetime.strptime(ref_str, "%Y-%m-%d")
+            end_dt = ref_dt + timedelta(days=days)
+            end_str = end_dt.strftime("%Y-%m-%d")
+        except Exception:
+            return []
+
+        all_events = self.get_date_events(event_type=event_type, limit=500)
+        upcoming = [
+            ev for ev in all_events
+            if ev.date and ref_str <= ev.date <= end_str
+        ]
+        upcoming.sort(key=lambda x: x.date or "")
+        return upcoming
+
+    # -------------------------------------------------------------------------
+    # REGULATORY DEADLINES PERSISTENCE (Phase 65)
+    # -------------------------------------------------------------------------
+
+    def save_deadlines(self, deadlines: List[RegulatoryDeadline]) -> int:
+        """Upserts regulatory deadlines to MongoDB and local filesystem."""
+        if not deadlines:
+            return 0
+
+        count = 0
+        for ddl in deadlines:
+            try:
+                fp = self.deadlines_dir / f"{ddl.deadline_id}.json"
+                with open(fp, "w", encoding="utf-8") as f:
+                    json.dump(ddl.model_dump(), f, indent=2, ensure_ascii=False)
+                count += 1
+            except Exception as e:
+                logger.warning(f"Error saving deadline {ddl.deadline_id} locally: {e}")
+
+        try:
+            from app.db import get_deadlines_collection
+            coll = get_deadlines_collection()
+            for ddl in deadlines:
+                coll.update_one(
+                    {"deadline_id": ddl.deadline_id},
+                    {"$set": ddl.model_dump()},
+                    upsert=True
+                )
+        except Exception as e:
+            logger.debug(f"MongoDB save_deadlines bypassed/failed: {e}")
+
+        return count
+
+    def get_deadlines(
+        self,
+        document_id: Optional[str] = None,
+        obligation_id: Optional[str] = None,
+        status: Optional[str] = None,
+        limit: int = 100,
+        offset: int = 0
+    ) -> List[RegulatoryDeadline]:
+        """Queries stored regulatory deadlines."""
+        query: Dict[str, Any] = {}
+        if document_id:
+            query["document_id"] = document_id.strip()
+        if obligation_id:
+            query["obligation_id"] = obligation_id.strip()
+        if status:
+            query["status"] = status.strip().upper()
+
+        try:
+            from app.db import get_deadlines_collection
+            coll = get_deadlines_collection()
+            cursor = coll.find(query).sort("due_date", 1).skip(offset).limit(limit)
+            results = []
+            for doc in cursor:
+                doc.pop("_id", None)
+                results.append(RegulatoryDeadline.model_validate(doc))
+            if results or coll.count_documents(query) > 0:
+                return results
+        except Exception:
+            pass
+
+        deadlines = []
+        for fp in self.deadlines_dir.glob("*.json"):
+            try:
+                with open(fp, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if document_id and data.get("document_id") != document_id.strip():
+                        continue
+                    if obligation_id and data.get("obligation_id") != obligation_id.strip():
+                        continue
+                    if status and data.get("status") != status.strip().upper():
+                        continue
+                    deadlines.append(RegulatoryDeadline.model_validate(data))
+            except Exception:
+                continue
+
+        deadlines.sort(key=lambda x: x.due_date or "9999-99-99")
+        return deadlines[offset: offset + limit]
+
+    # -------------------------------------------------------------------------
+    # REGULATORY ALERTS PERSISTENCE & DEDUPLICATION (Phase 65)
+    # -------------------------------------------------------------------------
+
+    def save_alerts(self, alerts: List[RegulatoryAlert]) -> int:
+        """
+        Saves alerts while enforcing deduplication on dedup_hash (65.10).
+        If an alert with identical dedup_hash exists, it is not duplicated.
+        """
+        if not alerts:
+            return 0
+
+        # Load existing dedup hashes
+        existing_hashes = set()
+        for fp in self.alerts_dir.glob("*.json"):
+            try:
+                with open(fp, "r", encoding="utf-8") as f:
+                    d = json.load(f)
+                    if d.get("dedup_hash"):
+                        existing_hashes.add(d["dedup_hash"])
+            except Exception:
+                continue
+
+        saved_count = 0
+        to_persist = []
+        for alt in alerts:
+            if alt.dedup_hash in existing_hashes:
+                continue
+            existing_hashes.add(alt.dedup_hash)
+            to_persist.append(alt)
+
+            try:
+                fp = self.alerts_dir / f"{alt.alert_id}.json"
+                with open(fp, "w", encoding="utf-8") as f:
+                    json.dump(alt.model_dump(), f, indent=2, ensure_ascii=False)
+                saved_count += 1
+            except Exception as e:
+                logger.warning(f"Error saving alert {alt.alert_id} locally: {e}")
+
+        if to_persist:
+            try:
+                from app.db import get_alerts_collection
+                coll = get_alerts_collection()
+                for alt in to_persist:
+                    coll.update_one(
+                        {"dedup_hash": alt.dedup_hash},
+                        {"$setOnInsert": alt.model_dump()},
+                        upsert=True
+                    )
+            except Exception as e:
+                logger.debug(f"MongoDB save_alerts bypassed/failed: {e}")
+
+        return saved_count
+
+    def get_alerts(
+        self,
+        severity: Optional[str] = None,
+        alert_type: Optional[str] = None,
+        status: Optional[str] = None,
+        document_id: Optional[str] = None,
+        limit: int = 50,
+        offset: int = 0
+    ) -> List[RegulatoryAlert]:
+        """Queries stored alerts with filtering and pagination."""
+        query: Dict[str, Any] = {}
+        if severity:
+            query["severity"] = severity.strip().upper()
+        if alert_type:
+            query["alert_type"] = alert_type.strip().upper()
+        if status:
+            query["status"] = status.strip().upper()
+        if document_id:
+            query["document_id"] = document_id.strip()
+
+        try:
+            from app.db import get_alerts_collection
+            coll = get_alerts_collection()
+            cursor = coll.find(query).sort("created_at", -1).skip(offset).limit(limit)
+            results = []
+            for doc in cursor:
+                doc.pop("_id", None)
+                results.append(RegulatoryAlert.model_validate(doc))
+            if results or coll.count_documents(query) > 0:
+                return results
+        except Exception:
+            pass
+
+        alerts = []
+        for fp in self.alerts_dir.glob("*.json"):
+            try:
+                with open(fp, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if severity and data.get("severity") != severity.strip().upper():
+                        continue
+                    if alert_type and data.get("alert_type") != alert_type.strip().upper():
+                        continue
+                    if status and data.get("status") != status.strip().upper():
+                        continue
+                    if document_id and data.get("document_id") != document_id.strip():
+                        continue
+                    alerts.append(RegulatoryAlert.model_validate(data))
+            except Exception:
+                continue
+
+        alerts.sort(key=lambda x: x.created_at, reverse=True)
+        return alerts[offset: offset + limit]
+
+    def get_alert_by_id(self, alert_id: str) -> Optional[RegulatoryAlert]:
+        """Retrieves a single alert by ID."""
+        try:
+            from app.db import get_alerts_collection
+            coll = get_alerts_collection()
+            doc = coll.find_one({"alert_id": alert_id.strip()})
+            if doc:
+                doc.pop("_id", None)
+                return RegulatoryAlert.model_validate(doc)
+        except Exception:
+            pass
+
+        fp = self.alerts_dir / f"{alert_id.strip()}.json"
+        if fp.exists():
+            try:
+                with open(fp, "r", encoding="utf-8") as f:
+                    return RegulatoryAlert.model_validate(json.load(f))
+            except Exception:
+                pass
+        return None
+
+    def update_alert_status(self, alert_id: str, new_status: str) -> Optional[RegulatoryAlert]:
+        """Updates alert status (e.g. READ, DISMISSED)."""
+        alt = self.get_alert_by_id(alert_id)
+        if not alt:
+            return None
+
+        alt.status = new_status.upper()  # type: ignore
+        now_iso = datetime.utcnow().isoformat()
+        if new_status.upper() == "READ":
+            alt.read_at = now_iso
+        elif new_status.upper() == "DISMISSED":
+            alt.dismissed_at = now_iso
+
+        # Save update
+        try:
+            fp = self.alerts_dir / f"{alt.alert_id}.json"
+            with open(fp, "w", encoding="utf-8") as f:
+                json.dump(alt.model_dump(), f, indent=2, ensure_ascii=False)
+        except Exception:
+            pass
+
+        try:
+            from app.db import get_alerts_collection
+            coll = get_alerts_collection()
+            coll.update_one(
+                {"alert_id": alt.alert_id},
+                {"$set": {"status": alt.status, "read_at": alt.read_at, "dismissed_at": alt.dismissed_at}}
+            )
+        except Exception:
+            pass
+
+        return alt
+
+    # -------------------------------------------------------------------------
+    # WATCHLISTS PERSISTENCE (Phase 65.9)
+    # -------------------------------------------------------------------------
+
+    def save_watchlist(self, watchlist: Watchlist) -> Watchlist:
+        """Saves or updates a user watchlist."""
+        try:
+            fp = self.watchlists_dir / f"{watchlist.watchlist_id}.json"
+            with open(fp, "w", encoding="utf-8") as f:
+                json.dump(watchlist.model_dump(), f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            logger.warning(f"Error saving watchlist {watchlist.watchlist_id} locally: {e}")
+
+        try:
+            from app.db import get_watchlists_collection
+            coll = get_watchlists_collection()
+            coll.update_one(
+                {"watchlist_id": watchlist.watchlist_id},
+                {"$set": watchlist.model_dump()},
+                upsert=True
+            )
+        except Exception as e:
+            logger.debug(f"MongoDB save_watchlist bypassed/failed: {e}")
+
+        return watchlist
+
+    def get_watchlists(self, user_id: Optional[str] = None) -> List[Watchlist]:
+        """Returns all watchlists, optionally filtered by user_id."""
+        query: Dict[str, Any] = {}
+        if user_id:
+            query["user_id"] = user_id.strip()
+
+        try:
+            from app.db import get_watchlists_collection
+            coll = get_watchlists_collection()
+            cursor = coll.find(query).sort("created_at", -1)
+            results = []
+            for doc in cursor:
+                doc.pop("_id", None)
+                results.append(Watchlist.model_validate(doc))
+            if results or coll.count_documents(query) > 0:
+                return results
+        except Exception:
+            pass
+
+        watchlists = []
+        for fp in self.watchlists_dir.glob("*.json"):
+            try:
+                with open(fp, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if user_id and data.get("user_id") != user_id.strip():
+                        continue
+                    watchlists.append(Watchlist.model_validate(data))
+            except Exception:
+                continue
+
+        return watchlists
+
+    def get_watchlist_by_id(self, watchlist_id: str) -> Optional[Watchlist]:
+        """Retrieves a watchlist by ID."""
+        try:
+            from app.db import get_watchlists_collection
+            coll = get_watchlists_collection()
+            doc = coll.find_one({"watchlist_id": watchlist_id.strip()})
+            if doc:
+                doc.pop("_id", None)
+                return Watchlist.model_validate(doc)
+        except Exception:
+            pass
+
+        fp = self.watchlists_dir / f"{watchlist_id.strip()}.json"
+        if fp.exists():
+            try:
+                with open(fp, "r", encoding="utf-8") as f:
+                    return Watchlist.model_validate(json.load(f))
+            except Exception:
+                pass
         return None
 
 

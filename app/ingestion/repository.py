@@ -46,6 +46,7 @@ class DocumentRepository:
             
             # Metadata filter indexes
             created.append(coll.create_index([("source", ASCENDING)], name="idx_source"))
+            created.append(coll.create_index([("authority", ASCENDING)], name="idx_authority"))
             created.append(coll.create_index([("category", ASCENDING)], name="idx_category"))
             created.append(coll.create_index([("document_type", ASCENDING)], name="idx_document_type"))
             created.append(coll.create_index([("published_date", ASCENDING)], name="idx_published_date"))
@@ -56,6 +57,11 @@ class DocumentRepository:
             created.append(coll.create_index(
                 [("source", ASCENDING), ("category", ASCENDING), ("published_date", ASCENDING)],
                 name="idx_source_category_date"
+            ))
+            # Compound index for authority + document_type + published_date
+            created.append(coll.create_index(
+                [("authority", ASCENDING), ("document_type", ASCENDING), ("published_date", ASCENDING)],
+                name="idx_authority_doctype_date"
             ))
 
             logger.info("MongoDB document metadata indexes created successfully")
@@ -154,6 +160,7 @@ class DocumentRepository:
             # Document and metadata filter indexes
             created.append(coll.create_index([("document_id", ASCENDING)], name="idx_chunk_doc_id"))
             created.append(coll.create_index([("source", ASCENDING)], name="idx_chunk_source"))
+            created.append(coll.create_index([("authority", ASCENDING)], name="idx_chunk_authority"))
             created.append(coll.create_index([("category", ASCENDING)], name="idx_chunk_category"))
             created.append(coll.create_index([("document_type", ASCENDING)], name="idx_chunk_type"))
             created.append(coll.create_index([("published_date", ASCENDING)], name="idx_chunk_published_date"))
@@ -163,6 +170,11 @@ class DocumentRepository:
             created.append(coll.create_index(
                 [("document_id", ASCENDING), ("chunk_index", ASCENDING)],
                 name="idx_chunk_doc_and_index"
+            ))
+            # Compound index for authority + document_type + published_date
+            created.append(coll.create_index(
+                [("authority", ASCENDING), ("document_type", ASCENDING), ("published_date", ASCENDING)],
+                name="idx_chunk_authority_doctype_date"
             ))
 
             # Index on content_hash for fast embedding reuse (Phase 55.11)

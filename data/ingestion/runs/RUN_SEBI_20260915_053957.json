@@ -1,0 +1,16 @@
+{
+  "run_id": "RUN_SEBI_20260915_053957",
+  "authority": "SEBI",
+  "started_at": "2026-09-15T05:39:57.588463",
+  "completed_at": null,
+  "status": "RUNNING",
+  "discovered_count": 0,
+  "downloaded_count": 0,
+  "new_documents": 0,
+  "changed_documents": 0,
+  "skipped_documents": 0,
+  "failed_documents": 0,
+  "errors": [],
+  "warnings": [],
+  "duration_seconds": null
+}

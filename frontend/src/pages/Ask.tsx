@@ -23,6 +23,7 @@ export const Ask: React.FC = () => {
   const [retrievalMode, setRetrievalMode] = useState<RetrievalMode>('hybrid');
   const [topK, setTopK] = useState(5);
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [authorityFilter, setAuthorityFilter] = useState('');
   const [showSettings, setShowSettings] = useState(false);
 
   const {
@@ -53,6 +54,7 @@ export const Ask: React.FC = () => {
       top_k: topK,
       retrieval_mode: retrievalMode,
       category: categoryFilter || null,
+      source: authorityFilter || null,
     });
   };
 
@@ -63,6 +65,7 @@ export const Ask: React.FC = () => {
       top_k: topK,
       retrieval_mode: retrievalMode,
       category: categoryFilter || null,
+      source: authorityFilter || null,
     });
   };
 
@@ -158,6 +161,22 @@ export const Ask: React.FC = () => {
                 onChange={(e) => setTopK(parseInt(e.target.value, 10))}
                 style={{ width: '100%', marginTop: '8px' }}
               />
+            </div>
+
+            <div>
+              <label className="form-label">Regulatory Authority</label>
+              <select
+                className="form-select"
+                value={authorityFilter}
+                onChange={(e) => setAuthorityFilter(e.target.value)}
+              >
+                <option value="">All Regulators</option>
+                <option value="SEBI">SEBI (Securities)</option>
+                <option value="RBI">RBI (Banking)</option>
+                <option value="IRDAI">IRDAI (Insurance)</option>
+                <option value="PFRDA">PFRDA (Pension)</option>
+                <option value="IFSCA">IFSCA (IFSC / GIFT)</option>
+              </select>
             </div>
 
             <div>

@@ -7,6 +7,18 @@ import {
   RegulatoryObligation,
   ComplianceChecklist,
   TraceabilityNode,
+  RegulatoryDateEvent,
+  TemporalStateEvaluation,
+  RequirementTemporalState,
+  ObligationTemporalState,
+  ChecklistItemTemporalState,
+  RegulatoryAlert,
+  RegulatoryDeadline,
+  Watchlist,
+  AuthorityMetadata,
+  RegulatorySourceInfo,
+  ConnectorHealth,
+  ConnectorRun,
 } from '../types/api';
 import { apiClient } from './client';
 
@@ -168,3 +180,253 @@ export async function fetchItemTraceability(checklistId: string, itemId: string)
   if (!res.ok) throw new Error('Failed to fetch item traceability');
   return res.json();
 }
+
+// =============================================================================
+// PHASE 64: EFFECTIVE-DATE INTELLIGENCE (64.8, 64.9, 64.14, 64.15)
+// =============================================================================
+
+export async function fetchDocumentRegulatoryState(
+  documentId: string,
+  asOf?: string
+): Promise<TemporalStateEvaluation> {
+  const baseUrl = apiClient.getBaseUrl();
+  const url = asOf
+    ? `${baseUrl}/regulatory-state/${encodeURIComponent(documentId)}?as_of=${encodeURIComponent(asOf)}`
+    : `${baseUrl}/regulatory-state/${encodeURIComponent(documentId)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Failed to fetch document regulatory state');
+  return res.json();
+}
+
+export async function fetchRequirementState(
+  requirementId: string,
+  asOf?: string
+): Promise<RequirementTemporalState> {
+  const baseUrl = apiClient.getBaseUrl();
+  const url = asOf
+    ? `${baseUrl}/requirements/${encodeURIComponent(requirementId)}/state?as_of=${encodeURIComponent(asOf)}`
+    : `${baseUrl}/requirements/${encodeURIComponent(requirementId)}/state`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Failed to fetch requirement temporal state');
+  return res.json();
+}
+
+export async function fetchObligationState(
+  obligationId: string,
+  asOf?: string
+): Promise<ObligationTemporalState> {
+  const baseUrl = apiClient.getBaseUrl();
+  const url = asOf
+    ? `${baseUrl}/obligations/${encodeURIComponent(obligationId)}/state?as_of=${encodeURIComponent(asOf)}`
+    : `${baseUrl}/obligations/${encodeURIComponent(obligationId)}/state`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Failed to fetch obligation temporal state');
+  return res.json();
+}
+
+export async function fetchChecklistTemporalState(
+  checklistId: string,
+  asOf?: string
+): Promise<ChecklistItemTemporalState[]> {
+  const baseUrl = apiClient.getBaseUrl();
+  const url = asOf
+    ? `${baseUrl}/compliance/checklists/${encodeURIComponent(checklistId)}/temporal-state?as_of=${encodeURIComponent(asOf)}`
+    : `${baseUrl}/compliance/checklists/${encodeURIComponent(checklistId)}/temporal-state`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Failed to fetch checklist temporal state');
+  return res.json();
+}
+
+export async function fetchDocumentDateEvents(documentId: string): Promise<RegulatoryDateEvent[]> {
+  const baseUrl = apiClient.getBaseUrl();
+  const res = await fetch(`${baseUrl}/documents/${encodeURIComponent(documentId)}/dates`);
+  if (!res.ok) throw new Error('Failed to fetch document date events');
+  return res.json();
+}
+
+export async function extractDocumentDates(documentId: string): Promise<RegulatoryDateEvent[]> {
+  const baseUrl = apiClient.getBaseUrl();
+  const res = await fetch(`${baseUrl}/documents/${encodeURIComponent(documentId)}/extract-dates`, {
+    method: 'POST',
+  });
+  if (!res.ok) throw new Error('Failed to extract dates');
+  return res.json();
+}
+
+export async function fetchRegulatoryCalendar(
+  startDate?: string,
+  endDate?: string,
+  eventType?: string
+): Promise<RegulatoryDateEvent[]> {
+  const baseUrl = apiClient.getBaseUrl();
+  const query = new URLSearchParams();
+  if (startDate) query.append('start_date', startDate);
+  if (endDate) query.append('end_date', endDate);
+  if (eventType) query.append('event_type', eventType);
+  const res = await fetch(`${baseUrl}/regulatory-events/calendar?${query.toString()}`);
+  if (!res.ok) throw new Error('Failed to fetch regulatory calendar');
+  return res.json();
+}
+
+export async function fetchUpcomingEvents(
+  days: number = 30,
+  asOf?: string,
+  eventType?: string
+): Promise<RegulatoryDateEvent[]> {
+  const baseUrl = apiClient.getBaseUrl();
+  const query = new URLSearchParams({ days: days.toString() });
+  if (asOf) query.append('as_of', asOf);
+  if (eventType) query.append('event_type', eventType);
+  const res = await fetch(`${baseUrl}/regulatory-events/upcoming?${query.toString()}`);
+  if (!res.ok) throw new Error('Failed to fetch upcoming regulatory events');
+  return res.json();
+}
+
+// =============================================================================
+// PHASE 65: REGULATORY ALERT & DEADLINE INTELLIGENCE (65.13, 65.14)
+// =============================================================================
+
+export async function fetchAlerts(params?: {
+  severity?: string;
+  alert_type?: string;
+  status?: string;
+  document_id?: string;
+  limit?: number;
+}): Promise<RegulatoryAlert[]> {
+  const baseUrl = apiClient.getBaseUrl();
+  const query = new URLSearchParams();
+  if (params?.severity) query.append('severity', params.severity);
+  if (params?.alert_type) query.append('alert_type', params.alert_type);
+  if (params?.status) query.append('status', params.status);
+  if (params?.document_id) query.append('document_id', params.document_id);
+  if (params?.limit) query.append('limit', params.limit.toString());
+  const res = await fetch(`${baseUrl}/alerts?${query.toString()}`);
+  if (!res.ok) throw new Error('Failed to fetch alerts');
+  return res.json();
+}
+
+export async function fetchAlert(alertId: string): Promise<RegulatoryAlert> {
+  const baseUrl = apiClient.getBaseUrl();
+  const res = await fetch(`${baseUrl}/alerts/${encodeURIComponent(alertId)}`);
+  if (!res.ok) throw new Error('Failed to fetch alert details');
+  return res.json();
+}
+
+export async function markAlertRead(alertId: string): Promise<RegulatoryAlert> {
+  const baseUrl = apiClient.getBaseUrl();
+  const res = await fetch(`${baseUrl}/alerts/${encodeURIComponent(alertId)}/read`, {
+    method: 'POST',
+  });
+  if (!res.ok) throw new Error('Failed to mark alert as read');
+  return res.json();
+}
+
+export async function dismissAlert(alertId: string): Promise<RegulatoryAlert> {
+  const baseUrl = apiClient.getBaseUrl();
+  const res = await fetch(`${baseUrl}/alerts/${encodeURIComponent(alertId)}/dismiss`, {
+    method: 'POST',
+  });
+  if (!res.ok) throw new Error('Failed to dismiss alert');
+  return res.json();
+}
+
+export async function fetchDeadlines(params?: {
+  document_id?: string;
+  obligation_id?: string;
+  status?: string;
+  limit?: number;
+}): Promise<RegulatoryDeadline[]> {
+  const baseUrl = apiClient.getBaseUrl();
+  const query = new URLSearchParams();
+  if (params?.document_id) query.append('document_id', params.document_id);
+  if (params?.obligation_id) query.append('obligation_id', params.obligation_id);
+  if (params?.status) query.append('status', params.status);
+  if (params?.limit) query.append('limit', params.limit.toString());
+  const res = await fetch(`${baseUrl}/deadlines?${query.toString()}`);
+  if (!res.ok) throw new Error('Failed to fetch deadlines');
+  return res.json();
+}
+
+export async function fetchWatchlists(userId?: string): Promise<Watchlist[]> {
+  const baseUrl = apiClient.getBaseUrl();
+  const query = new URLSearchParams();
+  if (userId) query.append('user_id', userId);
+  const res = await fetch(`${baseUrl}/watchlists?${query.toString()}`);
+  if (!res.ok) throw new Error('Failed to fetch watchlists');
+  return res.json();
+}
+
+export async function saveWatchlist(payload: Partial<Watchlist>): Promise<Watchlist> {
+  const baseUrl = apiClient.getBaseUrl();
+  const res = await fetch(`${baseUrl}/watchlists`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Failed to save watchlist');
+  return res.json();
+}
+
+export async function triggerAlertEvaluation(asOf?: string): Promise<Record<string, any>> {
+  const baseUrl = apiClient.getBaseUrl();
+  const url = asOf
+    ? `${baseUrl}/jobs/run-alert-evaluation?as_of=${encodeURIComponent(asOf)}`
+    : `${baseUrl}/jobs/run-alert-evaluation`;
+  const res = await fetch(url, { method: 'POST' });
+  if (!res.ok) throw new Error('Failed to trigger alert evaluation');
+  return res.json();
+}
+
+// ==========================================
+// Multi-Regulator Connectors API (Phases 66–69)
+// ==========================================
+
+export async function fetchConnectors(): Promise<AuthorityMetadata[]> {
+  const baseUrl = apiClient.getBaseUrl();
+  const res = await fetch(`${baseUrl}/api/connectors`);
+  if (!res.ok) throw new Error('Failed to fetch regulatory connectors');
+  return res.json();
+}
+
+export async function fetchConnectorSources(authority?: string): Promise<RegulatorySourceInfo[]> {
+  const baseUrl = apiClient.getBaseUrl();
+  const query = new URLSearchParams();
+  if (authority && authority !== 'All') query.append('authority', authority);
+  const res = await fetch(`${baseUrl}/api/connectors/sources?${query.toString()}`);
+  if (!res.ok) throw new Error('Failed to fetch connector sources');
+  return res.json();
+}
+
+export async function fetchConnectorHealth(): Promise<ConnectorHealth[]> {
+  const baseUrl = apiClient.getBaseUrl();
+  const res = await fetch(`${baseUrl}/api/connectors/health`);
+  if (!res.ok) throw new Error('Failed to fetch connector health');
+  return res.json();
+}
+
+export async function fetchConnectorRuns(authority?: string, limit: number = 20): Promise<ConnectorRun[]> {
+  const baseUrl = apiClient.getBaseUrl();
+  const query = new URLSearchParams();
+  if (authority && authority !== 'All') query.append('authority', authority);
+  query.append('limit', limit.toString());
+  const res = await fetch(`${baseUrl}/api/connectors/runs?${query.toString()}`);
+  if (!res.ok) throw new Error('Failed to fetch connector runs');
+  return res.json();
+}
+
+export async function triggerConnectorRun(
+  authority: string,
+  limit: number = 10,
+  dryRun: boolean = false,
+  force: boolean = false
+): Promise<{ message: string; run_id: string; status: string }> {
+  const baseUrl = apiClient.getBaseUrl();
+  const res = await fetch(`${baseUrl}/api/connectors/${encodeURIComponent(authority)}/run`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ limit, dry_run: dryRun, force }),
+  });
+  if (!res.ok) throw new Error(`Failed to trigger connector run for ${authority}`);
+  return res.json();
+}
+

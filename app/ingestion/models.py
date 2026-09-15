@@ -6,8 +6,8 @@ from typing import Optional, List, Dict, Any, Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 
-# Supported Sources
-SourceType = Literal["SEBI", "Moneycontrol"]
+# Supported Sources & Regulatory Authorities (Phases 54 & 66)
+SourceType = Literal["SEBI", "RBI", "IRDAI", "PFRDA", "IFSCA", "Moneycontrol"] | str
 
 # Document Processing Status (Phase 55.2)
 DocumentProcessingStatus = Literal[
@@ -110,10 +110,13 @@ class DocumentMetadata(BaseModel):
     """Metadata extracted deterministically from the regulatory document."""
     document_type: Optional[str] = None  # e.g., Circular, Master Circular, Order, Notification, Advisory
     category: Optional[str] = None       # e.g., Investment Adviser, Mutual Funds, Market Intermediaries, Securities Markets
+    authority: Optional[str] = "SEBI"    # SEBI, RBI, IRDAI, PFRDA, IFSCA
+    source: Optional[str] = "SEBI"
     circular_number: Optional[str] = None
     published_date: Optional[str] = None  # ISO YYYY-MM-DD
     effective_date: Optional[str] = None  # ISO YYYY-MM-DD
     section: Optional[str] = None
+    department: Optional[str] = None
     status: Optional[str] = "unknown"     # current, historical, unknown
     source_status: Optional[str] = "SOURCE_CURRENT"  # SOURCE_CURRENT, SOURCE_MISSING (Phase 55.17)
     supersedes: Optional[str] = None
@@ -149,7 +152,8 @@ class RegulatoryDocument(BaseModel):
     document_id: str
     url: str
     title: Optional[str] = None
-    source: SourceType
+    source: SourceType = "SEBI"
+    authority: Optional[str] = "SEBI"
     document_type: Optional[str] = None
     category: Optional[str] = None
     circular_number: Optional[str] = None
@@ -171,6 +175,7 @@ class RegulatoryDocument(BaseModel):
     content_hash: Optional[str] = None
     document_version: Optional[str] = "1.0"
     relationship_type: Optional[str] = None
+    department: Optional[str] = None
     content: str
     scraped_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
     metadata: DocumentMetadata
@@ -205,6 +210,8 @@ class RegulatoryDocument(BaseModel):
                 self.effective_date = self.metadata.effective_date
             if self.section is None:
                 self.section = self.metadata.section
+            if self.department is None:
+                self.department = getattr(self.metadata, "department", None) or self.section
             if self.status == "unknown" and self.metadata.status != "unknown":
                 self.status = self.metadata.status
             if self.source_status == "SOURCE_CURRENT" and self.metadata.source_status != "SOURCE_CURRENT":
@@ -235,6 +242,8 @@ class RegulatoryDocument(BaseModel):
                 self.document_version = self.metadata.document_version
             if self.relationship_type is None:
                 self.relationship_type = self.metadata.relationship_type
+            if getattr(self, "authority", None) is None:
+                self.authority = getattr(self.metadata, "authority", None) or self.source or "SEBI"
         return self
 
 
@@ -249,7 +258,8 @@ class DocumentChunk(BaseModel):
     content: str
     title: Optional[str] = None
     section: Optional[str] = None
-    source: SourceType
+    source: SourceType = "SEBI"
+    authority: Optional[str] = "SEBI"
     document_type: Optional[str] = None
     category: Optional[str] = None
     circular_number: Optional[str] = None

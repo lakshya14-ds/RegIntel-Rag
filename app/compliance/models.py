@@ -145,6 +145,7 @@ class RegulatoryObligation(BaseModel):
     document_id: str
     document_version_id: Optional[str] = "1.0"
     section_id: Optional[str] = None
+    authority: str = "SEBI"
 
     # Operational Who / What / Object
     obligated_party: Optional[str] = None
@@ -207,6 +208,7 @@ class ChecklistItem(BaseModel):
 
     document_id: str
     section_id: Optional[str] = None
+    authority: str = "SEBI"
 
     # Actionable Control Question & Target
     control_question: str

@@ -38,12 +38,17 @@ class RetrievedChunk(BaseModel):
     content: str
     section: Optional[str] = None
     source: str
+    authority: Optional[str] = None
     category: Optional[str] = None
     document_type: Optional[str] = None
     published_date: Optional[str] = None
     effective_date: Optional[str] = None
     url: str
     score: float = Field(default=0.0)
+
+    def model_post_init(self, __context: Any) -> None:
+        if self.authority is None:
+            self.authority = self.source
 
 
 def compute_cosine_similarity(vec_a: List[float], vec_b: List[float]) -> float:
@@ -115,7 +120,18 @@ class MongoDBVectorRetriever:
                     if filter_dict:
                         match = True
                         for k, v in filter_dict.items():
-                            if c.get(k) != v:
+                            val = c.get(k)
+                            if k in ("authority", "source") and val is None:
+                                val = c.get("authority") or c.get("source")
+                            if isinstance(v, dict) and "$in" in v:
+                                if val not in v["$in"]:
+                                    match = False
+                                    break
+                            elif isinstance(v, (list, tuple, set)):
+                                if val not in v:
+                                    match = False
+                                    break
+                            elif val != v:
                                 match = False
                                 break
                         if not match:
@@ -129,6 +145,7 @@ class MongoDBVectorRetriever:
                         content=c.get("content", ""),
                         section=c.get("section"),
                         source=c.get("source", "SEBI"),
+                        authority=c.get("authority") or c.get("source", "SEBI"),
                         category=c.get("category"),
                         document_type=c.get("document_type"),
                         published_date=c.get("published_date"),
@@ -187,6 +204,7 @@ class MongoDBVectorRetriever:
                     "content": 1,
                     "section": 1,
                     "source": 1,
+                    "authority": 1,
                     "category": 1,
                     "document_type": 1,
                     "published_date": 1,
@@ -210,6 +228,7 @@ class MongoDBVectorRetriever:
                         content=doc.get("content", ""),
                         section=doc.get("section"),
                         source=doc.get("source", "SEBI"),
+                        authority=doc.get("authority") or doc.get("source", "SEBI"),
                         category=doc.get("category"),
                         document_type=doc.get("document_type"),
                         published_date=doc.get("published_date"),

@@ -212,6 +212,7 @@ class ObligationExtractor:
             document_id=requirement.document_id,
             document_version_id=requirement.document_version_id,
             section_id=requirement.section_id,
+            authority=requirement.authority,
             obligated_party=requirement.subject or "Regulated Entity",
             obligation_action=act or "comply with regulatory provision",
             obligation_object=requirement.object or "regulatory requirement",
@@ -259,3 +260,28 @@ _obligation_extractor = ObligationExtractor()
 
 def get_obligation_extractor() -> ObligationExtractor:
     return _obligation_extractor
+
+
+def extract_obligation_from_requirement(
+    requirement: RegulatoryRequirement,
+    document_status: Optional[str] = None
+) -> RegulatoryObligation:
+    """Convenience function calling singleton extract_obligation_from_requirement."""
+    return _obligation_extractor.extract_obligation_from_requirement(requirement, document_status=document_status)
+
+
+def extract_obligations_from_requirement(
+    requirement: RegulatoryRequirement,
+    document_status: Optional[str] = None
+) -> List[RegulatoryObligation]:
+    """Convenience function returning obligations list for a requirement."""
+    return [_obligation_extractor.extract_obligation_from_requirement(requirement, document_status=document_status)]
+
+
+def extract_obligations(
+    requirements: List[RegulatoryRequirement],
+    document_status: Optional[str] = None
+) -> List[RegulatoryObligation]:
+    """Convenience function calling singleton extract_obligations."""
+    return _obligation_extractor.extract_obligations(requirements, document_status=document_status)
+

@@ -1,0 +1,16 @@
+{
+  "run_id": "SEBI_INGEST_20260915_054058",
+  "authority": "SEBI",
+  "started_at": "2026-09-15T05:41:00.468349",
+  "completed_at": "2026-09-15T05:41:00.498677",
+  "status": "SUCCESS",
+  "discovered_count": 1,
+  "downloaded_count": 1,
+  "new_documents": 0,
+  "changed_documents": 0,
+  "skipped_documents": 1,
+  "failed_documents": 0,
+  "errors": [],
+  "warnings": [],
+  "duration_seconds": 0.03
+}

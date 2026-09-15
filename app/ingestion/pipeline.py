@@ -52,6 +52,7 @@ from app.ingestion.repository import DocumentRepository
 from app.rag.embeddings import GeminiEmbeddingService
 from app.change_detection.document_comparator import DocumentComparator
 from scraper.sebi_sources import get_curated_documents
+from app.connectors import connector_registry, connector_tracker, RegulatoryAuthority
 
 logger = logging.getLogger("regintel.ingestion")
 if not logger.hasHandlers():
@@ -198,13 +199,36 @@ class IngestionPipeline:
                 except Exception as e:
                     logger.warning(f"Error reading raw candidate file {f.name}: {e}")
 
-        # 2. From curated seed documents if raw directory has fewer than expected (and not retrying failed items)
-        if not retry_run_id and source.lower() == "sebi":
-            curated = get_curated_documents()
+        # 2. From connector seeds or curated sources if raw directory has fewer than expected
+        if not retry_run_id:
             existing_urls = {c.get("url") for c in raw_candidates if isinstance(c, dict)}
-            for item in curated:
-                if item["url"] not in existing_urls:
-                    raw_candidates.append(item)
+            connector = connector_registry.get_connector(source)
+            if connector:
+                import asyncio
+                try:
+                    # Run discover_documents synchronously inside event loop or new loop
+                    try:
+                        loop = asyncio.get_event_loop()
+                        if loop.is_running():
+                            # Running in an active loop
+                            import concurrent.futures
+                            with concurrent.futures.ThreadPoolExecutor() as pool:
+                                discovered = pool.submit(asyncio.run, connector.discover_documents()).result()
+                        else:
+                            discovered = loop.run_until_complete(connector.discover_documents())
+                    except RuntimeError:
+                        discovered = asyncio.run(connector.discover_documents())
+
+                    for item in (discovered or []):
+                        if item.get("url") and item["url"] not in existing_urls:
+                            raw_candidates.append(item)
+                except Exception as e:
+                    logger.warning(f"Error discovering documents from connector for {source}: {e}")
+            elif source.lower() == "sebi":
+                curated = get_curated_documents()
+                for item in curated:
+                    if item["url"] not in existing_urls:
+                        raw_candidates.append(item)
 
         # 3. Canonicalize & Deduplicate
         seen_urls: Set[str] = set()
@@ -328,30 +352,46 @@ class IngestionPipeline:
 
             # Process NEW or CHANGED document
             try:
-                # 1. Metadata Extraction
-                meta_dict = extract_document_metadata(raw_content, url=url, source=source.upper())
-                meta_dict["content_hash"] = new_hash
-                meta_dict["document_version"] = "1.1" if classification == "CHANGED" else "1.0"
+                # 1. Metadata Extraction via Authority Connector if available
+                doc_authority = item.get("authority") or source.upper()
+                connector = connector_registry.get_connector(doc_authority)
+                if connector:
+                    metadata_obj = connector.extract_metadata(text=cleaned_content, title=title, url=url)
+                    if not metadata_obj.published_date and item.get("date_hint"):
+                        metadata_obj.published_date = item.get("date_hint")
+                    if not metadata_obj.category and item.get("category"):
+                        metadata_obj.category = item.get("category")
+                    if not metadata_obj.circular_number and item.get("reference_number"):
+                        metadata_obj.circular_number = item.get("reference_number")
+                    metadata_obj.content_hash = new_hash
+                    metadata_obj.document_version = "1.1" if classification == "CHANGED" else "1.0"
+                else:
+                    meta_dict = extract_document_metadata(raw_content, url=url, source=doc_authority)
+                    meta_dict["content_hash"] = new_hash
+                    meta_dict["document_version"] = "1.1" if classification == "CHANGED" else "1.0"
 
-                metadata_obj = DocumentMetadata(
-                    document_type=meta_dict.get("document_type") or item.get("expected_document_type", "Circular"),
-                    category=meta_dict.get("category") or item.get("expected_category", "General"),
-                    circular_number=meta_dict.get("circular_number"),
-                    published_date=meta_dict.get("published_date") or item.get("date_hint"),
-                    effective_date=meta_dict.get("effective_date"),
-                    section=meta_dict.get("section"),
-                    status="current",
-                    source_status="SOURCE_CURRENT",
-                    content_hash=new_hash,
-                    document_version=meta_dict["document_version"]
-                )
+                    metadata_obj = DocumentMetadata(
+                        document_type=meta_dict.get("document_type") or item.get("expected_document_type", "Circular"),
+                        category=meta_dict.get("category") or item.get("expected_category", "General"),
+                        authority=doc_authority,
+                        source=doc_authority,
+                        circular_number=meta_dict.get("circular_number"),
+                        published_date=meta_dict.get("published_date") or item.get("date_hint"),
+                        effective_date=meta_dict.get("effective_date"),
+                        section=meta_dict.get("section"),
+                        status="current",
+                        source_status="SOURCE_CURRENT",
+                        content_hash=new_hash,
+                        document_version=meta_dict["document_version"]
+                    )
 
-                # 2. Construct RegulatoryDocument
+                # 2. Construct RegulatoryDocument with explicit authority context
                 reg_doc = RegulatoryDocument(
                     document_id=doc_id,
                     url=url,
-                    title=title or meta_dict.get("title", f"Regulatory Notice {doc_id[:8]}"),
-                    source=source.upper(),
+                    title=title or (metadata_obj.title if hasattr(metadata_obj, "title") else None) or f"Regulatory Notice {doc_id[:8]}",
+                    source=doc_authority,
+                    authority=doc_authority,
                     document_type=metadata_obj.document_type,
                     category=metadata_obj.category,
                     circular_number=metadata_obj.circular_number,
@@ -399,6 +439,8 @@ class IngestionPipeline:
 
                 for chunk in chunks:
                     chunk.content_hash = compute_content_hash(chunk.content)
+                    chunk.authority = reg_doc.authority
+                    chunk.source = reg_doc.source
 
                     # Look for cached chunk strictly matching content_hash (Phases 55.9 - 55.11)
                     cached_chunk = existing_hash_map.get(chunk.content_hash)
@@ -589,6 +631,24 @@ class IngestionPipeline:
             existing_fails.extend(summary.failures)
             with open(fail_path, "w", encoding="utf-8") as ff:
                 json.dump(existing_fails, ff, indent=2)
+
+        # 4. Record run in connector_tracker
+        try:
+            auth_val = summary.source.upper()
+            conn_run = connector_tracker.start_run(auth_val)
+            conn_run.run_id = summary.run_id
+            connector_tracker.finish_run(
+                conn_run,
+                discovered=summary.discovered,
+                downloaded=summary.unique,
+                new_docs=summary.new,
+                changed=summary.changed,
+                skipped=summary.unchanged,
+                failed=summary.failed,
+                errors=summary.failures
+            )
+        except Exception as e:
+            logger.debug(f"Connector run tracking skipped: {e}")
 
     def _print_summary_report(self, summary: IngestionRunSummary, dry_run: bool = False) -> None:
         """Prints formatted summary per Phase 55.30."""

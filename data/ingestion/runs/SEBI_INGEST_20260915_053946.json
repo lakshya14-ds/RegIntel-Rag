@@ -1,0 +1,31 @@
+{
+  "run_id": "SEBI_INGEST_20260915_053946",
+  "authority": "SEBI",
+  "started_at": "2026-09-15T05:39:46.736789",
+  "completed_at": "2026-09-15T05:39:46.772788",
+  "status": "PARTIAL_SUCCESS",
+  "discovered_count": 2,
+  "downloaded_count": 2,
+  "new_documents": 0,
+  "changed_documents": 0,
+  "skipped_documents": 0,
+  "failed_documents": 2,
+  "errors": [
+    {
+      "run_id": "SEBI_INGEST_20260915_053946",
+      "url": "",
+      "stage": "discovery",
+      "error_type": "MissingData",
+      "message": "Missing URL or raw markdown content"
+    },
+    {
+      "run_id": "SEBI_INGEST_20260915_053946",
+      "url": "https://sebi.gov.in/empty.html",
+      "stage": "discovery",
+      "error_type": "MissingData",
+      "message": "Missing URL or raw markdown content"
+    }
+  ],
+  "warnings": [],
+  "duration_seconds": 0.04
+}

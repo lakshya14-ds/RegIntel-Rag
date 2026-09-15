@@ -451,3 +451,33 @@ _requirement_extractor = RequirementExtractor()
 
 def get_requirement_extractor() -> RequirementExtractor:
     return _requirement_extractor
+
+
+def extract_requirements_from_text(
+    text: str,
+    document_id: str,
+    authority: str = "SEBI",
+    document_title: Optional[str] = None,
+    document_type: Optional[str] = None,
+    effective_date: Optional[str] = None,
+    section_id: Optional[str] = None,
+    section_number: Optional[str] = None,
+    heading: Optional[str] = None,
+    page_number: Optional[int] = None,
+    use_llm: bool = False
+) -> List[RegulatoryRequirement]:
+    """Convenience function calling the singleton RequirementExtractor."""
+    return _requirement_extractor.extract_requirements_from_text(
+        text=text,
+        document_id=document_id,
+        authority=authority,
+        document_title=document_title,
+        document_type=document_type,
+        effective_date=effective_date,
+        section_id=section_id,
+        section_number=section_number,
+        heading=heading,
+        page_number=page_number,
+        use_llm=use_llm
+    )
+

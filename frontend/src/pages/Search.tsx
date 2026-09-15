@@ -12,6 +12,7 @@ export const Search: React.FC = () => {
   const [retrievalMode, setRetrievalMode] = useState<RetrievalMode>('hybrid');
   const [topK, setTopK] = useState(10);
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [authorityFilter, setAuthorityFilter] = useState('');
 
   const { data, isLoading, error, search, retry } = useSearch();
 
@@ -24,6 +25,7 @@ export const Search: React.FC = () => {
       top_k: topK,
       retrieval_mode: retrievalMode,
       category: categoryFilter || null,
+      source: authorityFilter || null,
     });
   };
 
@@ -62,7 +64,23 @@ export const Search: React.FC = () => {
             </button>
           </div>
 
-          <div className="grid-3">
+          <div className="grid-4">
+            <div>
+              <label className="form-label">Authority Filter</label>
+              <select
+                className="form-select"
+                value={authorityFilter}
+                onChange={(e) => setAuthorityFilter(e.target.value)}
+              >
+                <option value="">All Regulators</option>
+                <option value="SEBI">SEBI (Securities)</option>
+                <option value="RBI">RBI (Banking)</option>
+                <option value="IRDAI">IRDAI (Insurance)</option>
+                <option value="PFRDA">PFRDA (Pension)</option>
+                <option value="IFSCA">IFSCA (IFSC / GIFT)</option>
+              </select>
+            </div>
+
             <div>
               <label className="form-label">Retrieval Algorithm</label>
               <select

@@ -17,6 +17,7 @@ from app.api.routes_health import router as health_router
 from app.api.routes_rag import router as rag_router
 from app.api.routes_documents import router as documents_router
 from app.api.routes_compliance import router as compliance_router
+from app.api.routes_connectors import router as connectors_router
 
 # Setup logging
 logging.basicConfig(
@@ -132,6 +133,7 @@ app.include_router(health_router)
 app.include_router(rag_router)
 app.include_router(documents_router)
 app.include_router(compliance_router)
+app.include_router(connectors_router)
 
 
 if __name__ == "__main__":

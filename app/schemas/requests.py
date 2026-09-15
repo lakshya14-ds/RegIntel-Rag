@@ -2,7 +2,7 @@
 Pydantic Request Models for RegIntel FastAPI Endpoints.
 """
 
-from typing import Optional, Literal
+from typing import Optional, Literal, List
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -31,7 +31,15 @@ class AskRequest(BaseModel):
     )
     source: Optional[str] = Field(
         default=None,
-        description="Optional regulatory authority filter (e.g. SEBI)."
+        description="Optional regulatory authority filter (e.g. SEBI, RBI, IRDAI, PFRDA, IFSCA)."
+    )
+    authority: Optional[str] = Field(
+        default=None,
+        description="Optional single regulatory authority filter (e.g. IRDAI)."
+    )
+    authorities: Optional[List[str]] = Field(
+        default=None,
+        description="Optional list of regulatory authorities to filter by (e.g. ['RBI', 'SEBI'])."
     )
 
     @field_validator("question")
@@ -91,6 +99,14 @@ class SearchRequest(BaseModel):
     source: Optional[str] = Field(
         default=None,
         description="Optional regulatory authority filter."
+    )
+    authority: Optional[str] = Field(
+        default=None,
+        description="Optional single regulatory authority filter."
+    )
+    authorities: Optional[List[str]] = Field(
+        default=None,
+        description="Optional list of regulatory authorities to filter by (e.g. ['RBI', 'SEBI'])."
     )
 
     @field_validator("query")

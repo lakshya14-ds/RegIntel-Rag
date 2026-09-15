@@ -18,6 +18,7 @@ class SourceCitation(BaseModel):
     chunk_id: str
     document_id: str
     source: str
+    authority: Optional[str] = "SEBI"
     title: str
     section: Optional[str] = "General"
     published_date: Optional[str] = "N/A"
@@ -63,12 +64,14 @@ class CitationManager:
         """Maps retrieved chunks to sequential source citations [1], [2], etc."""
         citations: List[SourceCitation] = []
         for idx, chunk in enumerate(retrieved_chunks, start=1):
+            auth = getattr(chunk, "authority", None) or chunk.source or "SEBI"
             citations.append(SourceCitation(
                 source_id=idx,
                 chunk_id=chunk.chunk_id,
                 document_id=chunk.document_id,
                 source=chunk.source,
-                title=chunk.title or "SEBI Document",
+                authority=auth,
+                title=chunk.title or f"{auth} Document",
                 section=chunk.section or "General",
                 published_date=chunk.published_date or "N/A",
                 effective_date=chunk.effective_date or "N/A",
@@ -130,3 +133,14 @@ def validate_citations(
 ) -> List[SourceCitation]:
     citations, _, _ = CitationManager.validate_answer_citations(generated_answer, retrieved_chunks)
     return citations
+
+
+def build_grounding_context(retrieved_chunks: List[RetrievedChunk]) -> Tuple[str, List[int]]:
+    """
+    Builds numbered evidence context text and valid citation indices list.
+    """
+    from app.rag.context import build_evidence_context
+    context_str = build_evidence_context(retrieved_chunks)
+    valid_indices = list(range(1, len(retrieved_chunks) + 1))
+    return context_str, valid_indices
+

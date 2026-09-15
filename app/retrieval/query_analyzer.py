@@ -15,18 +15,26 @@ if not logger.hasHandlers():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
 # Controlled Vocabularies
-SUPPORTED_SOURCES = {"SEBI", "RBI", "IRDAI", "NSE", "BSE", "Moneycontrol"}
+SUPPORTED_SOURCES = {"SEBI", "RBI", "IRDAI", "PFRDA", "IFSCA", "NSE", "BSE", "Moneycontrol"}
 
 SUPPORTED_CATEGORIES = {
     "Investment Adviser": ["investment adviser", "investment advisers", "investment advisor", "investment advisors", "ria", "rias", "ia", "basl"],
     "Mutual Funds": ["mutual fund", "mutual funds", "amc", "amcs", "etf", "etfs", "index fund", "unit trust"],
     "Market Intermediaries": ["market intermediary", "market intermediaries", "intermediary", "intermediaries", "stock broker", "stock brokers", "broker", "brokers", "research analyst", "research analysts", "portfolio manager", "portfolio managers", "pms"],
-    "Securities Markets": ["securities market", "securities markets", "takeover", "takeovers", "lodr", "drhp", "public issue", "listing obligation", "bond platform", "obpp"]
+    "Securities Markets": ["securities market", "securities markets", "takeover", "takeovers", "lodr", "drhp", "public issue", "listing obligation", "bond platform", "obpp"],
+    "Banking Regulation": ["rbi", "banking", "bank", "banks", "nbfc", "nbfcs", "kyc", "priority sector", "digital payment", "digital lending", "commercial bank"],
+    "Insurance": ["irdai", "insurance", "insurer", "insurers", "policyholder", "policyholders", "life insurance", "health insurance", "motor insurance", "tpa"],
+    "Pension": ["pfrda", "pension", "nps", "apy", "national pension system", "atal pension yojana", "cra", "point of presence"],
+    "International Finance": ["ifsca", "gift city", "ifsc", "international financial services", "fintech entity", "offshore banking"]
 }
 
 SUPPORTED_DOCUMENT_TYPES = {
+    "Master Direction": ["master direction", "master directions"],
     "Master Circular": ["master circular", "master circulars"],
     "Circular": ["circular", "circulars"],
+    "Guideline": ["guideline", "guidelines"],
+    "Notification": ["notification", "notifications"],
+    "Framework": ["framework", "frameworks"],
     "Order": ["order", "orders", "adjudication", "recovery certificate"],
     "Regulations": ["regulations", "regulation"],
     "DRHP": ["drhp", "draft red herring prospectus"]
@@ -68,6 +76,7 @@ class QueryIntent(BaseModel):
     """Normalized structured understanding of a user's regulatory query."""
     original_query: str
     source: Optional[str] = None
+    authorities: List[str] = Field(default_factory=list)
     category: Optional[str] = None
     document_type: Optional[str] = None
     time_intent: str = Field(default="none")  # latest, current, recent, historical, date_specific, none
@@ -100,8 +109,8 @@ def _extract_time_and_date(query: str) -> Tuple[str, Optional[str]]:
 
     # 2. Check time intent keywords
     for intent, patterns in TIME_INTENT_PATTERNS.items():
-        for p in patterns:
-            if re.search(p, q_lower):
+        for pattern in patterns:
+            if re.search(pattern, q_lower):
                 return intent, None
 
     return "none", None
@@ -110,24 +119,22 @@ def _extract_time_and_date(query: str) -> Tuple[str, Optional[str]]:
 def _extract_query_type(query: str, time_intent: str) -> str:
     q_lower = query.lower()
     for q_type, patterns in QUERY_TYPE_PATTERNS.items():
-        for p in patterns:
-            if re.search(p, q_lower):
+        for pattern in patterns:
+            if re.search(pattern, q_lower):
                 return q_type
 
-    if time_intent in {"latest", "current", "recent"}:
+    if time_intent in ("latest", "recent", "current"):
         return "current_requirement"
-    elif time_intent == "historical":
-        return "historical"
 
     return "general_search"
 
 
 def _extract_exact_terms(query: str) -> List[str]:
     """Extracts exact regulatory identifiers, circular numbers, clauses, and acronyms."""
-    terms = []
+    terms = [m.strip() for m in re.findall(r'"([^"]+)"', query) if m.strip()]
 
-    # Slashed circular numbers: e.g. SEBI/HO/MIRSD/MIRSD-PoD-2/P/CIR/2024/56
-    circular_matches = re.findall(r"\b(?:SEBI|RBI|CIR)/[A-Za-z0-9/\-_]+", query, flags=re.IGNORECASE)
+    # Slashed circular numbers: e.g. SEBI/..., RBI/..., IRDAI/..., PFRDA/..., IFSCA/...
+    circular_matches = re.findall(r"\b(?:SEBI|RBI|IRDAI?|PFRDA|IFSCA|CIR)/[A-Za-z0-9/\-_]+", query, flags=re.IGNORECASE)
     terms.extend(circular_matches)
 
     # Regulation numbers: e.g. Regulation 15A, Regulation 12(1)
@@ -148,6 +155,7 @@ def _extract_exact_terms(query: str) -> List[str]:
     return list(dict.fromkeys(terms))
 
 
+
 class QueryAnalyzer:
     """
     Analyzes user queries to produce structured QueryIntent records.
@@ -159,20 +167,23 @@ class QueryAnalyzer:
             return QueryIntent(original_query="")
 
         clean_query = query.strip()
-        source = cls.extract_source(clean_query)
+        authorities = cls.extract_sources(clean_query)
+        source = authorities[0] if len(authorities) == 1 else (cls.extract_source(clean_query))
         category = cls.extract_category(clean_query)
         doc_type = cls.extract_document_type(clean_query)
         time_intent, target_date = _extract_time_and_date(clean_query)
         query_type = _extract_query_type(clean_query, time_intent)
         exact_terms = _extract_exact_terms(clean_query)
 
-        # Default source to SEBI if not specified but standard Indian market categories detected
-        if source is None and category in {"Investment Adviser", "Mutual Funds", "Market Intermediaries", "Securities Markets"}:
+        # Default source to SEBI if not specified but standard Indian capital market categories detected
+        if source is None and not authorities and category in {"Investment Adviser", "Mutual Funds", "Market Intermediaries", "Securities Markets"}:
             source = "SEBI"
+            authorities = ["SEBI"]
 
         intent = QueryIntent(
             original_query=clean_query,
             source=source,
+            authorities=authorities,
             category=category,
             document_type=doc_type,
             time_intent=time_intent,
@@ -185,14 +196,21 @@ class QueryAnalyzer:
         return intent
 
     @classmethod
-    def extract_source(cls, query: str) -> Optional[str]:
+    def extract_sources(cls, query: str) -> List[str]:
+        """Extracts all recognized regulatory authority names mentioned in the query."""
         q_lower = f" {query.lower()} "
-        for src in ["sebi", "rbi", "irdai", "nse", "bse", "moneycontrol"]:
-            if f" {src} " in q_lower or f"/{src}/" in q_lower:
+        found = []
+        for src in ["sebi", "rbi", "irdai", "pfrda", "ifsca"]:
+            if f" {src} " in q_lower or f"/{src}/" in q_lower or f" {src}," in q_lower or f" {src}." in q_lower:
                 for supported in SUPPORTED_SOURCES:
-                    if supported.lower() == src:
-                        return supported
-        return None
+                    if supported.lower() == src and supported not in found:
+                        found.append(supported)
+        return found
+
+    @classmethod
+    def extract_source(cls, query: str) -> Optional[str]:
+        sources = cls.extract_sources(query)
+        return sources[0] if sources else None
 
     @classmethod
     def extract_category(cls, query: str) -> Optional[str]:
@@ -219,8 +237,14 @@ def build_metadata_filters(intent: QueryIntent) -> Dict[str, Any]:
     Only includes confidently extracted filters to avoid over-constraining results.
     """
     filter_dict = {}
-    if intent.source:
+    if intent.authorities:
+        if len(intent.authorities) == 1:
+            filter_dict["source"] = intent.authorities[0]
+        else:
+            filter_dict["source"] = {"$in": intent.authorities}
+    elif intent.source:
         filter_dict["source"] = intent.source
+
     if intent.category:
         filter_dict["category"] = intent.category
     if intent.document_type:

@@ -106,6 +106,26 @@ class MongoDBManager:
     def checklists_collection(self) -> Collection:
         return self.db[settings.mongodb_checklists_collection]
 
+    @property
+    def date_events_collection(self) -> Collection:
+        return self.db[settings.mongodb_date_events_collection]
+
+    @property
+    def events_collection(self) -> Collection:
+        return self.db[settings.mongodb_events_collection]
+
+    @property
+    def deadlines_collection(self) -> Collection:
+        return self.db[settings.mongodb_deadlines_collection]
+
+    @property
+    def alerts_collection(self) -> Collection:
+        return self.db[settings.mongodb_alerts_collection]
+
+    @property
+    def watchlists_collection(self) -> Collection:
+        return self.db[settings.mongodb_watchlists_collection]
+
     def ping(self) -> bool:
         """Pings the MongoDB server to verify active connectivity."""
         try:
@@ -164,6 +184,31 @@ def get_checklists_collection() -> Collection:
     return _db_manager.checklists_collection
 
 
+def get_date_events_collection() -> Collection:
+    """Returns the regulatory date events collection handle."""
+    return _db_manager.date_events_collection
+
+
+def get_events_collection() -> Collection:
+    """Returns the regulatory events collection handle."""
+    return _db_manager.events_collection
+
+
+def get_deadlines_collection() -> Collection:
+    """Returns the regulatory deadlines collection handle."""
+    return _db_manager.deadlines_collection
+
+
+def get_alerts_collection() -> Collection:
+    """Returns the regulatory alerts collection handle."""
+    return _db_manager.alerts_collection
+
+
+def get_watchlists_collection() -> Collection:
+    """Returns the watchlists collection handle."""
+    return _db_manager.watchlists_collection
+
+
 # Module-level lazy attribute access
 def __getattr__(name: str):
     if name == "client":
@@ -180,4 +225,14 @@ def __getattr__(name: str):
         return _db_manager.obligations_collection
     if name == "checklists_collection":
         return _db_manager.checklists_collection
+    if name == "date_events_collection":
+        return _db_manager.date_events_collection
+    if name == "events_collection":
+        return _db_manager.events_collection
+    if name == "deadlines_collection":
+        return _db_manager.deadlines_collection
+    if name == "alerts_collection":
+        return _db_manager.alerts_collection
+    if name == "watchlists_collection":
+        return _db_manager.watchlists_collection
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")

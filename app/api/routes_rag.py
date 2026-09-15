@@ -78,8 +78,12 @@ def ask_regulatory_question(req: AskRequest, request: Request = None) -> AskResp
         filter_dict = {}
         if req.category:
             filter_dict["category"] = req.category
-        if req.source:
-            filter_dict["source"] = req.source
+
+        from app.retrieval.authority_filter import AuthorityFilter
+        auth_candidates = req.authorities or ([req.authority] if req.authority else ([req.source] if req.source else None))
+        auth_filter = AuthorityFilter(auth_candidates)
+        if not auth_filter.is_unconstrained:
+            filter_dict.update(auth_filter.to_mongo_query("source"))
 
         rag_res = pipeline.answer(
             question=req.question,
@@ -95,6 +99,7 @@ def ask_regulatory_question(req: AskRequest, request: Request = None) -> AskResp
                 chunk_id=s.chunk_id,
                 document_id=s.document_id,
                 source=s.source,
+                authority=getattr(s, "authority", None) or s.source or "SEBI",
                 title=s.title,
                 section=s.section or "General",
                 published_date=s.published_date or "N/A",
@@ -173,8 +178,12 @@ def search_documents(req: SearchRequest, request: Request = None) -> SearchRespo
             filter_dict = {}
             if req.category:
                 filter_dict["category"] = req.category
-            if req.source:
-                filter_dict["source"] = req.source
+
+            from app.retrieval.authority_filter import AuthorityFilter
+            auth_candidates = req.authorities or ([req.authority] if req.authority else ([req.source] if req.source else None))
+            auth_filter = AuthorityFilter(auth_candidates)
+            if not auth_filter.is_unconstrained:
+                filter_dict.update(auth_filter.to_mongo_query("source"))
 
             retriever = get_hybrid_retriever()
             mode = req.retrieval_mode or "hybrid"
@@ -218,6 +227,7 @@ def search_documents(req: SearchRequest, request: Request = None) -> SearchRespo
                 if score_val is None:
                     score_val = getattr(c, "score", 0.0)
 
+                auth_val = getattr(c, "authority", None) or c.source or "SEBI"
                 results.append(SearchItemResponse(
                     rank=rank,
                     chunk_id=c.chunk_id,
@@ -225,6 +235,7 @@ def search_documents(req: SearchRequest, request: Request = None) -> SearchRespo
                     title=c.title,
                     section=c.section or "General",
                     source=c.source or "SEBI",
+                    authority=auth_val,
                     category=c.category,
                     document_type=c.document_type,
                     published_date=c.published_date,

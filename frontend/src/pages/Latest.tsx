@@ -4,6 +4,7 @@ import { FileText, ExternalLink, GitBranch, Scale, RefreshCw } from 'lucide-reac
 import { useLatestDocuments } from '../hooks/useDocuments';
 import { formatDate } from '../utils/dates';
 import { Badge } from '../components/common/Badge';
+import { ConnectorHealthDashboard } from '../components/connectors/ConnectorHealthDashboard';
 
 export const Latest: React.FC = () => {
   const [sourceFilter, setSourceFilter] = useState('All');
@@ -30,9 +31,12 @@ export const Latest: React.FC = () => {
           <span>📜</span> Regulatory Documents Catalog
         </h1>
         <p className="page-subtitle">
-          Browse authoritative SEBI circulars, master directions, and regulatory gazettes indexed in the local intelligence corpus.
+          Browse authoritative circulars, master directions, and regulatory gazettes across SEBI, RBI, IRDAI, PFRDA, and IFSCA.
         </p>
       </div>
+
+      {/* Connector Health Monitoring Widget */}
+      <ConnectorHealthDashboard />
 
       {/* Filter Bar */}
       <div className="card" style={{ marginBottom: '1.5rem' }}>
@@ -45,7 +49,11 @@ export const Latest: React.FC = () => {
               onChange={(e) => setSourceFilter(e.target.value)}
             >
               <option value="All">All Authorities</option>
-              <option value="SEBI">SEBI</option>
+              <option value="SEBI">SEBI (Securities)</option>
+              <option value="RBI">RBI (Banking)</option>
+              <option value="IRDAI">IRDAI (Insurance)</option>
+              <option value="PFRDA">PFRDA (Pension)</option>
+              <option value="IFSCA">IFSCA (IFSC / GIFT)</option>
             </select>
           </div>
 
