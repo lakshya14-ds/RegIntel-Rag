@@ -28,6 +28,8 @@ from app.compliance.alert_models import (
     RegulatoryAlert,
     Watchlist,
 )
+from app.compliance.overlap_models import RegulatoryOverlap
+from app.compliance.conflict_models import RegulatoryConflict, ConflictReviewEvent
 
 logger = logging.getLogger(__name__)
 if not logger.hasHandlers():
@@ -50,6 +52,8 @@ class ComplianceRepository:
         self.deadlines_dir = self.base_data_dir / "deadlines"
         self.alerts_dir = self.base_data_dir / "alerts"
         self.watchlists_dir = self.base_data_dir / "watchlists"
+        self.overlaps_dir = self.base_data_dir / "overlaps"
+        self.conflicts_dir = self.base_data_dir / "conflicts"
 
         # Ensure local fallback storage directories exist
         self.req_dir.mkdir(parents=True, exist_ok=True)
@@ -60,6 +64,8 @@ class ComplianceRepository:
         self.deadlines_dir.mkdir(parents=True, exist_ok=True)
         self.alerts_dir.mkdir(parents=True, exist_ok=True)
         self.watchlists_dir.mkdir(parents=True, exist_ok=True)
+        self.overlaps_dir.mkdir(parents=True, exist_ok=True)
+        self.conflicts_dir.mkdir(parents=True, exist_ok=True)
 
     # -------------------------------------------------------------------------
     # REQUIREMENTS PERSISTENCE (Phase 61)
@@ -899,6 +905,306 @@ class ComplianceRepository:
                 pass
         return None
 
+    # -------------------------------------------------------------------------
+    # REGULATORY OVERLAPS PERSISTENCE (Phase 73)
+    # -------------------------------------------------------------------------
+
+    def save_overlaps(self, overlaps: List[RegulatoryOverlap]) -> int:
+        """Upserts regulatory overlaps to MongoDB Atlas and local filesystem."""
+        if not overlaps:
+            return 0
+
+        count = 0
+        for ovl in overlaps:
+            try:
+                fp = self.overlaps_dir / f"{ovl.overlap_id}.json"
+                with open(fp, "w", encoding="utf-8") as f:
+                    json.dump(ovl.model_dump(), f, indent=2, ensure_ascii=False)
+                count += 1
+            except Exception as e:
+                logger.warning(f"Error saving overlap {ovl.overlap_id} locally: {e}")
+
+        try:
+            from app.db import get_overlaps_collection
+            coll = get_overlaps_collection()
+            for ovl in overlaps:
+                coll.update_one(
+                    {"overlap_id": ovl.overlap_id},
+                    {"$set": ovl.model_dump()},
+                    upsert=True
+                )
+        except Exception as e:
+            logger.debug(f"MongoDB save_overlaps bypassed/failed: {e}")
+
+        return count
+
+    def get_overlap_by_id(self, overlap_id: str) -> Optional[RegulatoryOverlap]:
+        """Retrieves a single regulatory overlap by ID."""
+        clean_id = overlap_id.strip()
+        try:
+            from app.db import get_overlaps_collection
+            coll = get_overlaps_collection()
+            doc = coll.find_one({"overlap_id": clean_id})
+            if doc:
+                doc.pop("_id", None)
+                return RegulatoryOverlap.model_validate(doc)
+        except Exception:
+            pass
+
+        fp = self.overlaps_dir / f"{clean_id}.json"
+        if fp.exists():
+            try:
+                with open(fp, "r", encoding="utf-8") as f:
+                    return RegulatoryOverlap.model_validate(json.load(f))
+            except Exception:
+                pass
+        return None
+
+    def get_overlaps(
+        self,
+        authority: Optional[str] = None,
+        relationship_type: Optional[str] = None,
+        topic: Optional[str] = None,
+        status: Optional[str] = None,
+        confidence: Optional[str] = None,
+        requirement_id: Optional[str] = None,
+        document_id: Optional[str] = None,
+        limit: int = 100,
+        offset: int = 0
+    ) -> List[RegulatoryOverlap]:
+        """Queries regulatory overlaps with multi-dimensional filtering and pagination."""
+        query: Dict[str, Any] = {}
+        if authority:
+            auth_clean = authority.strip().upper()
+            query["$or"] = [
+                {"left_authority": auth_clean},
+                {"right_authority": auth_clean}
+            ]
+        if relationship_type:
+            query["relationship_type"] = relationship_type.strip()
+        if topic:
+            query["shared_topic"] = topic.strip().upper()
+        if status:
+            query["status"] = status.strip().upper()
+        if confidence:
+            query["confidence"] = confidence.strip().upper()
+        if requirement_id:
+            req_clean = requirement_id.strip()
+            query["$or"] = [
+                {"left_requirement_id": req_clean},
+                {"right_requirement_id": req_clean}
+            ]
+        if document_id:
+            doc_clean = document_id.strip()
+            query["$or"] = [
+                {"left_document_id": doc_clean},
+                {"right_document_id": doc_clean}
+            ]
+
+        try:
+            from app.db import get_overlaps_collection
+            coll = get_overlaps_collection()
+            cursor = coll.find(query).sort("created_at", -1).skip(offset).limit(limit)
+            results = []
+            for doc in cursor:
+                doc.pop("_id", None)
+                results.append(RegulatoryOverlap.model_validate(doc))
+            if results or coll.count_documents(query) > 0:
+                return results
+        except Exception:
+            pass
+
+        # Local filesystem fallback
+        overlaps = []
+        for fp in self.overlaps_dir.glob("*.json"):
+            try:
+                with open(fp, "r", encoding="utf-8") as f:
+                    ovl = RegulatoryOverlap.model_validate(json.load(f))
+                    if authority:
+                        auth_c = authority.strip().upper()
+                        if ovl.left_authority.upper() != auth_c and ovl.right_authority.upper() != auth_c:
+                            continue
+                    if relationship_type and ovl.relationship_type != relationship_type.strip():
+                        continue
+                    if topic and (ovl.shared_topic or "").upper() != topic.strip().upper():
+                        continue
+                    if status and ovl.status != status.strip().upper():
+                        continue
+                    if confidence and ovl.confidence != confidence.strip().upper():
+                        continue
+                    if requirement_id:
+                        rc = requirement_id.strip()
+                        if ovl.left_requirement_id != rc and ovl.right_requirement_id != rc:
+                            continue
+                    if document_id:
+                        dc = document_id.strip()
+                        if ovl.left_document_id != dc and ovl.right_document_id != dc:
+                            continue
+                    overlaps.append(ovl)
+            except Exception:
+                continue
+
+        overlaps.sort(key=lambda x: x.created_at, reverse=True)
+        return overlaps[offset: offset + limit]
+
+    # -------------------------------------------------------------------------
+    # REGULATORY CONFLICTS PERSISTENCE (Phase 74)
+    # -------------------------------------------------------------------------
+
+    def save_conflicts(self, conflicts: List[RegulatoryConflict]) -> int:
+        """Upserts regulatory conflicts to MongoDB Atlas and local filesystem."""
+        if not conflicts:
+            return 0
+
+        count = 0
+        for cnf in conflicts:
+            try:
+                fp = self.conflicts_dir / f"{cnf.conflict_id}.json"
+                with open(fp, "w", encoding="utf-8") as f:
+                    json.dump(cnf.model_dump(), f, indent=2, ensure_ascii=False)
+                count += 1
+            except Exception as e:
+                logger.warning(f"Error saving conflict {cnf.conflict_id} locally: {e}")
+
+        try:
+            from app.db import get_conflicts_collection
+            coll = get_conflicts_collection()
+            for cnf in conflicts:
+                coll.update_one(
+                    {"conflict_id": cnf.conflict_id},
+                    {"$set": cnf.model_dump()},
+                    upsert=True
+                )
+        except Exception as e:
+            logger.debug(f"MongoDB save_conflicts bypassed/failed: {e}")
+
+        return count
+
+    def get_conflict_by_id(self, conflict_id: str) -> Optional[RegulatoryConflict]:
+        """Retrieves a single conflict record by ID."""
+        clean_id = conflict_id.strip()
+        try:
+            from app.db import get_conflicts_collection
+            coll = get_conflicts_collection()
+            doc = coll.find_one({"conflict_id": clean_id})
+            if doc:
+                doc.pop("_id", None)
+                return RegulatoryConflict.model_validate(doc)
+        except Exception:
+            pass
+
+        fp = self.conflicts_dir / f"{clean_id}.json"
+        if fp.exists():
+            try:
+                with open(fp, "r", encoding="utf-8") as f:
+                    return RegulatoryConflict.model_validate(json.load(f))
+            except Exception:
+                pass
+        return None
+
+    def get_conflicts(
+        self,
+        authority: Optional[str] = None,
+        conflict_type: Optional[str] = None,
+        severity: Optional[str] = None,
+        confidence: Optional[str] = None,
+        resolution_status: Optional[str] = None,
+        requirement_id: Optional[str] = None,
+        limit: int = 100,
+        offset: int = 0
+    ) -> List[RegulatoryConflict]:
+        """Queries regulatory conflicts with filtering and pagination."""
+        query: Dict[str, Any] = {}
+        if authority:
+            auth_clean = authority.strip().upper()
+            query["$or"] = [
+                {"left_authority": auth_clean},
+                {"right_authority": auth_clean}
+            ]
+        if conflict_type:
+            query["conflict_type"] = conflict_type.strip()
+        if severity:
+            query["severity"] = severity.strip().upper()
+        if confidence:
+            query["confidence"] = confidence.strip().upper()
+        if resolution_status:
+            query["resolution_status"] = resolution_status.strip().upper()
+        if requirement_id:
+            rc = requirement_id.strip()
+            query["$or"] = [
+                {"left_requirement_id": rc},
+                {"right_requirement_id": rc}
+            ]
+
+        try:
+            from app.db import get_conflicts_collection
+            coll = get_conflicts_collection()
+            cursor = coll.find(query).sort("created_at", -1).skip(offset).limit(limit)
+            results = []
+            for doc in cursor:
+                doc.pop("_id", None)
+                results.append(RegulatoryConflict.model_validate(doc))
+            if results or coll.count_documents(query) > 0:
+                return results
+        except Exception:
+            pass
+
+        # Local filesystem fallback
+        conflicts = []
+        for fp in self.conflicts_dir.glob("*.json"):
+            try:
+                with open(fp, "r", encoding="utf-8") as f:
+                    cnf = RegulatoryConflict.model_validate(json.load(f))
+                    if authority:
+                        auth_c = authority.strip().upper()
+                        if cnf.left_authority.upper() != auth_c and cnf.right_authority.upper() != auth_c:
+                            continue
+                    if conflict_type and cnf.conflict_type != conflict_type.strip():
+                        continue
+                    if severity and cnf.severity != severity.strip().upper():
+                        continue
+                    if confidence and cnf.confidence != confidence.strip().upper():
+                        continue
+                    if resolution_status and cnf.resolution_status != resolution_status.strip().upper():
+                        continue
+                    if requirement_id:
+                        rc = requirement_id.strip()
+                        if cnf.left_requirement_id != rc and cnf.right_requirement_id != rc:
+                            continue
+                    conflicts.append(cnf)
+            except Exception:
+                continue
+
+        conflicts.sort(key=lambda x: x.created_at, reverse=True)
+        return conflicts[offset: offset + limit]
+
+    def update_conflict_status(
+        self,
+        conflict_id: str,
+        new_status: str,
+        reviewer_id: str,
+        notes: Optional[str] = None
+    ) -> Optional[RegulatoryConflict]:
+        """
+        Updates the human review resolution status of a conflict and appends an audit event (74.16, 74.18).
+        """
+        conflict = self.get_conflict_by_id(conflict_id)
+        if not conflict:
+            return None
+
+        event = ConflictReviewEvent(
+            reviewer_id=reviewer_id,
+            previous_status=conflict.resolution_status,
+            new_status=new_status,
+            notes=notes
+        )
+        conflict.resolution_status = new_status
+        conflict.review_history.append(event)
+        conflict.updated_at = datetime.utcnow().isoformat()
+
+        self.save_conflicts([conflict])
+        return conflict
+
 
 # Global singleton repository
 _compliance_repo = ComplianceRepository()
@@ -906,3 +1212,4 @@ _compliance_repo = ComplianceRepository()
 
 def get_compliance_repository() -> ComplianceRepository:
     return _compliance_repo
+

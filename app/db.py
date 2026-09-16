@@ -126,6 +126,14 @@ class MongoDBManager:
     def watchlists_collection(self) -> Collection:
         return self.db[settings.mongodb_watchlists_collection]
 
+    @property
+    def overlaps_collection(self) -> Collection:
+        return self.db[settings.mongodb_overlaps_collection]
+
+    @property
+    def conflicts_collection(self) -> Collection:
+        return self.db[settings.mongodb_conflicts_collection]
+
     def ping(self) -> bool:
         """Pings the MongoDB server to verify active connectivity."""
         try:
@@ -209,6 +217,16 @@ def get_watchlists_collection() -> Collection:
     return _db_manager.watchlists_collection
 
 
+def get_overlaps_collection() -> Collection:
+    """Returns the regulatory overlaps collection handle."""
+    return _db_manager.overlaps_collection
+
+
+def get_conflicts_collection() -> Collection:
+    """Returns the regulatory conflicts collection handle."""
+    return _db_manager.conflicts_collection
+
+
 # Module-level lazy attribute access
 def __getattr__(name: str):
     if name == "client":
@@ -235,4 +253,8 @@ def __getattr__(name: str):
         return _db_manager.alerts_collection
     if name == "watchlists_collection":
         return _db_manager.watchlists_collection
+    if name == "overlaps_collection":
+        return _db_manager.overlaps_collection
+    if name == "conflicts_collection":
+        return _db_manager.conflicts_collection
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")

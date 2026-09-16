@@ -621,4 +621,125 @@ export interface ConnectorHealth {
   error_summary?: string | null;
 }
 
+// ==========================================
+// Phase 73: Cross-Regulator Overlaps
+// ==========================================
+export type OverlapType =
+  | 'IDENTICAL'
+  | 'NEAR_DUPLICATE'
+  | 'OVERLAPPING'
+  | 'COMPLEMENTARY'
+  | 'RELATED'
+  | 'DISTINCT'
+  | 'UNKNOWN';
+
+export type OverlapStatus =
+  | 'ACTIVE'
+  | 'HISTORICAL'
+  | 'FUTURE'
+  | 'UNKNOWN'
+  | 'SUPERSEDED';
+
+export interface RegulatoryOverlap {
+  overlap_id: string;
+  left_authority: string;
+  left_document_id: string;
+  left_document_version_id?: string | null;
+  left_section_id?: string | null;
+  left_requirement_id: string;
+  left_obligation_id?: string | null;
+
+  right_authority: string;
+  right_document_id: string;
+  right_document_version_id?: string | null;
+  right_section_id?: string | null;
+  right_requirement_id: string;
+  right_obligation_id?: string | null;
+
+  relationship_type: OverlapType;
+  shared_topic?: string | null;
+  shared_activity?: string | null;
+  similarity_score: number;
+  confidence: 'HIGH' | 'MEDIUM' | 'LOW' | 'UNKNOWN';
+  reasoning: string;
+
+  evidence_left: string;
+  evidence_right: string;
+
+  effective_date_left?: string | null;
+  effective_date_right?: string | null;
+  status: OverlapStatus;
+  applicability_match?: string | null;
+  parameter_comparison?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+// ==========================================
+// Phase 74: Cross-Regulator Conflicts
+// ==========================================
+export type RegulatoryConflictType =
+  | 'PARAMETER_CONFLICT'
+  | 'DEADLINE_CONFLICT'
+  | 'FREQUENCY_CONFLICT'
+  | 'ACTION_CONFLICT'
+  | 'PROHIBITION_CONFLICT'
+  | 'APPLICABILITY_CONFLICT'
+  | 'DEFINITION_CONFLICT'
+  | 'SEQUENCING_CONFLICT'
+  | 'POTENTIAL_INCONSISTENCY'
+  | 'NO_CONFLICT'
+  | 'UNKNOWN';
+
+export type ConflictSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'UNKNOWN';
+export type ConflictResolutionStatus =
+  | 'OPEN'
+  | 'UNDER_REVIEW'
+  | 'RESOLVED'
+  | 'DISMISSED'
+  | 'FALSE_POSITIVE'
+  | 'UNKNOWN';
+
+export interface ConflictReviewEvent {
+  reviewer_id: string;
+  timestamp: string;
+  previous_status: string;
+  new_status: string;
+  notes?: string | null;
+}
+
+export interface RegulatoryConflict {
+  conflict_id: string;
+  overlap_id?: string | null;
+  left_requirement_id: string;
+  left_obligation_id?: string | null;
+  left_authority: string;
+  left_document_id?: string | null;
+  left_section_id?: string | null;
+
+  right_requirement_id: string;
+  right_obligation_id?: string | null;
+  right_authority: string;
+  right_document_id?: string | null;
+  right_section_id?: string | null;
+
+  conflict_type: RegulatoryConflictType;
+  severity: ConflictSeverity;
+  confidence: 'HIGH' | 'MEDIUM' | 'LOW' | 'UNKNOWN';
+  conflicting_fields: string[];
+  left_value: Record<string, any>;
+  right_value: Record<string, any>;
+  applicability_scope?: string | null;
+  temporal_scope?: string | null;
+  explanation: string;
+
+  evidence_left: string;
+  evidence_right: string;
+
+  resolution_status: ConflictResolutionStatus;
+  review_history: ConflictReviewEvent[];
+  created_at: string;
+  updated_at: string;
+}
+
 

@@ -80,7 +80,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins_list if not settings.debug_mode else ["*"],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -134,6 +134,8 @@ app.include_router(rag_router)
 app.include_router(documents_router)
 app.include_router(compliance_router)
 app.include_router(connectors_router)
+from app.api.routes_cross_regulator import router as cross_regulator_router
+app.include_router(cross_regulator_router)
 
 
 if __name__ == "__main__":

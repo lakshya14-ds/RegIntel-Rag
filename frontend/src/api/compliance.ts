@@ -19,6 +19,8 @@ import {
   RegulatorySourceInfo,
   ConnectorHealth,
   ConnectorRun,
+  RegulatoryOverlap,
+  RegulatoryConflict,
 } from '../types/api';
 import { apiClient } from './client';
 
@@ -427,6 +429,99 @@ export async function triggerConnectorRun(
     body: JSON.stringify({ limit, dry_run: dryRun, force }),
   });
   if (!res.ok) throw new Error(`Failed to trigger connector run for ${authority}`);
+  return res.json();
+}
+
+// ==========================================
+// Phases 73 & 74: Overlaps & Conflicts API
+// ==========================================
+
+export async function fetchRegulatoryOverlaps(params?: {
+  authority?: string;
+  relationship_type?: string;
+  topic?: string;
+  status?: string;
+  confidence?: string;
+  requirement_id?: string;
+  limit?: number;
+}): Promise<RegulatoryOverlap[]> {
+  const baseUrl = apiClient.getBaseUrl();
+  const query = new URLSearchParams();
+  if (params?.authority && params.authority !== 'All') query.append('authority', params.authority);
+  if (params?.relationship_type) query.append('relationship_type', params.relationship_type);
+  if (params?.topic) query.append('topic', params.topic);
+  if (params?.status) query.append('status', params.status);
+  if (params?.confidence) query.append('confidence', params.confidence);
+  if (params?.requirement_id) query.append('requirement_id', params.requirement_id);
+  if (params?.limit) query.append('limit', params.limit.toString());
+
+  const res = await fetch(`${baseUrl}/api/regulatory-overlaps?${query.toString()}`);
+  if (!res.ok) throw new Error('Failed to fetch regulatory overlaps');
+  return res.json();
+}
+
+export async function fetchRegulatoryOverlapDetail(id: string): Promise<RegulatoryOverlap> {
+  const baseUrl = apiClient.getBaseUrl();
+  const res = await fetch(`${baseUrl}/api/regulatory-overlaps/${encodeURIComponent(id)}`);
+  if (!res.ok) throw new Error(`Failed to fetch overlap detail for ${id}`);
+  return res.json();
+}
+
+export async function fetchRegulatoryConflicts(params?: {
+  authority?: string;
+  conflict_type?: string;
+  severity?: string;
+  confidence?: string;
+  resolution_status?: string;
+  requirement_id?: string;
+  limit?: number;
+}): Promise<RegulatoryConflict[]> {
+  const baseUrl = apiClient.getBaseUrl();
+  const query = new URLSearchParams();
+  if (params?.authority && params.authority !== 'All') query.append('authority', params.authority);
+  if (params?.conflict_type) query.append('conflict_type', params.conflict_type);
+  if (params?.severity) query.append('severity', params.severity);
+  if (params?.confidence) query.append('confidence', params.confidence);
+  if (params?.resolution_status) query.append('resolution_status', params.resolution_status);
+  if (params?.requirement_id) query.append('requirement_id', params.requirement_id);
+  if (params?.limit) query.append('limit', params.limit.toString());
+
+  const res = await fetch(`${baseUrl}/api/regulatory-conflicts?${query.toString()}`);
+  if (!res.ok) throw new Error('Failed to fetch regulatory conflicts');
+  return res.json();
+}
+
+export async function fetchRegulatoryConflictDetail(id: string): Promise<RegulatoryConflict> {
+  const baseUrl = apiClient.getBaseUrl();
+  const res = await fetch(`${baseUrl}/api/regulatory-conflicts/${encodeURIComponent(id)}`);
+  if (!res.ok) throw new Error(`Failed to fetch conflict detail for ${id}`);
+  return res.json();
+}
+
+export async function updateRegulatoryConflictStatus(
+  id: string,
+  newStatus: string,
+  reviewerId: string = 'compliance_officer',
+  notes?: string
+): Promise<RegulatoryConflict> {
+  const baseUrl = apiClient.getBaseUrl();
+  const res = await fetch(`${baseUrl}/api/regulatory-conflicts/${encodeURIComponent(id)}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ new_status: newStatus, reviewer_id: reviewerId, notes }),
+  });
+  if (!res.ok) throw new Error(`Failed to update conflict status for ${id}`);
+  return res.json();
+}
+
+export async function triggerOverlapAnalysis(requirementId?: string): Promise<any> {
+  const baseUrl = apiClient.getBaseUrl();
+  const res = await fetch(`${baseUrl}/api/regulatory-overlaps/analyze`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ requirement_id: requirementId, use_llm: false, max_candidates: 15 }),
+  });
+  if (!res.ok) throw new Error('Failed to trigger overlap analysis');
   return res.json();
 }
 

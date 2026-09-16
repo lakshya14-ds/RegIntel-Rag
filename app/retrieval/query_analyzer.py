@@ -50,6 +50,8 @@ TIME_INTENT_PATTERNS = {
 QUERY_TYPE_PATTERNS = {
     "change_analysis": [r"what\s+changed", r"changes\s+in", r"change\s+analysis", r"what\s+has\s+changed", r"amendment", r"amendments", r"how\s+has\s+.*changed"],
     "comparison": [r"compare", r"comparison", r"difference\s+between", r"versus", r"\bvs\b"],
+    "overlap": [r"overlap", r"regulatory\s+overlap", r"cross-regulator", r"overlapping\s+requirements?", r"same\s+topic"],
+    "conflict": [r"conflict", r"conflicting", r"inconsisten", r"regulatory\s+conflict", r"contradict"],
     "effective_date": [r"effective\s+date", r"when\s+did\s+.*become\s+effective", r"effective\s+from", r"date\s+of\s+effect"],
     "current_requirement": [r"what\s+are\s+the\s+(?:current|latest)?\s*(?:requirements|rules|guidelines|norms|eligibility|limits)", r"requirements\s+for", r"compliance\s+for"],
     "definition": [r"what\s+is\s+a\b", r"what\s+is\s+an\b", r"define\b", r"definition\s+of"],

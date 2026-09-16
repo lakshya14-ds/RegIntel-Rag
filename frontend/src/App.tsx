@@ -11,6 +11,7 @@ import { Document } from './pages/Document';
 import { Timeline } from './pages/Timeline';
 import { About } from './pages/About';
 import { Compliance } from './pages/Compliance';
+import { Landscape } from './pages/Landscape';
 
 export const App: React.FC = () => {
   return (
@@ -21,6 +22,7 @@ export const App: React.FC = () => {
             <Route index element={<Home />} />
             <Route path="compliance" element={<Compliance />} />
             <Route path="compliance/checklist/:checklistId" element={<Compliance />} />
+            <Route path="landscape" element={<Landscape />} />
             <Route path="ask" element={<Ask />} />
             <Route path="search" element={<Search />} />
             <Route path="latest" element={<Latest />} />

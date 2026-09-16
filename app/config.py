@@ -62,6 +62,12 @@ class Settings(BaseSettings):
     mongodb_watchlists_collection: str = Field(
         default_factory=lambda: os.getenv("MONGODB_WATCHLISTS_COLLECTION", "regulatory_watchlists")
     )
+    mongodb_overlaps_collection: str = Field(
+        default_factory=lambda: os.getenv("MONGODB_OVERLAPS_COLLECTION", "regulatory_overlaps")
+    )
+    mongodb_conflicts_collection: str = Field(
+        default_factory=lambda: os.getenv("MONGODB_CONFLICTS_COLLECTION", "regulatory_conflicts")
+    )
 
     # Gemini / LLM key & Embedding Settings
     gemini_api_key: Optional[str] = Field(
