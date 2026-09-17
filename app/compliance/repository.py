@@ -1110,6 +1110,8 @@ class ComplianceRepository:
         confidence: Optional[str] = None,
         resolution_status: Optional[str] = None,
         requirement_id: Optional[str] = None,
+        obligation_id: Optional[str] = None,
+        document_id: Optional[str] = None,
         limit: int = 100,
         offset: int = 0
     ) -> List[RegulatoryConflict]:
@@ -1134,6 +1136,18 @@ class ComplianceRepository:
             query["$or"] = [
                 {"left_requirement_id": rc},
                 {"right_requirement_id": rc}
+            ]
+        if obligation_id:
+            oc = obligation_id.strip()
+            query["$or"] = [
+                {"left_obligation_id": oc},
+                {"right_obligation_id": oc}
+            ]
+        if document_id:
+            dc = document_id.strip()
+            query["$or"] = [
+                {"left_document_id": dc},
+                {"right_document_id": dc}
             ]
 
         try:
@@ -1171,6 +1185,14 @@ class ComplianceRepository:
                         rc = requirement_id.strip()
                         if cnf.left_requirement_id != rc and cnf.right_requirement_id != rc:
                             continue
+                    if obligation_id:
+                        oc = obligation_id.strip()
+                        if cnf.left_obligation_id != oc and cnf.right_obligation_id != oc:
+                            continue
+                    if document_id:
+                        dc = document_id.strip()
+                        if cnf.left_document_id != dc and cnf.right_document_id != dc:
+                            continue
                     conflicts.append(cnf)
             except Exception:
                 continue
@@ -1204,6 +1226,35 @@ class ComplianceRepository:
 
         self.save_conflicts([conflict])
         return conflict
+
+    def invalidate_stale_records_for_requirement(self, requirement_id: str) -> Dict[str, int]:
+        """
+        Marks overlapping and conflicting records as stale / superseded when a requirement changes (73.21, 74.24).
+        """
+        affected_overlaps = self.get_overlaps(requirement_id=requirement_id, limit=500)
+        for ovl in affected_overlaps:
+            ovl.status = "SUPERSEDED"
+            ovl.updated_at = datetime.utcnow().isoformat()
+        if affected_overlaps:
+            self.save_overlaps(affected_overlaps)
+
+        affected_conflicts = self.get_conflicts(requirement_id=requirement_id, limit=500)
+        for cnf in affected_conflicts:
+            cnf.resolution_status = "DISMISSED"
+            cnf.review_history.append(ConflictReviewEvent(
+                reviewer_id="system_change_propagation",
+                previous_status=cnf.resolution_status,
+                new_status="DISMISSED",
+                notes=f"Requirement {requirement_id} was updated or superseded; re-evaluation required."
+            ))
+            cnf.updated_at = datetime.utcnow().isoformat()
+        if affected_conflicts:
+            self.save_conflicts(affected_conflicts)
+
+        return {
+            "invalidated_overlaps": len(affected_overlaps),
+            "invalidated_conflicts": len(affected_conflicts)
+        }
 
 
 # Global singleton repository

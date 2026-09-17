@@ -132,6 +132,67 @@ async def update_regulatory_conflict_status(
     return updated
 
 
+@router.get("/requirements/{requirement_id}/overlaps", response_model=List[RegulatoryOverlap])
+async def get_overlaps_by_requirement(
+    requirement_id: str = Path(..., description="Requirement ID"),
+    limit: int = Query(50, ge=1, le=200)
+):
+    """Retrieves all overlaps involving a specific requirement (73.16)."""
+    repo = get_compliance_repository()
+    return repo.get_overlaps(requirement_id=requirement_id, limit=limit)
+
+
+@router.get("/obligations/{obligation_id}/overlaps", response_model=List[RegulatoryOverlap])
+async def get_overlaps_by_obligation(
+    obligation_id: str = Path(..., description="Obligation ID"),
+    limit: int = Query(50, ge=1, le=200)
+):
+    """Retrieves all overlaps involving a specific obligation (73.16)."""
+    repo = get_compliance_repository()
+    # Overlaps match requirement IDs; obligations relate to requirements
+    return repo.get_overlaps(requirement_id=obligation_id, limit=limit)
+
+
+@router.get("/documents/{document_id}/overlaps", response_model=List[RegulatoryOverlap])
+async def get_overlaps_by_document(
+    document_id: str = Path(..., description="Document ID"),
+    limit: int = Query(50, ge=1, le=200)
+):
+    """Retrieves all overlaps involving provisions from a specific document (73.16)."""
+    repo = get_compliance_repository()
+    return repo.get_overlaps(document_id=document_id, limit=limit)
+
+
+@router.get("/requirements/{requirement_id}/conflicts", response_model=List[RegulatoryConflict])
+async def get_conflicts_by_requirement(
+    requirement_id: str = Path(..., description="Requirement ID"),
+    limit: int = Query(50, ge=1, le=200)
+):
+    """Retrieves all potential conflicts involving a specific requirement (74.18)."""
+    repo = get_compliance_repository()
+    return repo.get_conflicts(requirement_id=requirement_id, limit=limit)
+
+
+@router.get("/obligations/{obligation_id}/conflicts", response_model=List[RegulatoryConflict])
+async def get_conflicts_by_obligation(
+    obligation_id: str = Path(..., description="Obligation ID"),
+    limit: int = Query(50, ge=1, le=200)
+):
+    """Retrieves all potential conflicts involving a specific obligation (74.18)."""
+    repo = get_compliance_repository()
+    return repo.get_conflicts(obligation_id=obligation_id, limit=limit)
+
+
+@router.post("/requirements/{requirement_id}/invalidate-cross-regulator")
+async def invalidate_requirement_cross_regulator(
+    requirement_id: str = Path(..., description="Requirement ID that changed")
+):
+    """Marks existing overlaps and conflicts as superseded/stale when requirement changes (73.21, 74.24)."""
+    repo = get_compliance_repository()
+    res = repo.invalidate_stale_records_for_requirement(requirement_id)
+    return {"status": "invalidated", "details": res}
+
+
 @router.post("/regulatory-overlaps/analyze")
 async def analyze_regulatory_overlaps(
     payload: OverlapAnalysisRequest

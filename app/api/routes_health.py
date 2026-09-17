@@ -5,7 +5,6 @@ Health and Status Routes for RegIntel FastAPI Backend.
 import logging
 from fastapi import APIRouter
 from app.config import settings
-from app.db import db
 from app.schemas.responses import HealthResponse
 
 logger = logging.getLogger(__name__)
@@ -20,8 +19,9 @@ def get_health() -> HealthResponse:
     """
     mongo_ok = False
     try:
-        if db.client is not None:
-            db.client.admin.command("ping")
+        from app.db import _db_manager
+        if _db_manager.client is not None:
+            _db_manager.client.admin.command("ping")
             mongo_ok = True
     except Exception as e:
         logger.warning(f"MongoDB ping check failed during /health: {e}")

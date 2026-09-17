@@ -112,3 +112,23 @@ class RegulatoryOverlap(BaseModel):
     overlap_schema_version: str = "1.0.0"
     analysis_method: Literal["DETERMINISTIC", "HYBRID", "LLM"] = "HYBRID"
     analysis_model: Optional[str] = "gemini-embedding-001+gemini"
+
+    @property
+    def id(self) -> str:
+        return self.overlap_id
+
+    @property
+    def left_evidence(self) -> str:
+        return self.evidence_left
+
+    @property
+    def right_evidence(self) -> str:
+        return self.evidence_right
+
+    @property
+    def topic(self) -> Optional[str]:
+        return self.shared_topic
+
+    @property
+    def explanation(self) -> str:
+        return self.reasoning

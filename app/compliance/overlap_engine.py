@@ -103,6 +103,55 @@ class OverlapEngine:
         candidates.sort(key=lambda x: x[1], reverse=True)
         return candidates[:max_candidates]
 
+    def generate_candidates_via_hybrid_retrieval(
+        self,
+        target_req: RegulatoryRequirement,
+        top_k: int = 15
+    ) -> List[Tuple[RegulatoryRequirement, float, str]]:
+        """
+        Uses existing HybridRetriever (Gemini Vector Search + BM25) to find candidates across authorities (73.4, 73.5).
+        Enforces cross-authority isolation (target_req.authority != candidate.authority).
+        """
+        try:
+            from app.retrieval.hybrid import HybridRetriever
+            from app.compliance.repository import get_compliance_repository
+
+            repo = get_compliance_repository()
+            retriever = HybridRetriever(candidate_pool=top_k * 2)
+            query_text = f"{target_req.action or ''} {target_req.object or ''} {target_req.requirement_text[:200]}"
+            chunks = retriever.search(query=query_text, top_k=top_k * 2)
+
+            target_auth = (target_req.authority or "").upper()
+            target_topic = normalize_regulatory_topic(
+                target_req.requirement_text, target_req.subject, target_req.action, target_req.object
+            )
+
+            candidates = []
+            seen_req_ids = set()
+
+            for chunk in chunks:
+                chunk_auth = (getattr(chunk, "authority", "") or getattr(chunk, "source", "") or "").upper()
+                if chunk_auth and chunk_auth == target_auth:
+                    continue
+
+                matching_reqs = repo.get_requirements(document_id=chunk.document_id, limit=5)
+                for req in matching_reqs:
+                    if req.requirement_id in seen_req_ids:
+                        continue
+                    req_auth = (req.authority or "").upper()
+                    if req_auth == target_auth:
+                        continue
+                    seen_req_ids.add(req.requirement_id)
+                    score, _ = self.compute_deterministic_similarity(target_req, req, target_topic)
+                    if score >= 0.15:
+                        candidates.append((req, score, target_topic))
+
+            candidates.sort(key=lambda x: x[1], reverse=True)
+            return candidates[:top_k]
+        except Exception as e:
+            logger.debug(f"Hybrid retrieval candidate discovery bypassed/failed: {e}")
+            return []
+
     # -------------------------------------------------------------------------
     # 73.6 DETERMINISTIC STRUCTURED COMPARISON
     # -------------------------------------------------------------------------

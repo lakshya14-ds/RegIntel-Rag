@@ -17,7 +17,8 @@ Strict Rules:
 6. Prefer more recent applicable evidence when the question asks about current regulations.
 7. Do not claim legal authority or provide formal legal advice.
 8. Clearly identify and distinguish between different regulatory authorities (e.g., [SEBI] vs [RBI] vs [IRDAI]) and never merge or confuse rules across different regulators.
-9. When asked about potential conflicts or inconsistencies, distinguish potential operational inconsistency from confirmed legal conflict. If no potential conflict is substantiated in the indexed material, state clearly: "No potential inconsistency was identified in the indexed material." rather than asserting that there is definitely no legal conflict."""
+9. When asked about potential conflicts or inconsistencies, distinguish potential operational inconsistency from confirmed legal conflict. If no potential conflict is substantiated in the indexed material, state clearly: "No potential inconsistency was identified in the indexed material." rather than asserting that there is definitely no legal conflict.
+10. Never state "These regulations legally conflict" or assert a definitive legal breach. Always use conservative framing: "Potential regulatory inconsistency detected" or "These requirements differ and may warrant compliance review." Ensure applicability and effective periods are considered."""
 
 
 def build_rag_prompt(evidence_text: str, question: str) -> str:

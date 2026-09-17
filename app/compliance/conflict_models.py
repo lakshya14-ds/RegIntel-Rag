@@ -113,3 +113,19 @@ class RegulatoryConflict(BaseModel):
     created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
     conflict_schema_version: str = "1.0.0"
+
+    @property
+    def id(self) -> str:
+        return self.conflict_id
+
+    @property
+    def left_evidence(self) -> str:
+        return self.evidence_left
+
+    @property
+    def right_evidence(self) -> str:
+        return self.evidence_right
+
+    @property
+    def reasoning_summary(self) -> str:
+        return self.explanation
