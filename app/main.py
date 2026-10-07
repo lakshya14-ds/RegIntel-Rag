@@ -136,6 +136,8 @@ app.include_router(compliance_router)
 app.include_router(connectors_router)
 from app.api.routes_cross_regulator import router as cross_regulator_router
 app.include_router(cross_regulator_router)
+from app.api.routes_agentic import router as agentic_router
+app.include_router(agentic_router)
 
 
 if __name__ == "__main__":

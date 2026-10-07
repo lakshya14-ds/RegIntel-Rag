@@ -21,6 +21,8 @@ import {
   ConnectorRun,
   RegulatoryOverlap,
   RegulatoryConflict,
+  QueryPlanResponse,
+  AgenticRAGResponse,
 } from '../types/api';
 import { apiClient } from './client';
 
@@ -524,4 +526,43 @@ export async function triggerOverlapAnalysis(requirementId?: string): Promise<an
   if (!res.ok) throw new Error('Failed to trigger overlap analysis');
   return res.json();
 }
+
+// ==========================================
+// Phases 75-78: Agentic Multi-Hop RAG API
+// ==========================================
+
+export async function planAgenticQuery(query: string): Promise<QueryPlanResponse> {
+  const baseUrl = apiClient.getBaseUrl();
+  const res = await fetch(`${baseUrl}/api/rag/plan`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query }),
+  });
+  if (!res.ok) throw new Error('Failed to plan query');
+  return res.json();
+}
+
+export async function askAgenticQuery(params: {
+  query: string;
+  force_agentic?: boolean;
+  max_hops?: number;
+  authority?: string;
+}): Promise<AgenticRAGResponse> {
+  const baseUrl = apiClient.getBaseUrl();
+  const res = await fetch(`${baseUrl}/api/rag/agentic-ask`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) throw new Error('Agentic ask request failed');
+  return res.json();
+}
+
+export async function fetchAgenticTrace(queryId: string): Promise<any> {
+  const baseUrl = apiClient.getBaseUrl();
+  const res = await fetch(`${baseUrl}/api/rag/agentic-trace/${encodeURIComponent(queryId)}`);
+  if (!res.ok) throw new Error(`Failed to fetch trace for query ${queryId}`);
+  return res.json();
+}
+
 

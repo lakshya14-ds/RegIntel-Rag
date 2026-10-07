@@ -742,4 +742,71 @@ export interface RegulatoryConflict {
   updated_at: string;
 }
 
+// ==========================================
+// Agentic & Multi-Hop RAG (Phases 75-78)
+// ==========================================
+export interface SubQuestionItem {
+  id: string;
+  text: string;
+  purpose?: string;
+  authority_scope?: string;
+  expected_evidence_type?: string;
+  status: string;
+  rewritten_query?: string;
+  depends_on?: string[];
+}
+
+export interface QueryPlanResponse {
+  plan_id: string;
+  query_id: string;
+  original_query: string;
+  sub_questions: SubQuestionItem[];
+  execution_order: string[][];
+  planned_tools: string[];
+}
+
+export interface VerifiedClaimItem {
+  claim_id: string;
+  text: string;
+  claim_type: string;
+  supporting_evidence_ids: string[];
+  confidence: number;
+  verification_status: string;
+  verification_notes?: string;
+}
+
+export interface AgenticRAGResponse {
+  query_id: string;
+  question: string;
+  answer: string;
+  is_agentic: boolean;
+  fast_path_used: boolean;
+  strategy_used: string;
+  plan?: QueryPlanResponse | null;
+  total_hops: number;
+  total_evidence_count: number;
+  verification_rate: number;
+  verified_claims: VerifiedClaimItem[];
+  citations: Array<{
+    citation_number?: number;
+    evidence_id?: string;
+    type?: string;
+    authority?: string;
+    document_id?: string;
+    section_id?: string;
+    text_snippet?: string;
+    snippet?: string;
+    title?: string;
+  }>;
+  evidence_graph_summary: {
+    total_nodes: number;
+    total_edges: number;
+    authorities: string[];
+    node_types: Record<string, number>;
+  };
+  operational_steps: string[];
+  execution_time_seconds: number;
+}
+
+
 

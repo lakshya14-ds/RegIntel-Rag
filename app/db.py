@@ -165,6 +165,11 @@ def get_db() -> Database:
     return _db_manager.db
 
 
+def get_sync_db() -> Database:
+    """Returns the connected MongoDB database (sync)."""
+    return _db_manager.db
+
+
 def get_collection(name: Optional[str] = None) -> Collection:
     """Returns a collection handle from the connected database."""
     if name:

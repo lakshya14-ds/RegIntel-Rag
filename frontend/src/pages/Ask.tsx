@@ -8,9 +8,15 @@ import {
   BookOpen,
   Info,
   XCircle,
+  Cpu,
+  CheckCircle,
+  ShieldCheck,
+  Layers,
+  Network,
 } from 'lucide-react';
 import { useAsk } from '../hooks/useAsk';
-import { RetrievalMode } from '../types/api';
+import { RetrievalMode, AgenticRAGResponse } from '../types/api';
+import { askAgenticQuery } from '../api/compliance';
 import { GroundedAnswer } from '../components/chat/GroundedAnswer';
 import { QueryIntentPanel } from '../components/chat/QueryIntentPanel';
 import { CitationDrawer } from '../components/citations/CitationDrawer';
@@ -26,59 +32,117 @@ export const Ask: React.FC = () => {
   const [authorityFilter, setAuthorityFilter] = useState('');
   const [showSettings, setShowSettings] = useState(false);
 
+  // Phase 75-78 Agentic RAG state
+  const [isAgenticMode, setIsAgenticMode] = useState(true);
+  const [agenticData, setAgenticData] = useState<AgenticRAGResponse | null>(null);
+  const [isAgenticLoading, setIsAgenticLoading] = useState(false);
+  const [agenticError, setAgenticError] = useState<string | null>(null);
+
   const {
-    data,
-    isLoading,
-    error,
+    data: standardData,
+    isLoading: isStandardLoading,
+    error: standardError,
     activeCitation,
-    ask,
-    cancel,
-    retry,
+    ask: askStandard,
+    cancel: cancelStandard,
     selectCitation,
     closeCitation,
   } = useAsk();
 
+  const isLoading = isAgenticMode ? isAgenticLoading : isStandardLoading;
+  const error = isAgenticMode ? (agenticError ? { message: agenticError } : null) : standardError;
+
   const suggestedQueries = [
+    'Compare cybersecurity audit requirements between SEBI and RBI',
     'What are the latest SEBI requirements for investment advisers?',
     'What is the fee cap structure specified under Regulation 15A for investment advisers?',
-    'What are the qualification and certification norms for research analysts?',
-    'What changed in the latest investment adviser circular?',
+    'Is there any potential conflict between RBI and SEBI KYC norms?',
   ];
 
-  const handleSubmit = (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!question.trim() || isLoading) return;
 
-    ask({
-      question: question.trim(),
-      top_k: topK,
-      retrieval_mode: retrievalMode,
-      category: categoryFilter || null,
-      source: authorityFilter || null,
-    });
+    if (isAgenticMode) {
+      setIsAgenticLoading(true);
+      setAgenticError(null);
+      setAgenticData(null);
+      try {
+        const res = await askAgenticQuery({
+          query: question.trim(),
+          force_agentic: false, // Allows automatic fast-path for simple queries
+          authority: authorityFilter || undefined,
+        });
+        setAgenticData(res);
+      } catch (err: any) {
+        setAgenticError(err.message || 'Agentic multi-hop retrieval failed');
+      } finally {
+        setIsAgenticLoading(false);
+      }
+    } else {
+      askStandard({
+        question: question.trim(),
+        top_k: topK,
+        retrieval_mode: retrievalMode,
+        category: categoryFilter || null,
+        source: authorityFilter || null,
+      });
+    }
   };
 
   const handleSuggestedClick = (q: string) => {
     setQuestion(q);
-    ask({
-      question: q,
-      top_k: topK,
-      retrieval_mode: retrievalMode,
-      category: categoryFilter || null,
-      source: authorityFilter || null,
-    });
+    if (isAgenticMode) {
+      setIsAgenticLoading(true);
+      setAgenticError(null);
+      setAgenticData(null);
+      askAgenticQuery({
+        query: q,
+        force_agentic: false,
+        authority: authorityFilter || undefined,
+      })
+        .then((res) => setAgenticData(res))
+        .catch((err) => setAgenticError(err.message))
+        .finally(() => setIsAgenticLoading(false));
+    } else {
+      askStandard({
+        question: q,
+        top_k: topK,
+        retrieval_mode: retrievalMode,
+        category: categoryFilter || null,
+        source: authorityFilter || null,
+      });
+    }
   };
 
   return (
     <div className="page-container">
       {/* Page Header */}
-      <div style={{ marginBottom: '1.5rem' }}>
-        <h1 className="page-title">
-          <span>💬</span> Ask RegIntel
-        </h1>
-        <p className="page-subtitle">
-          Grounded regulatory question answering strictly constrained by indexed SEBI circulars with deterministic citations.
-        </p>
+      <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+        <div>
+          <h1 className="page-title">
+            <span>💬</span> Ask RegIntel
+          </h1>
+          <p className="page-subtitle">
+            Multi-regulator question answering with adaptive multi-hop retrieval, evidence graph verification, and conservative synthesis.
+          </p>
+        </div>
+
+        {/* Agentic Mode Toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'var(--surface-subtle)', padding: '0.5rem 0.85rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Cpu size={16} color={isAgenticMode ? 'var(--primary-600)' : 'var(--text-muted)'} />
+            <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>Agentic Multi-Hop</span>
+          </div>
+          <button
+            type="button"
+            className={`btn btn-sm ${isAgenticMode ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setIsAgenticMode(!isAgenticMode)}
+            style={{ fontSize: '0.78rem', padding: '0.25rem 0.65rem' }}
+          >
+            {isAgenticMode ? 'Enabled' : 'Fast-Path Only'}
+          </button>
+        </div>
       </div>
 
       {/* Search Input Box */}
@@ -88,7 +152,7 @@ export const Ask: React.FC = () => {
             <input
               type="text"
               className="form-control"
-              placeholder="Ask a regulatory compliance query (e.g. investment adviser client agreement rules)..."
+              placeholder="Ask a regulatory compliance query (e.g. Compare cybersecurity audit mandates between SEBI and RBI)..."
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               disabled={isLoading}
@@ -98,7 +162,10 @@ export const Ask: React.FC = () => {
               <button
                 type="button"
                 className="btn btn-secondary"
-                onClick={cancel}
+                onClick={() => {
+                  if (!isAgenticMode) cancelStandard();
+                  setIsAgenticLoading(false);
+                }}
                 style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '6px' }}
               >
                 <XCircle size={16} /> Stop
@@ -216,17 +283,19 @@ export const Ask: React.FC = () => {
         </div>
       </div>
 
-      {/* Loading State */}
+      {/* Loading State with Operational Stepper */}
       {isLoading && (
         <div className="card" style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
           <div style={{ display: 'inline-flex', marginBottom: '1rem', color: 'var(--primary-600)' }}>
             <RefreshCw size={28} className="animate-spin" />
           </div>
           <h3 style={{ fontSize: '1.15rem', marginBottom: '0.5rem' }}>
-            Analyzing Regulatory Sources...
+            {isAgenticMode ? 'Executing Multi-Hop Regulatory Reasoning...' : 'Analyzing Regulatory Sources...'}
           </h3>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-            Performing multi-stage retrieval, neural cross-encoder reranking, and citation verification.
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', maxWidth: '500px', margin: '0 auto' }}>
+            {isAgenticMode
+              ? 'Evaluating query complexity, orchestrating staged retrieval hops, constructing evidence graph, and verifying factual claims.'
+              : 'Performing multi-stage retrieval, neural cross-encoder reranking, and citation verification.'}
           </p>
         </div>
       )}
@@ -239,20 +308,173 @@ export const Ask: React.FC = () => {
             <div style={{ fontWeight: 600 }}>Regulatory Q&A Error</div>
             <div style={{ fontSize: '0.88rem' }}>{error.message}</div>
           </div>
-          <button className="btn btn-secondary btn-sm" onClick={retry}>
+          <button className="btn btn-secondary btn-sm" onClick={() => handleSubmit()}>
             <RefreshCw size={14} /> Retry
           </button>
         </div>
       )}
 
-      {/* Answer State */}
-      {data && !isLoading && (
+      {/* AGENTIC RAG RESULT VIEW */}
+      {isAgenticMode && agenticData && !isLoading && (
         <div>
-          {/* Query Interpretation Panel */}
-          <QueryIntentPanel intent={data.query_intent} />
+          {/* Operational Status & Architecture Stepper (Non-CoT) */}
+          <div className="card" style={{ padding: '1.25rem', marginBottom: '1.5rem', background: '#f8fafc' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Layers size={18} color="var(--primary-600)" />
+                <strong style={{ fontSize: '0.95rem' }}>Operational Execution Path</strong>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <Badge variant={agenticData.fast_path_used ? 'blue' : 'green'}>
+                  {agenticData.fast_path_used ? 'Fast Path (Direct)' : `Multi-Hop (${agenticData.strategy_used})`}
+                </Badge>
+                <Badge variant="purple">{agenticData.total_hops} Hop{agenticData.total_hops > 1 ? 's' : ''}</Badge>
+                <Badge variant="blue">{agenticData.total_evidence_count} Evidence Items</Badge>
+                <Badge variant="green">{Math.round(agenticData.verification_rate * 100)}% Verified</Badge>
+              </div>
+            </div>
 
-          {/* Insufficient Evidence Notice if applicable */}
-          {!data.sufficient_evidence && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.85rem' }}>
+              {agenticData.operational_steps.map((step, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
+                  <CheckCircle size={14} color="#10b981" />
+                  <span>{step}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Main Verified Answer Card */}
+          <div className="card" style={{ padding: '1.75rem', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border-subtle)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Sparkles size={18} color="var(--primary-600)" />
+                <h2 style={{ fontSize: '1.15rem', fontWeight: 700 }}>Conservative Grounded Synthesis</h2>
+              </div>
+              <Badge variant="green">Safe Verification Passed</Badge>
+            </div>
+
+            <GroundedAnswer answer={agenticData.answer} onSelectCitation={selectCitation} />
+
+            <div style={{ marginTop: '1.5rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-subtle)', fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+              ⚖️ Grounded regulatory synthesis verified against active indexed evidence. Phrased cautiously to adhere to official regulatory status.
+            </div>
+          </div>
+
+          {/* Verified Claims Breakdown */}
+          {agenticData.verified_claims && agenticData.verified_claims.length > 0 && (
+            <div className="card" style={{ marginBottom: '1.5rem' }}>
+              <div className="card-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <ShieldCheck size={18} color="var(--primary-600)" />
+                  <h3 className="card-title">Atomic Verified Claims ({agenticData.verified_claims.length})</h3>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {agenticData.verified_claims.map((c) => {
+                  let badgeVariant: 'green' | 'blue' | 'amber' | 'red' = 'green';
+                  if (c.verification_status === 'PARTIALLY_SUPPORTED') badgeVariant = 'amber';
+                  if (c.verification_status === 'UNSUPPORTED' || c.verification_status === 'CONTRADICTED') badgeVariant = 'red';
+
+                  return (
+                    <div
+                      key={c.claim_id}
+                      style={{
+                        border: '1px solid var(--border-subtle)',
+                        borderRadius: 'var(--radius-md)',
+                        padding: '0.85rem 1rem',
+                        backgroundColor: '#f8fafc',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                        <strong style={{ fontSize: '0.88rem' }}>Claim #{c.claim_id.replace('claim_', '')} ({c.claim_type})</strong>
+                        <Badge variant={badgeVariant}>{c.verification_status.replace('_', ' ')}</Badge>
+                      </div>
+                      <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-primary)' }}>{c.text}</p>
+                      {c.verification_notes && (
+                        <div style={{ marginTop: '0.35rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                          <em>{c.verification_notes}</em>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Evidence Graph Summary */}
+          {agenticData.evidence_graph_summary && (
+            <div className="card" style={{ marginBottom: '1.5rem' }}>
+              <div className="card-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Network size={18} color="var(--primary-600)" />
+                  <h3 className="card-title">Evidence Graph Topology</h3>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', fontSize: '0.88rem' }}>
+                <div style={{ padding: '0.75rem', background: '#f1f5f9', borderRadius: 'var(--radius-md)' }}>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Total Graph Nodes</div>
+                  <strong style={{ fontSize: '1.2rem' }}>{agenticData.evidence_graph_summary.total_nodes}</strong>
+                </div>
+                <div style={{ padding: '0.75rem', background: '#f1f5f9', borderRadius: 'var(--radius-md)' }}>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Relational Edges</div>
+                  <strong style={{ fontSize: '1.2rem' }}>{agenticData.evidence_graph_summary.total_edges}</strong>
+                </div>
+                <div style={{ padding: '0.75rem', background: '#f1f5f9', borderRadius: 'var(--radius-md)' }}>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Covered Authorities</div>
+                  <strong style={{ fontSize: '1.05rem' }}>
+                    {agenticData.evidence_graph_summary.authorities?.join(', ') || 'General'}
+                  </strong>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Grounded Citation Sources */}
+          {agenticData.citations && agenticData.citations.length > 0 && (
+            <div className="card">
+              <div className="card-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <BookOpen size={18} color="var(--primary-600)" />
+                  <h3 className="card-title">Source Citations ({agenticData.citations.length})</h3>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {agenticData.citations.map((c, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      border: '1px solid var(--border-subtle)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '0.85rem 1rem',
+                      backgroundColor: '#f8fafc',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                      <span className="citation-tag">[{idx + 1}]</span>
+                      <strong style={{ fontSize: '0.92rem' }}>{c.title || c.document_id || 'Regulatory Evidence'}</strong>
+                      {c.authority && <Badge variant="blue">{c.authority}</Badge>}
+                      {c.type && <Badge variant="purple">{c.type}</Badge>}
+                    </div>
+                    <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)' }}>
+                      {c.text_snippet || c.snippet}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* STANDARD RAG RESULT VIEW (Fallback / Non-Agentic) */}
+      {!isAgenticMode && standardData && !isLoading && (
+        <div>
+          <QueryIntentPanel intent={standardData.query_intent} />
+
+          {!standardData.sufficient_evidence && (
             <div className="alert alert-warning">
               <Info size={18} />
               <div>
@@ -261,7 +483,6 @@ export const Ask: React.FC = () => {
             </div>
           )}
 
-          {/* Main Grounded Answer Card */}
           <div className="card" style={{ padding: '1.75rem', marginBottom: '1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border-subtle)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -271,27 +492,24 @@ export const Ask: React.FC = () => {
               <Badge variant="green">100% Citations Verified</Badge>
             </div>
 
-            {/* Answer Content */}
-            <GroundedAnswer answer={data.answer} onSelectCitation={selectCitation} />
+            <GroundedAnswer answer={standardData.answer} onSelectCitation={selectCitation} />
 
-            {/* Disclaimer */}
             <div style={{ marginTop: '1.5rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-subtle)', fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-              ⚖️ {data.disclaimer}
+              ⚖️ {standardData.disclaimer}
             </div>
           </div>
 
-          {/* Retrieved Key Evidence Sources List */}
-          {data.sources && data.sources.length > 0 && (
+          {standardData.sources && standardData.sources.length > 0 && (
             <div className="card">
               <div className="card-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <BookOpen size={18} color="var(--primary-600)" />
-                  <h3 className="card-title">Retrieved Evidence Sources ({data.sources.length})</h3>
+                  <h3 className="card-title">Retrieved Evidence Sources ({standardData.sources.length})</h3>
                 </div>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {data.sources.map((s) => (
+                {standardData.sources.map((s) => (
                   <div
                     key={s.source_id}
                     style={{
@@ -333,14 +551,14 @@ export const Ask: React.FC = () => {
       )}
 
       {/* Empty State */}
-      {!data && !isLoading && !error && (
+      {!standardData && !agenticData && !isLoading && !error && (
         <div className="card" style={{ textAlign: 'center', padding: '3rem 1.5rem', color: 'var(--text-secondary)' }}>
           <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>⚖️</div>
           <h3 style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
-            Ready to explore regulatory obligations
+            Ready to explore multi-regulator intelligence
           </h3>
           <p style={{ maxWidth: '540px', margin: '0 auto', fontSize: '0.92rem', lineHeight: 1.6 }}>
-            Ask questions regarding compliance frameworks, fee caps, audit schedules, circular supersession, or intermediary qualification norms.
+            Ask questions regarding compliance frameworks, fee caps, audit schedules, cross-regulator overlaps, potential inconsistencies, or circular supersession.
           </p>
         </div>
       )}
