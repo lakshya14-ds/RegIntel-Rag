@@ -783,3 +783,68 @@ trailer
 startxref
 106630
 %%EOF
+9 0 obj
+<</Contents 49 0 R/MediaBox[ 0 0 612 792]/Parent 47 0 R/Resources<</Font 1 0 R/ProcSet[/PDF/Text/ImageB/ImageC/ImageI]>>/Rotate 0/Trans<<>>/Type/Page/Annots 85 0 R>>
+endobj
+85 0 obj
+[ 86 0 R 87 0 R]
+endobj
+86 0 obj
+<</Type/Annot/Subtype/Highlight/P 9 0 R/F 4/M(D:20261006185159+05'30')/NM(74d1f4f3-8215-4f69-aa06-b3d775e7aa26)/Rect[ 148.6385 392.7 240.2855 402.475]/C[ 1 .941176 .4]/Popup 87 0 R/CA 1/CreationDate(D:20261006185159+05'30')/QuadPoints[ 148.6385 402.475 240.2855 402.475 148.6385 392.7 240.2855 392.7]/AP<</N 94 0 R>>>>
+endobj
+87 0 obj
+<</Type/Annot/Subtype/Popup/Open false/F 28/Rect[ 612 282.475 792 402.475]/Parent 86 0 R>>
+endobj
+92 0 obj
+<</Length 100/Type/XObject/Subtype/Form/FormType 1/BBox[ 148.6385 392.7 240.2855 402.475]/Matrix[ 1 0 0 1 -148.6385 -392.7]/Resources<</ProcSet[/PDF]>>>>
+stream
+1 .941176 .4 rg
+.610938 w
+148.6385 392.7 m
+148.6385 402.475 l
+240.2855 402.475 l
+240.2855 392.7 l
+f
+
+endstream
+endobj
+93 0 obj
+<</Length 9/Type/XObject/Subtype/Form/FormType 1/BBox[ 0 0 91.647 9.775]/Matrix[ 1 0 0 1 0 0]/Resources<</ProcSet[/PDF]/XObject<</Form 92 0 R>>>>/Group<</S/Transparency>>>>
+stream
+/Form Do
+
+endstream
+endobj
+94 0 obj
+<</Length 20/Type/XObject/Subtype/Form/FormType 1/BBox[ 0 0 91.647 9.775]/Matrix[ 1 0 0 1 0 0]/Resources<</ProcSet[/PDF]/XObject<</MWFOForm 93 0 R>>/ExtGState<</R0 95 0 R>>>>>>
+stream
+/R0 gs
+/MWFOForm Do
+
+endstream
+endobj
+95 0 obj
+<</Type/ExtGState/AIS false/BM/Multiply>>
+endobj
+46 0 obj
+<</Author((anonymous))/CreationDate(D:20260903190151+05'00')/Creator((unspecified))/Keywords()/ModDate(D:20261006185443+05'30')/Producer(ReportLab PDF Library - (opensource))/Subject((unspecified))/Title((anonymous))/Trapped/False>>
+endobj
+xref
+9 1
+0000108547 00000 n
+46 1
+0000109999 00000 n
+85 3
+0000108728 00000 n
+0000108761 00000 n
+0000109096 00000 n
+92 4
+0000109203 00000 n
+0000109492 00000 n
+0000109709 00000 n
+0000109941 00000 n
+trailer
+<</ID[<A5F8DBFC7F23C0F05DAF39B31D3FDDC3><2705A0076C0933EF12B78CCC60A35B62>]/Info 46 0 R/Root 45 0 R/Size 96/Prev 106630>>
+startxref
+110248
+%%EOF
